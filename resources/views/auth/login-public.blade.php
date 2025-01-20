@@ -6,6 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
     <title>Auth | Public</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <link href="https://login.petra.ac.id/css/bootstrap.css" rel="stylesheet">
     <link href="https://login.petra.ac.id/css/style.css" rel="stylesheet">
@@ -38,6 +39,29 @@
         margin-top: 10px;
     }
     </style>
+    </style>
+    <!--[if lt IE 9
+        ]>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script
+        >
+        <![endif]-->
+    <!--[if lt IE 9]>
+        <script src="/js/respond.js"></script>
+        <![endif]-->
+    <script defer="defer" src="https://login.petra.ac.id/js/chunk-vendors.f2b7dbd6.js"></script>
+
+    <link href="https://login.petra.ac.id/css/chunk-vendors.f76ef4e6.css" rel="stylesheet">
+    <link href="https://login.petra.ac.id/css/app.2a14bc1c.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://login.petra.ac.id/css/870.fb36812f.css">
+    <style>
+        .login-wrapper .form-control {
+    background: #fdfdfd;
+    border: 1px solid #E6E6E6;
+    border-radius: 0;
+    height: 60px;
+    margin-top: 10px;
+}
+        </style>
 </head>
 
 <body>
@@ -56,7 +80,7 @@
                 <div class="nav-outer">
                     <div class="logo-box" style="margin-right: auto;">
                         <div class="logo">
-                            <a href="https://login.petra.ac.id">
+                            <a href="{{ route('login') }}">
                                 <img src="https://login.petra.ac.id/images/logo-ukp.png" alt="Logo">
                             </a>
                         </div>
@@ -76,13 +100,13 @@
                                 <p style="margin-top: 10px;">Log in to access our full features.</p>
 
                                 <!-- Login Form -->
-                                <form method="POST" action="{{ route('public.login') }}">
+                                <form method="POST" action="{{ route('login') }}">
                                     @csrf
 
-                                    <!-- Email -->
                                     <div class="input-group mb-3">
+                                        <!-- Email -->
                                         <input type="email" class="form-control" id="email" name="email"
-                                            placeholder="Email Address" value="{{ old('email') }}" required autofocus>
+                                            placeholder="Email" value="{{ old('email') }}" required autofocus>
                                     </div>
 
                                     <!-- Password -->
@@ -121,7 +145,7 @@
                                     <br />
                                     <!-- Student or staff login -->
                                     You are student or staff, click
-                                    <a href="{{ route('password.request') }}"
+                                    <a href="{{ route('login') }}"
                                         class="text-reset"><strong>here</strong></a>.
                                 </p>
                             </div>
@@ -138,14 +162,57 @@
     </div>
 
     <!-- Scripts -->
+    !-- Scripts -->
     <script src="https://login.petra.ac.id/js/jquery.js"></script>
-    <script>
-    $(document).ready(function() {
-        $('form').submit(function(e) {
-            $('.loading-screen').show();
+    <script src="https://login.petra.ac.id/js/popper.min.js"></script>
+    <script src="https://login.petra.ac.id/js/jquery-ui.min.js"></script>
+    <script src="https://login.petra.ac.id/js/chosen.min.js"></script>
+    <script src="https://login.petra.ac.id/js/bootstrap.min.js"></script>
+    <script src="https://login.petra.ac.id/js/jquery.fancybox.js"></script>
+    <script src="https://login.petra.ac.id/js/jquery.modal.min.js"></script>
+    <script src="https://login.petra.ac.id/js/mmenu.polyfills.js"></script>
+    <script src="https://login.petra.ac.id/js/mmenu.js"></script>
+    <script src="https://login.petra.ac.id/js/appear.js"></script>
+    <script src="https://login.petra.ac.id/js/ScrollMagic.min.js"></script>
+    <script src="https://login.petra.ac.id/js/rellax.min.js"></script>
+    <script src="https://login.petra.ac.id/js/owl.js"></script>
+    <script src="https://login.petra.ac.id/js/wow.js"></script>
+    <script src="https://login.petra.ac.id/js/script.js"></script>
+    <script src="https://login.petra.ac.id/js/lottie-player.js"></script>
+    <script src="https://login.petra.ac.id/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
+    <script type="text/javascript">
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 5000
         });
-    });
     </script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('form').submit(function(e) {
+                $('.loading-screen').show();
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            @if ($errors->any())
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Login',
+                    text: 'The email or password you entered is incorrect. Please try again.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    },
+                    buttonsStyling: false
+                });
+            @endif
+        });
+    </script>
+
 </body>
 
 </html>

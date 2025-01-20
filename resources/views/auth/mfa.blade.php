@@ -55,56 +55,20 @@
                         <div class="col-sm-6">
                             <div class="login-wrapper">
                                 <div class="tab-content mt-4">
-                                    <h1 class="login-title">Doesn't have an account? Join us now!</h1>
-                                    <p style="margin-top: 10px; margin-bottom: 10px;">Fill in the form below to create your account.</p>
+                                    <h1 class="login-title">Input OTP Code</h1>
+                                    <p style="margin-top: 10px; margin-bottom: 10px;">Open your authenticator app, Email or SMS and enter the 6-digit code to log in.</p>
 
                                     <form action="{{ route('register') }}" method="POST">
                                         @csrf
 
-                                        <!-- Name -->
+                                        <!-- Code -->
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" id="name" name="name" placeholder="Full Name" value="{{ old('name') }}" required>
+                                            <input type="text" class="form-control" id="name" name="name" placeholder="Input Code" value="{{ old('name') }}" required>
                                             @error('name')
                                                 <small class="text-danger">{{ $message }}</small>
                                             @enderror
                                         </div>
 
-                                        <!-- Email -->
-                                        <div class="input-group mb-3">
-                                            <input type="email" class="form-control" id="email" name="email" placeholder="Email Address" value="{{ old('email') }}" required>
-                                            @error('email')
-                                                <small class="text-danger">{{ $message }}</small>
-                                            @enderror
-                                        </div>
-
-                                        <!-- Password -->
-                                        <div class="input-group mb-3">
-                                            <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
-                                            @error('password')
-                                                <small class="text-danger">{{ $message }}</small>
-                                            @enderror
-                                        </div>
-
-                                        <!-- Confirm Password -->
-                                        <div class="input-group mb-3">
-                                            <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="Confirm Password" required>
-                                            @error('password_confirmation')
-                                                <small class="text-danger">{{ $message }}</small>
-                                            @enderror
-                                        </div>
-
-                                        <!-- Register Button -->
-                                        <div class="form-group">
-                                            <button type="submit" class="btn btn-lg login-btn">Register</button>
-                                        </div>
-                                    </form>
-
-                                    <div>
-                                        <p class="login-wrapper-footer-text" style="margin-top: 20px; margin-bottom: 10px; display: block;">
-                                            Already have an account?
-                                            <a href="{{ route('login.public') }}" class="text-reset"><strong>Login here</strong></a>
-                                        </p>
-                                    </div>
                                 </div>
                             </div>
                         </div>

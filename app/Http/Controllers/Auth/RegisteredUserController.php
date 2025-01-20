@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class RegisteredUserController extends Controller
 {
@@ -39,6 +41,8 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'email_verified_at' => Carbon::now(), // Automatically assign the current timestamp
+        'remember_token' => Str::random(60),  // Generate a random token
         ]);
 
         event(new Registered($user));

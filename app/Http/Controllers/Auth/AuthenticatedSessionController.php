@@ -18,6 +18,14 @@ class AuthenticatedSessionController extends Controller
     {
         return view('auth.login');
     }
+    public function createPublic(): View
+    {
+        return view('auth.login-public');
+    }
+
+
+
+
 
     /**
      * Handle an incoming authentication request.
@@ -28,8 +36,21 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        if($request->user()->usertype === 'staff'){
+            return redirect('staff/dashboard');
+        }elseif($request->user()->usertype === 'student'){
+            return redirect('student/dashboard');
+        }
+
+            return redirect()->intended(route('dashboard'));
+
+
+
     }
+
+
+
+
 
     /**
      * Destroy an authenticated session.

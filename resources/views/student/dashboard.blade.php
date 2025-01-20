@@ -68,7 +68,7 @@
 
         <!-- Navbar -->
         <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-            <a href="{{ route('login') }}" class="ml-2">
+            <a href="https://my.petra.ac.id" class="ml-2">
                 <img src="https://my.petra.ac.id/img/logo.png" alt="Gate" style="width: 153px;">
             </a>
             <ul class="order-1 order-md-3 navbar-nav navbar-no-expand ml-auto">

@@ -6,6 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
     <title>Auth | Login</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <link href="https://login.petra.ac.id/css/bootstrap.css" rel="stylesheet">
     <link href="https://login.petra.ac.id/css/style.css" rel="stylesheet">
@@ -186,6 +187,9 @@
                 display: none;
             }
         }
+        .mb-3 {
+    margin-bottom: 0px !important;
+}
     </style>
     <!--[if lt IE 9
         ]>
@@ -218,7 +222,7 @@
                 <div class="nav-outer">
                     <div class="logo-box" style="margin-right: auto;">
                         <div class="logo">
-                            <a href="https://login.petra.ac.id">
+                            <a href="{{ route('login') }}">
                                 <img src="https://login.petra.ac.id/images/logo-ukp.png" alt="Logo">
                             </a>
                         </div>
@@ -243,16 +247,20 @@
 
                                     <!-- Email and Domain -->
                                     <div class="input-group mb-3">
-                                        <!-- Email -->
-                                        <input type="text" class="form-control" id="username" name="username"
-                                            placeholder="Email" value="{{ old('username') }}" required autofocus>
+                                        <!-- Email Local Part -->
+                                        <input type="text" class="form-control" id="emailLocalPart" name="emailLocalPart"
+                                            placeholder="Username" value="{{ old('emailLocalPart') }}" required>
 
-                                        <!-- Domain -->
-                                        <select class="form-control" id="domain" name="domain" required>
-                                            <option value="john.petra.ac.id">@john.petra.ac.id</option>
-                                            <option value="peter.petra.ac.id">@peter.petra.ac.id</option>
+                                        <!-- Domain Selection -->
+                                        <select class="form-control" id="emailDomain" name="emailDomain" required>
+                                            <option value="@john.petra.ac.id">@john.petra.ac.id</option>
+                                            <option value="@peter.petra.ac.id">@peter.petra.ac.id</option>
                                         </select>
                                     </div>
+
+                                    <!-- Hidden Email Field -->
+                                    <input type="email" class="form-control" id="email" name="email"
+                                        placeholder="Email (e.g., user@domain.com)" value="{{ old('email') }}" required style="display: none;">
 
                                     <!-- Password -->
                                     <div class="input-group mb-3">
@@ -282,10 +290,13 @@
                                         Forgot your password? Reset your password
                                         <a href="{{ route('password.request') }}"
                                             class="text-reset"><strong>here</strong></a>.
-                                        <br>
-                                        You are not a student or staff? Click
-                                        <a href="{{ route('public.login') }}" target="_blank"
-                                            class="text-reset"><strong>here</strong></a>
+
+                                            <br />
+                                            <!-- Student or staff login -->
+                                            You are not a student or staff, click
+                                            <a href="{{ route('login.public') }}"
+                                                class="text-reset"><strong>here</strong></a>.
+
                                     </p>
                                 </div>
 
@@ -335,6 +346,44 @@
             });
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const emailLocalPart = document.getElementById("emailLocalPart");
+            const emailDomain = document.getElementById("emailDomain");
+            const email = document.getElementById("email");
+
+            function updateEmail() {
+                email.value = emailLocalPart.value + emailDomain.value;
+            }
+
+            // Update email field when input or selection changes
+            emailLocalPart.addEventListener("input", updateEmail);
+            emailDomain.addEventListener("change", updateEmail);
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            @if ($errors->any())
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Login',
+                    text: 'The email or password you entered is incorrect. Please try again.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    },
+                    buttonsStyling: false
+                });
+            @endif
+        });
+    </script>
+
+
+
+
+
+
 </body>
 
 </html>
