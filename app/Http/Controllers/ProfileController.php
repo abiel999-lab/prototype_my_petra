@@ -14,47 +14,58 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): View
+    public function studentprofile(Request $request): View
     {
-        return view('profile.edit', [
+        return view('profile.student.setting', [
             'user' => $request->user(),
         ]);
     }
-
-    /**
-     * Update the user's profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function staffprofile(Request $request): View
     {
-        $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
-    }
-
-    /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
+        return view('profile.staff.setting', [
+            'user' => $request->user(),
         ]);
-
-        $user = $request->user();
-
-        Auth::logout();
-
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
+    }
+    public function profile(Request $request): View
+    {
+        return view('profile.setting', [
+            'user' => $request->user(),
+        ]);
+    }
+    public function studenteditprofile(Request $request): View
+    {
+        return view('profile.student.profile', [
+            'user' => $request->user(),
+        ]);
+    }
+    public function staffeditprofile(Request $request): View
+    {
+        return view('profile.staff.profile', [
+            'user' => $request->user(),
+        ]);
+    }
+    public function editprofile(Request $request): View
+    {
+        return view('profile.profile', [
+            'user' => $request->user(),
+        ]);
+    }
+    public function studentsession(Request $request): View
+    {
+        return view('profile.student.session', [
+            'user' => $request->user(),
+        ]);
+    }
+    public function staffsession(Request $request): View
+    {
+        return view('profile.staff.session', [
+            'user' => $request->user(),
+        ]);
+    }
+    public function editsession(Request $request): View
+    {
+        return view('profile.session', [
+            'user' => $request->user(),
+        ]);
     }
 }

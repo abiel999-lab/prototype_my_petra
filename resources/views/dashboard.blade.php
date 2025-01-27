@@ -84,7 +84,7 @@
                                 </div>
                                 <h3 class="profile-username text-center">
                                     {{ strtoupper(auth()->user()->name) }}
-                                    <a href="https://my.petra.ac.id/setting" class="setting-profile"><i class="fas fa-pencil-alt"></i></a>
+                                    <a href="{{ route('profile.setting') }}" class="setting-profile"><i class="fas fa-pencil-alt"></i></a>
                                 </h3>
                                 <p class="text-muted text-center">{{ auth()->user()->email }}</p>
                             </div>
@@ -131,23 +131,6 @@
                 </div>
 
                 <!-- Add similar sections dynamically here if needed -->
-                 <!-- Akademik Section -->
-                 <div class="mb-3 container" style="text-align: left;">
-                    <h1 class="col-lg-5" style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
-                        Akademik
-                    </h1>
-                </div>
-                <div class="container">
-                    <a class="thing" href="https://bap.petra.ac.id">
-                        <i class="fas fa-chalkboard-teacher"></i> BAP
-                    </a>
-                    <a class="thing" href="https://leap.petra.ac.id">
-                        <i class=""></i> LEAP-MBKM
-                    </a>
-                    <a class="thing" href="https://service-learning.petra.ac.id">
-                        <i class=""></i> Service-Learning
-                    </a>
-                </div>
 
                 <!-- Lainnya Section -->
                 <div class="mb-3 container" style="text-align: left;">
@@ -156,38 +139,23 @@
                     </h1>
                 </div>
                 <div class="container">
-                    <a class="thing" href="https://form.petra.ac.id">
-                        <i class="fas fa-question-circle"></i> Petra Form
-                    </a>
                     <a class="thing" href="https://events.petra.ac.id">
                         <i class=""></i> Event Website
-                    </a>
-                    <a class="thing" href="http://lostnfound.petra.ac.id">
-                        <i class="fas fa-person-circle-plus"></i> LOST &amp; FOUND
                     </a>
                     <a class="thing" href="https://konseling.petra.ac.id">
                         <i class="fas fa-user-friends"></i> Konseling
                     </a>
                 </div>
 
-                <!-- Apps Section -->
+                <!-- Akademik Section -->
                 <div class="mb-3 container" style="text-align: left;">
                     <h1 class="col-lg-5" style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
-                        Apps
+                        Akademik
                     </h1>
                 </div>
                 <div class="container">
-                    <a class="thing" href="https://sim.petra.ac.id">
-                        <i class="fas fa-cubes"></i> SIM UK Petra
-                    </a>
-                    <a class="thing" href="https://sim-eltc.petra.ac.id">
-                        <i class=""></i> SIM-ELTC
-                    </a>
-                    <a class="thing" href="https://tnc.petra.ac.id">
-                        <i class=""></i> Term &amp; Conditions
-                    </a>
-                    <a class="thing" title="" href="https://survei-alumni.petra.ac.id">
-                        <i class=""></i> Survei Alumni
+                    <a class="thing" href="https://leap.petra.ac.id">
+                        <i class=""></i> LEAP-MBKM
                     </a>
                 </div>
 
@@ -206,17 +174,18 @@
                     </a>
                 </div>
 
-                <!-- Mutu Section -->
+                <!-- Apps Section -->
                 <div class="mb-3 container" style="text-align: left;">
                     <h1 class="col-lg-5" style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
-                        Mutu
+                        Apps
                     </h1>
                 </div>
                 <div class="container">
-                    <a class="thing" href="https://survey.petra.ac.id">
-                        <i class="fa fa-question"></i> Survey
+                    <a class="thing" href="https://sim.petra.ac.id">
+                        <i class="fas fa-cubes"></i> HSEP
                     </a>
                 </div>
+
             </div>
         </div>
 

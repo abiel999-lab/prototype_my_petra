@@ -18,17 +18,25 @@ Route::get('/dashboard', function () {
 
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/setting', [ProfileController::class, 'profile'])->name('profile.setting');
+    Route::get('student/setting', [ProfileController::class, 'studentprofile'])->name('profile.student.setting');
+    Route::get('staff/setting', [ProfileController::class, 'staffprofile'])->name('profile.staff.setting');
+    Route::get('/setting/profile', [ProfileController::class, 'editprofile'])->name('profile.profile');
+    Route::get('student/setting/profile', [ProfileController::class, 'studenteditprofile'])->name('profile.student.profile');
+    Route::get('staff/setting/profile', [ProfileController::class, 'staffeditprofile'])->name('profile.staff.profile');
+    Route::get('/setting/session', [ProfileController::class, 'editprofile'])->name('profile.session');
+    Route::get('student/setting/session', [ProfileController::class, 'studentsession'])->name('profile.student.session');
+    Route::get('staff/setting/session', [ProfileController::class, 'staffsession'])->name('profile.staff.session');
 });
+
 
 require __DIR__ . '/auth.php';
 
-route::get('staff/dashboard',[HomeController::class,'indexStaff']);
-route::get('student/dashboard',[HomeController::class,'indexStudent']);
+route::get('staff/dashboard',[HomeController::class,'indexStaff'])->name('staff.dashboard');
+route::get('student/dashboard',[HomeController::class,'indexStudent'])->name('student.dashboard');
 Route::get('/login/public', [AuthenticatedSessionController::class, 'createPublic'])->name('login.public');
 Route::post('/check-email-password', [AuthController::class, 'checkEmailAndPassword'])->name('checkEmailAndPassword');
+
 
 
 

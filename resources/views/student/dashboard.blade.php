@@ -84,7 +84,7 @@
                                 </div>
                                 <h3 class="profile-username text-center">
                                     {{ strtoupper(auth()->user()->name) }}
-                                    <a href="https://my.petra.ac.id/setting" class="setting-profile"><i class="fas fa-pencil-alt"></i></a>
+                                    <a href="{{ route('profile.student.setting') }}" class="setting-profile"><i class="fas fa-pencil-alt"></i></a>
                                 </h3>
                                 <p class="text-muted text-center">{{ auth()->user()->email }}</p>
                             </div>

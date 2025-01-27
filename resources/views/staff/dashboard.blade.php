@@ -84,7 +84,7 @@
                                 </div>
                                 <h3 class="profile-username text-center">
                                     {{ strtoupper(auth()->user()->name) }}
-                                    <a href="https://my.petra.ac.id/setting" class="setting-profile"><i class="fas fa-pencil-alt"></i></a>
+                                    <a href="{{ route('profile.staff.setting') }}" class="setting-profile"><i class="fas fa-pencil-alt"></i></a>
                                 </h3>
                                 <p class="text-muted text-center">{{ auth()->user()->email }}</p>
                             </div>
@@ -142,10 +142,16 @@
                         <i class="fas fa-chalkboard-teacher"></i> BAP
                     </a>
                     <a class="thing" href="https://leap.petra.ac.id">
-                        <i class=""></i> LEAP-MBKM
+                        <i class=""></i> BIMBINGAN MAHASISWA
                     </a>
                     <a class="thing" href="https://service-learning.petra.ac.id">
-                        <i class=""></i> Service-Learning
+                        <i class=""></i> LEAP-MBKM
+                    </a>
+                    <a class="thing" href="https://leap.petra.ac.id">
+                        <i class=""></i> OBE
+                    </a>
+                    <a class="thing" href="https://service-learning.petra.ac.id">
+                        <i class=""></i> SERVICE LEARNING
                     </a>
                 </div>
 
@@ -169,6 +175,26 @@
                         <i class="fas fa-user-friends"></i> Konseling
                     </a>
                 </div>
+                <!-- Personalia Section -->
+                <div class="mb-3 container" style="text-align: left;">
+                    <h1 class="col-lg-5" style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
+                        PERSONALIA &amp; P2M
+                    </h1>
+                </div>
+                <div class="container">
+                    <a class="thing" href="https://sim.petra.ac.id">
+                        <i class="fas fa-cubes"></i> SPMS
+                    </a>
+                    <a class="thing" href="https://sim-eltc.petra.ac.id">
+                        <i class=""></i> ABDIMAS
+                    </a>
+                    <a class="thing" href="https://tnc.petra.ac.id">
+                        <i class=""></i> GRANT
+                    </a>
+                    <a class="thing" title="" href="https://survei-alumni.petra.ac.id">
+                        <i class=""></i> PENUGASAN
+                    </a>
+                </div>
 
                 <!-- Apps Section -->
                 <div class="mb-3 container" style="text-align: left;">
@@ -190,6 +216,19 @@
                         <i class=""></i> Survei Alumni
                     </a>
                 </div>
+
+                <!-- Pelaporan Section -->
+                <div class="mb-3 container" style="text-align: left;">
+                    <h1 class="col-lg-5" style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
+                        Pelaporan
+                    </h1>
+                </div>
+                <div class="container">
+                    <a class="thing" href="https://sim.petra.ac.id">
+                        <i class="fas fa-cubes"></i> SISTER
+                    </a>
+                </div>
+
 
                 <!-- Link Section -->
                 <div class="mb-3 container" style="text-align: left;">
@@ -215,6 +254,9 @@
                 <div class="container">
                     <a class="thing" href="https://survey.petra.ac.id">
                         <i class="fa fa-question"></i> Survey
+                    </a>
+                    <a class="thing" href="https://sim-eltc.petra.ac.id">
+                        <i class=""></i> AKREDITASI
                     </a>
                 </div>
             </div>

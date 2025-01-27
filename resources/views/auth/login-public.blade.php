@@ -198,6 +198,49 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const loginForm = document.querySelector('form[action="{{ route('login') }}"]');
+            const loadingScreen = document.querySelector('.loading-screen');
+
+            if (loginForm) {
+                loginForm.addEventListener('submit', function (e) {
+                    const emailInput = document.getElementById('email');
+
+                    if (emailInput && loadingScreen) {
+                        const emailValue = emailInput.value.trim();
+                        const forbiddenDomains = ["@john.petra.ac.id", "@peter.petra.ac.id"];
+
+                        // Always show the loading screen first
+                        loadingScreen.style.display = 'block';
+
+                        const isForbidden = forbiddenDomains.some(domain => emailValue.endsWith(domain));
+
+                        if (isForbidden) {
+                            e.preventDefault(); // Prevent the form submission
+
+                            // Delay the popup slightly to ensure loading screen is shown first
+                            setTimeout(() => {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Invalid Email',
+                                    text: `Emails from the domains \"@john.petra.ac.id\" and \"@peter.petra.ac.id\" are not allowed.`,
+                                    confirmButtonText: 'OK',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary'
+                                    },
+                                    buttonsStyling: false
+                                }).then(() => {
+                                    // Hide the loading screen after popup is dismissed
+                                    loadingScreen.style.display = 'none';
+                                });
+                            }, 100); // Short delay to ensure loading screen is visible
+                        }
+                    } else {
+                        console.error("Email input or loading screen not found.");
+                    }
+                });
+            }
+
+            // Show SweetAlert on server-side errors
             @if ($errors->any())
                 Swal.fire({
                     icon: 'error',
@@ -208,8 +251,18 @@
                         confirmButton: 'btn btn-primary'
                     },
                     buttonsStyling: false
+                }).then(() => {
+                    // Ensure loading screen is hidden after SweetAlert
+                    if (loadingScreen) {
+                        loadingScreen.style.display = 'none';
+                    }
                 });
             @endif
+
+            // Ensure loading screen is hidden on page load
+            if (loadingScreen) {
+                loadingScreen.style.display = 'none';
+            }
         });
     </script>
 
