@@ -199,44 +199,11 @@
 
                     <div class="tab-pane" id="tab_password">
         <div class="form-group row">
-        <div class="col-sm-12">
-            <form action="{{ route('password.email') }}" method="POST">
-                @csrf
+            <div class="col-sm-12">
+
+                    <a href="{{ route('logout') }}" action="{{ route('logout') }}" type="submit" class="btn btn-primary" style="margin-top: 15px;">Klik disini untuk ganti Password</a>
 
 
-                <div class="input-group mb-3">
-
-                    <!-- Email -->
-                    <input type="text" class="form-control" id="username" name="username"
-                        placeholder="{{ auth()->user()->email }}" value="{{ auth()->user()->email }}" required>
-
-                </div>
-
-                <!-- Current Password -->
-                <div class="form-group">
-
-                    <input type="password"  name="current_password" id="current_password" class="form-control" placeholder="{{ auth()->user()->password }}" value="{{ auth()->user()->password }}" required>
-                </div>
-
-                <!-- New Password -->
-                <div class="form-group">
-
-                    <input type="password" name="new_password" id="new_password" class="form-control" placeholder="Enter your new password" required>
-                </div>
-
-                <!-- Confirm New Password -->
-                <div class="form-group">
-
-                    <input type="password" name="confirm_new_password" id="confirm_new_password" class="form-control" placeholder="Confirm your new password" required>
-                </div>
-
-
-
-                <!-- Submit Button -->
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Change Password</button>
-                </div>
-            </form>
         </div>
     </div>
     </div>

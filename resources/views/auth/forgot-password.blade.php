@@ -62,41 +62,25 @@
                                     <p style="margin-top: 10px; margin-bottom: 10px;">Please tell us your email.</p>
 
                                     <!-- Laravel CSRF Form -->
-                                    <form action="{{ route('password.email') }}" method="POST">
+                                    <div class="mb-4 text-sm text-gray-600">
+                                        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+                                    </div>
+
+                                    <!-- Session Status -->
+                                    <x-auth-session-status class="mb-4" :status="session('status')" />
+
+                                    <form method="POST" action="{{ route('password.email') }}">
                                         @csrf
 
-
-                                        <div class="input-group mb-3">
-
-                                            <!-- Email -->
-                                            <input type="text" class="form-control" id="username" name="username"
-                                                placeholder="Email" value="{{ old('username') }}" required autofocus>
-
+                                        <!-- Email Address -->
+                                        <div>
+                                            <x-input-label for="email" :value="__('Email')" />
+                                            <x-text-input id="email" class="form-control" type="email" name="email" :value="old('email')" required autofocus />
+                                            <x-input-error :messages="$errors->get('email')" class="mt-2" />
                                         </div>
 
-                                        <!-- Current Password -->
                                         <div class="form-group">
-
-                                            <input type="password" name="current_password" id="current_password" class="form-control" placeholder="Enter your current password" required>
-                                        </div>
-
-                                        <!-- New Password -->
-                                        <div class="form-group">
-
-                                            <input type="password" name="new_password" id="new_password" class="form-control" placeholder="Enter your new password" required>
-                                        </div>
-
-                                        <!-- Confirm New Password -->
-                                        <div class="form-group">
-
-                                            <input type="password" name="confirm_new_password" id="confirm_new_password" class="form-control" placeholder="Confirm your new password" required>
-                                        </div>
-
-
-
-                                        <!-- Submit Button -->
-                                        <div class="form-group">
-                                            <button type="submit" class="btn btn-lg login-btn">Change Password</button>
+                                            <button type="submit" class="btn btn-lg login-btn"> {{ __('Email Password Reset Link') }}</button>
                                         </div>
                                     </form>
 
