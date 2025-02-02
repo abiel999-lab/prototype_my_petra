@@ -42,3 +42,6 @@ Route::post('/check-email-password', [AuthController::class, 'checkEmailAndPassw
 
 
 
+
+
+
