@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,10 +13,7 @@
     <!-- overlayScrollbars -->
     <link rel="stylesheet" href="https://my.petra.ac.id/adminlte/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
     <link rel="stylesheet" href="https://my.petra.ac.id/adminlte/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
-    <!-- DataTables -->
-<link rel="stylesheet" href="https://my.petra.ac.id/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
-<link rel="stylesheet" href="https://my.petra.ac.id/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
-    <!-- Theme style -->
+        <!-- Theme style -->
     <link rel="stylesheet" href="https://my.petra.ac.id/adminlte/dist/css/adminlte.min.css">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -70,7 +68,7 @@
         <!-- Sidebar user panel (optional) -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
             <div class="image">
-                <img src="https://my.petra.ac.id/img/user.png" class="img-circle elevation-2" alt="ABIEL NATHANAEL GEORGIUS PASARIBU">
+                <img src="https://my.petra.ac.id/img/user.png" class="img-circle elevation-2">
             </div>
             <div class="info">
                 <a href="{{ route('profile.staff.setting') }}" class="d-block">{{ strtoupper(auth()->user()->name) }}</a>
@@ -94,7 +92,7 @@
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
 
                 <li class="nav-item">
-                    <a href="{{ route('profile.staff.profile') }}" class="nav-link ">
+                    <a href="{{ route('profile.admin.profile') }}" class="nav-link  active ">
                         <i class="nav-icon fas fa-user"></i>
                         <p>
                             Profile
@@ -105,7 +103,7 @@
 
 
                 <li class="nav-item">
-                    <a href="{{ route('profile.staff.session') }}" class="nav-link  active ">
+                    <a href="{{ route('profile.admin.session') }}" class="nav-link ">
                         <i class="nav-icon fas fa-stopwatch"></i>
                         <p>
                             Session
@@ -113,10 +111,18 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('profile.staff.mfa') }}" class="nav-link ">
+                    <a href="{{ route('profile.admin.mfa') }}" class="nav-link ">
                                         <i class="nav-icon fas fa-shield-alt"></i>
                         <p>
                             MFA
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('profile.admin.manageuser') }}" class="nav-link">
+                                        <i class="nav-icon far fa-address-card"></i>
+                        <p>
+                            Manage Users
                         </p>
                     </a>
                 </li>
@@ -134,12 +140,13 @@
                 <div class="container-fluid">
                     <div class="row mb-2">
     <div class="col-sm-6">
-        <h1 class="m-0">Session</h1>
+        <h1 class="m-0">Profile</h1>
     </div>
     <!-- /.col -->
     <div class="col-sm-6">
         <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item active">Session</li>
+            <li class="breadcrumb-item">Setting</li>
+            <li class="breadcrumb-item active">Profile</li>
         </ol>
     </div>
     <!-- /.col -->
@@ -153,54 +160,78 @@
             <!-- Main content -->
             <section class="content">
                 <div class="container-fluid">
-                    <div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">List Session</h3>
-                <div class="card-tools">
-                    <button class="btn btn-danger" data-toggle="tooltip" title="Revoke All" onclick="confirmDeleteSessionAll()">Revoke All <i class="fa fa-trash"></i></a>
-                </div>
-            </div>
-            <!-- /.card-header -->
-            <div class="card-body">
+                    <!-- Small boxes (Stat box) -->
+<div class="row">
+    <div class="col-md-3">
 
-                <table class="datatable table table-bordered table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>IP</th>
-                            <th>Device</th>
-                            <th>Login At</th>
-                            <th>Expired At</th>
-                            <th class="text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                                                <tr>
-                            <td>1</td>
-                            <td>203.189.120.68</td>
-                            <td>Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36</td>
-                            <td>27 Jan 2025 21:29</td>
-                            <td>27 Jan 2025 23:29</td>
-                            <td class="text-center">
-                                <button class="btn btn-danger btn-sm" data-toggle="tooltip" title="Revoke" onclick="confirmDeleteSession(`233243`, `203.189.120.68`, `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36`)"><i class="fa fa-trash"></i></a>
-                            </td>
-                        </tr>
-                                            </tbody>
-                </table>
+        <div class="card card-primary card-outline">
+            <div class="card-body box-profile">
+                <div class="text-center">
+                    <img class="profile-user-img img-fluid img-circle" src="https://my.petra.ac.id/img/user.png" alt="User profile picture">
+                </div>
+                <h3 class="profile-username text-center">{{ strtoupper(auth()->user()->name) }}</h3>
+                <p class="text-muted text-center">{{ strtoupper(auth()->user()->usertype) }}</p>
+                <ul class="list-group list-group-unbordered mb-3">
+                    <li class="list-group-item">
+                        <b>Email</b> <a class="float-right text-muted">{{ auth()->user()->email }}</a>
+                    </li>
+                </ul>
             </div>
-            <!-- /.card-body -->
+
         </div>
-        <!-- /.card -->
+
     </div>
+
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header p-2">
+                <ul class="nav nav-pills">
+                    <li class="nav-item"><a class="nav-link" href="#tab_account" data-toggle="tab">Account</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#tab_password" data-toggle="tab">Password</a></li>
+                                    </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+
+                    <div class="tab-pane" id="tab_account">
+	<form class="form-horizontal" action="" method="POST">
+    	<input type="hidden" name="_token" value="">
+        <div class="form-group row">
+            <label for="nama" class="col-sm-2 col-form-label">Nama</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control " id="nama" name="nama" placeholder="Nama" value="{{ strtoupper(auth()->user()->name) }}" required  disabled >
+                            </div>
+        </div>
+
+        <div class="form-group row">
+            <label for="email" class="col-sm-2 col-form-label">Email</label>
+            <div class="col-sm-10">
+                <input type="email" class="form-control " id="email" name="email" placeholder="Email" value="{{ auth()->user()->email }}" required  disabled >
+                            </div>
+        </div>
+
+            </form>
 </div>
 
-<form action="https://my.petra.ac.id/setting/session/revoke/:id" method="POST" id="delete-session">
-    <input type="hidden" name="_method" value="DELETE">    <input type="hidden" name="_token" value="iNaLLKim1OL6te1P1U2dE23M9zPRdHMKjM2UHWIN"></form>
+                    <div class="tab-pane" id="tab_password">
+        <div class="form-group row">
+            <div class="col-sm-12">
 
-<form action="https://my.petra.ac.id/setting/session/revoke/all" method="POST" id="delete-session-all">
-    <input type="hidden" name="_method" value="DELETE">    <input type="hidden" name="_token" value="iNaLLKim1OL6te1P1U2dE23M9zPRdHMKjM2UHWIN"></form>
+                    <a href="{{ route('logout') }}" action="{{ route('logout') }}" type="submit" class="btn btn-primary" style="margin-top: 15px;">Klik disini untuk ganti Password</a>
+
+
+        </div>
+    </div>
+    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
                 </div>
                 <!-- /.container-fluid -->
             </section>
@@ -263,54 +294,17 @@
             $('[data-toggle="tooltip"]').tooltip()
         })
     </script>
-    <!-- DataTables -->
-<script src="https://my.petra.ac.id/adminlte/plugins/datatables/jquery.dataTables.min.js"></script>
-<script src="https://my.petra.ac.id/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
-<script src="https://my.petra.ac.id/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
-<script src="https://my.petra.ac.id/adminlte/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
-<script type="text/javascript">
-    $(function() {
-        $(".datatable").DataTable({
-            "responsive": true,
-            "autoWidth": false,
-            "order": [],
-        });
-    });
-
-    function confirmDeleteSession(id, ip, user_agent) {
-        Swal.fire({
-            title: 'Konfirmasi Revoke',
-            text: `Revoke Session ${ip} - ${user_agent}?`,
-            type: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Delete'
-        }).then((result) => {
-            if (result.value) {
-                let url = $('#delete-session').attr('action');
-                url = url.replace(':id', id);
-                $('#delete-session').attr('action', url);
-                $('#delete-session').submit();
-            }
-        });
-    }
-
-    function confirmDeleteSessionAll() {
-        Swal.fire({
-            title: 'Konfirmasi Revoke All',
-            text: `Revoke semua Session?`,
-            type: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Delete'
-        }).then((result) => {
-            if (result.value) {
-                $('#delete-session-all').submit();
-            }
-        });
-    }
+    <script type="text/javascript">
+	$(function() {
+		var tab = ``;
+		if(tab) {
+			$(`a[href="#tab_${tab}"]`).addClass('active');
+			$(`#tab_${tab}`).addClass('active');
+		} else {
+			$(`a[href="#tab_account"]`).addClass('active');
+			$(`#tab_account`).addClass('active');
+		}
+	});
 </script>
 </body>
 </html>

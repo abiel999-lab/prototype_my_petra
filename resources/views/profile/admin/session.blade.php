@@ -34,7 +34,7 @@
             <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
         </li>
         <li class="nav-item d-none d-sm-inline-block">
-            <a href="{{ route('staff.dashboard') }}" class="nav-link">Gate</a>
+            <a href="{{ route('admin.dashboard') }}" class="nav-link">Gate</a>
         </li>
     </ul>
 
@@ -46,7 +46,7 @@
                 <i class="fas fa-caret-down"></i>
             </a>
             <div class="dropdown-menu dropdown-menu-right">
-                <a href="{{ route('profile.staff.setting') }}" class="dropdown-item">Setting</a>
+                <a href="{{ route('profile.admin.setting') }}" class="dropdown-item">Setting</a>
                 <a href="{{ route('logout') }}" class="dropdown-item" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                     @csrf
@@ -60,7 +60,7 @@
         <!-- Main Sidebar Container -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-    <a href="{{ route('staff.dashboard') }}" class="brand-link">
+    <a href="{{ route('admin.dashboard') }}" class="brand-link">
         <img src="https://my.petra.ac.id/img/logo.png" alt="Gate" class="brand-image img-circle elevation-3" style="opacity: .8">
         <span class="brand-text font-weight-light">Gate</span>
     </a>
@@ -73,7 +73,7 @@
                 <img src="https://my.petra.ac.id/img/user.png" class="img-circle elevation-2" alt="ABIEL NATHANAEL GEORGIUS PASARIBU">
             </div>
             <div class="info">
-                <a href="{{ route('profile.staff.setting') }}" class="d-block">{{ strtoupper(auth()->user()->name) }}</a>
+                <a href="{{ route('profile.admin.setting') }}" class="d-block">{{ strtoupper(auth()->user()->name) }}</a>
             </div>
         </div>
 
@@ -94,7 +94,7 @@
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
 
                 <li class="nav-item">
-                    <a href="{{ route('profile.staff.profile') }}" class="nav-link ">
+                    <a href="{{ route('profile.admin.profile') }}" class="nav-link ">
                         <i class="nav-icon fas fa-user"></i>
                         <p>
                             Profile
@@ -105,7 +105,7 @@
 
 
                 <li class="nav-item">
-                    <a href="{{ route('profile.staff.session') }}" class="nav-link  active ">
+                    <a href="{{ route('profile.admin.session') }}" class="nav-link  active ">
                         <i class="nav-icon fas fa-stopwatch"></i>
                         <p>
                             Session
@@ -113,10 +113,18 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('profile.staff.mfa') }}" class="nav-link ">
+                    <a href="{{ route('profile.admin.mfa') }}" class="nav-link ">
                                         <i class="nav-icon fas fa-shield-alt"></i>
                         <p>
                             MFA
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('profile.admin.manageuser') }}" class="nav-link">
+                                        <i class="nav-icon far fa-address-card"></i>
+                        <p>
+                            Manage Users
                         </p>
                     </a>
                 </li>

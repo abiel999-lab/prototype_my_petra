@@ -21,6 +21,8 @@ class UserSeeder extends Seeder
         'password' => bcrypt('23/04/2003'),
         'email_verified_at' => now(),
         'remember_token' => Str::random(60),
+        'mfa_enabled' => false,
+        'mfa_method' => 'email'
     ],);
     User::create([
         'name' => 'James Efandaru',
@@ -29,6 +31,8 @@ class UserSeeder extends Seeder
         'password' => bcrypt('23/04/2003'),
         'email_verified_at' => now(),
         'remember_token' => Str::random(60),
+        'mfa_enabled' => false,
+        'mfa_method' => 'email'
     ],);
     User::create([
         'name' => 'Wilson Lim',
@@ -37,6 +41,18 @@ class UserSeeder extends Seeder
         'password' => bcrypt('23/04/2003'),
         'email_verified_at' => now(),
         'remember_token' => Str::random(60),
+        'mfa_enabled' => false,
+        'mfa_method' => 'email'
+    ],);
+    User::create([
+        'name' => 'Peter Jackson',
+        'email' => 'peter@petra.ac.id',
+        'usertype' => 'admin',
+        'password' => bcrypt('23/04/2003'),
+        'email_verified_at' => now(),
+        'remember_token' => Str::random(60),
+        'mfa_enabled' => false,
+        'mfa_method' => 'email'
     ],);
 }
 }

@@ -78,7 +78,7 @@
 
                                         <!-- Password -->
                                         <div class="mt-4">
-                                            <x-input-label for="password" :value="__('Password')" />
+                                            <x-input-label for="password" :value="__('New Password')" />
                                             <x-text-input id="password" class="form-control" type="password" name="password" required
                                                 autocomplete="new-password" />
                                         </div>

@@ -232,13 +232,13 @@
 
             <div class="row">
                 <div class="col-sm-4 px-0 d-none d-sm-block">
-                    <div class="login-img"></div>
+                    <div class="login-img-company"></div>
                 </div>
                 <div class="col-sm-8 login-section-wrapper">
                     <div class="row d-flex justify-content-center flex-nowrap">
                         <div class="col-sm-6">
                             <div class="login-wrapper">
-                                <h1 class="login-title">Welcome Student and Staff</h1>
+                                <h1 class="login-title">Welcome Admin</h1>
                                 <p style="margin-top: 10px;">Log in to access our full features.</p>
 
                                 <!-- Login Form -->
@@ -298,9 +298,9 @@
                                             <a href="{{ route('login.public') }}"
                                                 class="text-reset"><strong>here</strong></a>.
                                                 <br />
-                                            <!-- Admin login -->
-                                            Are you an admin, click
-                                            <a href="{{ route('login.admin') }}"
+                                            <!-- Student or staff login -->
+                                            You are not an admin, click
+                                            <a href="{{ route('login') }}"
                                                 class="text-reset"><strong>here</strong></a>.
 
                                     </p>
@@ -384,6 +384,7 @@
             @endif
         });
     </script>
+
 
 
 

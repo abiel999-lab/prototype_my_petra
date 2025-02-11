@@ -58,16 +58,25 @@
                                     <h1 class="login-title">Input OTP Code</h1>
                                     <p style="margin-top: 10px; margin-bottom: 10px;">Open your authenticator app, Email or SMS and enter the 6-digit code to log in.</p>
 
-                                    <form action="{{ route('register') }}" method="POST">
+                                    <form action="{{ route('mfa-challenge.verify') }}" method="POST">
                                         @csrf
-
-                                        <!-- Code -->
                                         <div class="input-group mb-3">
-                                            <input type="text" class="form-control" id="name" name="name" placeholder="Input Code" value="{{ old('name') }}" required>
-                                            @error('name')
-                                                <small class="text-danger">{{ $message }}</small>
-                                            @enderror
+                                        <input type="text" class="form-control" name="code" placeholder="OTP code" id="code" required>
+                                        <div class="form-group">
+                                            <button type="submit" class="btn btn-lg login-btn">Verify</button>
+
                                         </div>
+
+                                    </form>
+                                    @if ($errors->any())
+                                    <div>
+                                        @foreach ($errors->all() as $error)
+                                            <p>{{ $error }}</p>
+                                        @endforeach
+                                    </div>
+                                @endif
+
+
 
                                 </div>
                             </div>
@@ -100,5 +109,23 @@
             }
         });
     </script>
+    <script type="text/javascript">
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 5000
+        });
+    </script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('form').submit(function(e) {
+                $('.loading-screen').show();
+            });
+        });
+    </script>
+
+
+
 </body>
 </html>

@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -21,6 +22,11 @@ class AuthenticatedSessionController extends Controller
     public function createPublic(): View
     {
         return view('auth.login-public');
+    }
+
+    public function createAdmin(): View
+    {
+        return view('auth.login-admin');
     }
 
 
@@ -40,6 +46,9 @@ class AuthenticatedSessionController extends Controller
             return redirect('staff/dashboard');
         }elseif($request->user()->usertype === 'student'){
             return redirect('student/dashboard');
+        }
+elseif($request->user()->usertype === 'admin'){
+            return redirect('admin/dashboard');
         }
 
             return redirect()->intended(route('dashboard'));
