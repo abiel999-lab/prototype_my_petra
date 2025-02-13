@@ -7,6 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TwoFactorController;
 
+
 // Redirect root URL ('/') to the login route
 Route::get('/', function () {
     return redirect()->route('login'); // Redirect to the 'login' route
@@ -18,9 +19,15 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/mfa-challenge', [TwoFactorController::class, 'index'])->name('mfa-challenge.index');
     Route::post('/mfa-challenge', [TwoFactorController::class, 'verify'])->name('mfa-challenge.verify');
+
+
+
+
+
     // Route for toggling MFA
     Route::post('/toggle-mfa', [ProfileController::class, 'toggleMfa'])->name('toggle-mfa');
     Route::post('/set-mfa-method', [ProfileController::class, 'setMfaMethod'])->name('set-mfa-method');
+
 
 
 
@@ -63,6 +70,9 @@ require __DIR__ . '/auth.php';
 Route::get('/login/public', [AuthenticatedSessionController::class, 'createPublic'])->name('login.public');
 Route::get('/login/admin', [AuthenticatedSessionController::class, 'createAdmin'])->name('login.admin');
 Route::post('/check-email-password', [AuthController::class, 'checkEmailAndPassword'])->name('checkEmailAndPassword');
+
+
+
 
 
 

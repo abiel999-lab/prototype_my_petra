@@ -384,6 +384,28 @@
             @endif
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            @if (Auth::check())
+                var userType = "{{ Auth::user()->usertype }}"; // Get usertype from Laravel
+
+                if (userType === 'student' || userType === 'staff' || userType === 'general') { // Restrict students (change as needed)
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Access Denied',
+                        text: 'You are not allowed to access this page.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        },
+                        buttonsStyling: false
+                    }).then(() => {
+                        location.reload(); // Refresh the page after clicking OK
+                    });
+                }
+            @endif
+        });
+    </script>
 
 
 

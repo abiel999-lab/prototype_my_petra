@@ -11,9 +11,11 @@
     <link rel="stylesheet" href="https://my.petra.ac.id/css/css.css">
     <link rel="stylesheet" href="https://my.petra.ac.id/adminlte/plugins/fontawesome-free/css/all.min.css">
     <link rel="stylesheet" href="https://my.petra.ac.id/adminlte/dist/css/adminlte.min.css?v=3.2.0">
-    <link rel="stylesheet" href="https://my.petra.ac.id/adminlte/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+    <link rel="stylesheet"
+        href="https://my.petra.ac.id/adminlte/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
     <link rel="stylesheet" href="https://my.petra.ac.id/flexbox/flexbox.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="shortcut icon" href="https://login.petra.ac.id/images/favicon.png" type="image/x-icon">
 
     <style>
         .navbar {
@@ -29,9 +31,9 @@
         }
 
         .nav-item.dropdown:hover .nav-link {
-        background-color: #6c757d;
-        color: white !important;
-    }
+            background-color: #6c757d;
+            color: white !important;
+        }
 
         @media only screen and (min-width: 600px) {
             .navbar {
@@ -54,7 +56,6 @@
             text-decoration: none;
             font-size: 15px;
         }
-
     </style>
 </head>
 
@@ -80,17 +81,20 @@
                         <div class="mediax">
                             <div class="card-body box-profile">
                                 <div class="text-center">
-                                    <img class="profile-user-img img-fluid img-circle" src="https://my.petra.ac.id/img/user.png" alt="User profile picture">
+                                    <img class="profile-user-img img-fluid img-circle"
+                                        src="https://my.petra.ac.id/img/user.png" alt="User profile picture">
                                 </div>
                                 <h3 class="profile-username text-center">
                                     {{ strtoupper(auth()->user()->name) }}
-                                    <a href="{{ route('profile.setting') }}" class="setting-profile"><i class="fas fa-pencil-alt"></i></a>
+                                    <a href="{{ route('profile.setting') }}" class="setting-profile"><i
+                                            class="fas fa-pencil-alt"></i></a>
                                 </h3>
                                 <p class="text-muted text-center">{{ auth()->user()->email }}</p>
                             </div>
                         </div>
                         <center>
-                            <a href="{{ route('logout') }}" class="btn btn-danger mb-2" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><b>Logout</b></a>
+                            <a href="{{ route('logout') }}" class="btn btn-danger mb-2"
+                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><b>Logout</b></a>
                             <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                                 @csrf
                             </form>
@@ -106,7 +110,8 @@
                 <div class="col-sm-8 mt-3 mb-2" style="margin-left: auto; margin-right: auto;">
                     <form action="{{ url('/') }}" method="GET">
                         <div class="input-group input-group-md">
-                            <input class="form-control form-control-lg" type="search" id="search" name="search" value="" placeholder="Cari Aplikasi" aria-label="Search App">
+                            <input class="form-control form-control-lg" type="search" id="search" name="search"
+                                value="" placeholder="Cari Aplikasi" aria-label="Search App">
                             <div class="input-group-append">
                                 <button class="btn btn-navbar" type="submit">
                                     <i class="fas fa-search"></i>
@@ -120,7 +125,8 @@
             <!-- Main Content -->
             <div class="flexgrid">
                 <div class="mb-3 container" style="text-align: left;">
-                    <h1 class="col-lg-5" style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
+                    <h1 class="col-lg-5"
+                        style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
                         Default
                     </h1>
                 </div>
@@ -134,7 +140,8 @@
 
                 <!-- Lainnya Section -->
                 <div class="mb-3 container" style="text-align: left;">
-                    <h1 class="col-lg-5" style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
+                    <h1 class="col-lg-5"
+                        style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
                         Lainnya
                     </h1>
                 </div>
@@ -149,7 +156,8 @@
 
                 <!-- Akademik Section -->
                 <div class="mb-3 container" style="text-align: left;">
-                    <h1 class="col-lg-5" style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
+                    <h1 class="col-lg-5"
+                        style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
                         Akademik
                     </h1>
                 </div>
@@ -161,7 +169,8 @@
 
                 <!-- Link Section -->
                 <div class="mb-3 container" style="text-align: left;">
-                    <h1 class="col-lg-5" style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
+                    <h1 class="col-lg-5"
+                        style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
                         Link
                     </h1>
                 </div>
@@ -176,7 +185,8 @@
 
                 <!-- Apps Section -->
                 <div class="mb-3 container" style="text-align: left;">
-                    <h1 class="col-lg-5" style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
+                    <h1 class="col-lg-5"
+                        style="text-align: left; font-weight: 550; color: #1E3258; border-bottom: 3px #f8ad3d solid;">
                         Apps
                     </h1>
                 </div>
@@ -223,12 +233,12 @@
             });
         }
         const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        showCloseButton: true,
-        timer: 5000
-    });
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            showCloseButton: true,
+            timer: 5000
+        });
     </script>
 </body>
 

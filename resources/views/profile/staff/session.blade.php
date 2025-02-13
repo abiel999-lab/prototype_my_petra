@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="https://my.petra.ac.id/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
     <!-- Theme style -->
     <link rel="stylesheet" href="https://my.petra.ac.id/adminlte/dist/css/adminlte.min.css">
+    <link rel="shortcut icon" href="https://login.petra.ac.id/images/favicon.png" type="image/x-icon">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
