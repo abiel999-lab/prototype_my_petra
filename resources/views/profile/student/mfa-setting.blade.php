@@ -254,19 +254,26 @@
                                                     required>
                                                     <option value="email"
                                                         {{ auth()->user()->mfa_method === 'email' ? 'selected' : '' }}>
-                                                        Email</option>
+                                                        Email (OTP code sent through Email)</option>
                                                     <option value="google_auth"
                                                         {{ auth()->user()->mfa_method === 'google_auth' ? 'selected' : '' }}>
                                                         Google Authenticator</option>
                                                 </select>
                                                 <button type="submit" class="btn btn-primary save-btn">Save</button>
+                                                <p style="margin-top: 1rem;">If you are using Google Auth app, click save to look at your QRCode</p>
                                             </form>
 
                                             {{-- QR Code Display --}}
                                             <div id="qr-code-container"
                                                 class="mt-4 p-4 border border-gray-300 rounded bg-gray-50"
                                                 style="display: none;">
-                                                <p>Scan this QR code with your Google Authenticator app:</p>
+                                                <p><b>Guide:</b></p>
+                                                <p>1. Install Google Authentication app on Playstore</p>
+                                                <img src="{{ asset('images/google_auth.jpg') }}"
+                                                    alt="Google Authenticator app"
+                                                    style="width: 250px; height: auto;">
+                                                <p style="margin-top: 1rem;">2. Login using Google account</p>
+                                                <p>3. Scan this QR code with your Google Authenticator app:</p>
                                                 <img id="qr-code-image" src="" alt="QR Code">
                                                 <p class="mt-2 text-sm text-gray-600">
                                                     After scanning the QR code, use the Google Authenticator app to
@@ -394,6 +401,7 @@
                                                 .catch(error => console.error('Error:', error));
                                         });
                                     </script>
+
 </body>
 
 </html>
