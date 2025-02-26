@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TwoFactorController;
+use App\Http\Controllers\UserController;
 
 // Redirect root URL ('/') to the correct dashboard or login
 Route::get('/', function () {
@@ -47,7 +48,10 @@ Route::middleware(['auth', 'mfachallenge'])->group(function () {
         Route::get('/admin/setting/profile', [ProfileController::class, 'admineditprofile'])->name('profile.admin.profile');
         Route::get('/admin/setting/session', [ProfileController::class, 'adminsession'])->name('profile.admin.session');
         Route::get('/admin/setting/mfa', [ProfileController::class, 'adminmfasetting'])->name('profile.admin.mfa');
-        Route::get('/admin/setting/manageuser', [ProfileController::class, 'manageuser'])->name('profile.admin.manageuser');
+        Route::get('/admin/setting/manage-user', [UserController::class, 'index'])->name('profile.admin.manageuser');
+        Route::post('/admin/setting/manage-user/store', [UserController::class, 'store'])->name('profile.admin.manageuser.store');
+        Route::put('/admin/setting/manage-user/update/{user}', [UserController::class, 'update'])->name('profile.admin.manageuser.update');
+        Route::delete('/admin/setting/manage-user/delete/{user}', [UserController::class, 'destroy'])->name('profile.admin.manageuser.delete');
     });
 
     // 🔹 Student Routes (Restricted to Students)
@@ -70,7 +74,9 @@ Route::middleware(['auth', 'mfachallenge'])->group(function () {
 
     // 🔹 General User Routes (Restricted to General Users)
     Route::middleware(['role:general'])->group(function () {
-        Route::get('/dashboard', function () { return view('dashboard'); })->name('dashboard');
+        Route::get('/dashboard', function () {
+            return view('dashboard');
+        })->name('dashboard');
         Route::get('/setting', [ProfileController::class, 'profile'])->name('profile.setting');
         Route::get('/setting/profile', [ProfileController::class, 'editprofile'])->name('profile.profile');
         Route::get('/setting/mfa', [ProfileController::class, 'mfasetting'])->name('profile.mfa');

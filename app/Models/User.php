@@ -23,9 +23,13 @@ class User extends Authenticatable
         'email',
         'password',
         'email_verified_at',
-    'remember_token',
-    'two_factor_code', 'mfa_enabled', 'mfa_method'
+        'remember_token',
+        'two_factor_code',
+        'mfa_enabled',
+        'mfa_method',
+        'usertype',
     ];
+
 
     /**
      * The attributes that should be hidden for serialization.

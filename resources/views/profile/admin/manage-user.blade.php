@@ -23,6 +23,38 @@
     <!-- Theme style -->
     <link rel="stylesheet" href="https://my.petra.ac.id/adminlte/dist/css/adminlte.min.css">
     <link rel="shortcut icon" href="https://login.petra.ac.id/images/favicon.png" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .btn-group-sm>.btn,
+        .btn-sm {
+            padding: .25rem .5rem;
+            font-size: .875rem;
+            line-height: 1.5;
+            border-radius: .2rem;
+            margin: 3px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .page-link {
+            color: #007bff !important;
+            /* Bootstrap primary blue */
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+        }
+
+        .page-item.active .page-link {
+            background-color: #007bff !important;
+            color: white !important;
+            border-color: #007bff !important;
+        }
+    </style>
+
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -182,46 +214,177 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="card">
-                                <div class="card-header">
-                                    <h3 class="card-title">List Session</h3>
-                                    <div class="card-tools">
-                                        <button class="btn btn-danger" data-toggle="tooltip" title="Revoke All"
-                                            onclick="confirmDeleteSessionAll()">Revoke All <i
-                                                class="fa fa-trash"></i></a>
+                                <!-- /.card-header -->
+
+
+
+                                <div class="card-body">
+                                    @if (session('success'))
+                                        <div class="alert alert-success">{{ session('success') }}</div>
+                                    @endif
+
+                                    <!-- Search Form -->
+                                    <div class="mb-4">
+                                        <form id="search-form" class="d-flex" onsubmit="return false;">
+                                            <input type="text" id="search-input" name="search"
+                                                class="form-control me-2"
+                                                placeholder="Search users... (e.g. mfa_enabled:on mfa_method:google_authenticator usertype:admin)">
+                                            <button type="button" class="btn btn-primary"
+                                                onclick="searchUsers()">Search</button>
+                                        </form>
+                                    </div>
+
+
+
+                                    <!-- Add User Form -->
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <h4 class="mb-3">Add User</h4>
+                                            <form method="POST"
+                                                action="{{ route('profile.admin.manageuser.store') }}">
+                                                @csrf
+                                                <div class="form-group mb-3">
+                                                    <label for="name">Name</label>
+                                                    <input type="text" id="name" name="name"
+                                                        class="form-control" required>
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="email">Email</label>
+                                                    <input type="email" id="email" name="email"
+                                                        class="form-control" required>
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="password">Password</label>
+                                                    <input type="password" id="password" name="password"
+                                                        class="form-control" required>
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="usertype">User Type</label>
+                                                    <select id="usertype" name="usertype" class="form-control"
+                                                        required>
+                                                        <option value="general">General</option>
+                                                        <option value="student">Student</option>
+                                                        <option value="staff">Staff</option>
+                                                        <option value="admin">Admin</option>
+                                                    </select>
+                                                </div>
+                                                <button type="submit" class="btn btn-primary rounded">Add
+                                                    User</button>
+                                            </form>
+                                        </div>
+
+                                        <!-- User List -->
+                                        <div class="col-md-8">
+                                            <h4 class="mb-3">User List</h4>
+                                            <table class="table table-bordered">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th>ID</th>
+                                                        <th>Name</th>
+                                                        <th>Email</th>
+                                                        <th>User Type</th>
+                                                        <th>MFA Enabled</th>
+                                                        <th>MFA Method</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="user-list">
+                                                    @foreach ($users as $user)
+                                                        <tr>
+                                                            <td>{{ $user->id }}</td>
+                                                            <td>
+                                                                <input type="text" id="name-{{ $user->id }}"
+                                                                    value="{{ $user->name }}"
+                                                                    class="form-control form-control-sm" disabled>
+                                                            </td>
+                                                            <td>
+                                                                <input type="email" id="email-{{ $user->id }}"
+                                                                    value="{{ $user->email }}"
+                                                                    class="form-control form-control-sm" disabled>
+                                                            </td>
+                                                            <td>
+                                                                <select id="usertype-{{ $user->id }}"
+                                                                    class="form-control form-control-sm" disabled>
+                                                                    <option value="admin"
+                                                                        {{ $user->usertype == 'admin' ? 'selected' : '' }}>
+                                                                        Admin</option>
+                                                                    <option value="student"
+                                                                        {{ $user->usertype == 'student' ? 'selected' : '' }}>
+                                                                        Student</option>
+                                                                    <option value="staff"
+                                                                        {{ $user->usertype == 'staff' ? 'selected' : '' }}>
+                                                                        Staff</option>
+                                                                    <option value="general"
+                                                                        {{ $user->usertype == 'general' ? 'selected' : '' }}>
+                                                                        General</option>
+                                                                </select>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <input type="checkbox"
+                                                                    id="mfa_enabled-{{ $user->id }}"
+                                                                    {{ $user->mfa_enabled ? 'checked' : '' }} disabled>
+                                                            </td>
+                                                            <td>
+                                                                <select id="mfa_method-{{ $user->id }}"
+                                                                    class="form-control form-control-sm" disabled>
+                                                                    <option value="email"
+                                                                        {{ $user->mfa_method == 'email' ? 'selected' : '' }}>
+                                                                        Email</option>
+                                                                    <option value="google_authenticator"
+                                                                        {{ $user->mfa_method == 'google_authenticator' ? 'selected' : '' }}>
+                                                                        Google Authenticator</option>
+                                                                </select>
+                                                            </td>
+                                                            <td>
+                                                                <form id="edit-form-{{ $user->id }}"
+                                                                    method="POST"
+                                                                    action="{{ route('profile.admin.manageuser.update', $user->id) }}">
+                                                                    @csrf
+                                                                    @method('PUT')
+                                                                    <button type="button"
+                                                                        class="btn btn-warning btn-sm rounded me-2"
+                                                                        onclick="toggleEdit({{ $user->id }})"
+                                                                        id="edit-btn-{{ $user->id }}">Edit</button>
+                                                                    <button type="submit"
+                                                                        class="btn btn-success btn-sm rounded me-2 d-none"
+                                                                        id="save-btn-{{ $user->id }}">Save</button>
+                                                                    <input type="hidden" name="name"
+                                                                        id="hidden-name-{{ $user->id }}">
+                                                                    <input type="hidden" name="email"
+                                                                        id="hidden-email-{{ $user->id }}">
+                                                                    <input type="hidden" name="usertype"
+                                                                        id="hidden-usertype-{{ $user->id }}">
+                                                                    <!-- Added this line -->
+                                                                    <input type="hidden" name="mfa_enabled"
+                                                                        id="hidden-mfa_enabled-{{ $user->id }}">
+                                                                    <input type="hidden" name="mfa_method"
+                                                                        id="hidden-mfa_method-{{ $user->id }}">
+                                                                </form>
+                                                                <form method="POST"
+                                                                    action="{{ route('profile.admin.manageuser.delete', $user->id) }}"
+                                                                    class="d-inline"
+                                                                    onsubmit="return confirmDeletion()">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit"
+                                                                        class="btn btn-danger btn-sm rounded">Delete</button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                            <div class="d-flex justify-content-center mt-3" id="pagination-links">
+                                                {{ $users->links('pagination::bootstrap-5') }}
+                                            </div>
+
+
+                                        </div>
                                     </div>
                                 </div>
-                                <!-- /.card-header -->
-                                <div class="card-body">
 
-                                    <table class="datatable table table-bordered table-striped table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>#</th>
-                                                <th>IP</th>
-                                                <th>Device</th>
-                                                <th>Login At</th>
-                                                <th>Expired At</th>
-                                                <th class="text-center">Aksi</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>1</td>
-                                                <td>203.189.120.68</td>
-                                                <td>Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
-                                                    like Gecko) Chrome/132.0.0.0 Safari/537.36</td>
-                                                <td>27 Jan 2025 21:29</td>
-                                                <td>27 Jan 2025 23:29</td>
-                                                <td class="text-center">
-                                                    <button class="btn btn-danger btn-sm" data-toggle="tooltip"
-                                                        title="Revoke"
-                                                        onclick="confirmDeleteSession(`233243`, `203.189.120.68`, `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36`)"><i
-                                                            class="fa fa-trash"></i></a>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+
+
                                 <!-- /.card-body -->
                             </div>
                             <!-- /.card -->
@@ -271,6 +434,9 @@
     <!-- AdminLTE App -->
     <script src="https://my.petra.ac.id/adminlte/dist/js/adminlte.js"></script>
     <script src="https://my.petra.ac.id/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+
     <script type="text/javascript">
         const Toast = Swal.mixin({
             toast: true,
@@ -279,10 +445,6 @@
             showCloseButton: true,
             timer: 5000
         });
-
-
-
-
 
         function showLoading() {
             Swal.fire({
@@ -314,42 +476,121 @@
                 "order": [],
             });
         });
-
-        function confirmDeleteSession(id, ip, user_agent) {
-            Swal.fire({
-                title: 'Konfirmasi Revoke',
-                text: `Revoke Session ${ip} - ${user_agent}?`,
-                type: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Delete'
-            }).then((result) => {
-                if (result.value) {
-                    let url = $('#delete-session').attr('action');
-                    url = url.replace(':id', id);
-                    $('#delete-session').attr('action', url);
-                    $('#delete-session').submit();
-                }
-            });
-        }
-
-        function confirmDeleteSessionAll() {
-            Swal.fire({
-                title: 'Konfirmasi Revoke All',
-                text: `Revoke semua Session?`,
-                type: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Delete'
-            }).then((result) => {
-                if (result.value) {
-                    $('#delete-session-all').submit();
-                }
-            });
-        }
     </script>
+
+    <script>
+        function confirmDeletion() {
+            return confirm('Are you sure you want to delete this user? This action cannot be undone.');
+        }
+
+        document.getElementById("search-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault(); // Prevent form submission
+                searchUsers(); // Trigger search
+            }
+        });
+
+        function searchUsers() {
+            let searchQuery = document.getElementById("search-input").value;
+
+            fetch("{{ route('profile.admin.manageuser') }}?search=" + encodeURIComponent(searchQuery))
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById("user-list").innerHTML = new DOMParser()
+                        .parseFromString(html, "text/html")
+                        .getElementById("user-list").innerHTML;
+                })
+                .catch(error => console.error("Error:", error));
+        }
+
+
+        function toggleEdit(userId) {
+            const nameField = document.getElementById(`name-${userId}`);
+            const emailField = document.getElementById(`email-${userId}`);
+            const usertypeField = document.getElementById(`usertype-${userId}`);
+            const mfaEnabledField = document.getElementById(`mfa_enabled-${userId}`);
+            const mfaMethodField = document.getElementById(`mfa_method-${userId}`);
+            const editBtn = document.getElementById(`edit-btn-${userId}`);
+            const saveBtn = document.getElementById(`save-btn-${userId}`);
+
+            if (nameField.disabled) {
+                nameField.disabled = false;
+                emailField.disabled = false;
+                usertypeField.disabled = false;
+                mfaEnabledField.disabled = false;
+                mfaMethodField.disabled = false;
+                editBtn.textContent = 'Cancel';
+                saveBtn.classList.remove('d-none');
+            } else {
+                nameField.disabled = true;
+                emailField.disabled = true;
+                usertypeField.disabled = true;
+                mfaEnabledField.disabled = true;
+                mfaMethodField.disabled = true;
+                editBtn.textContent = 'Edit';
+                saveBtn.classList.add('d-none');
+            }
+        }
+
+        document.querySelectorAll('form[id^="edit-form-"]').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                const userId = this.id.split('-')[2];
+                document.getElementById(`hidden-name-${userId}`).value = document.getElementById(
+                    `name-${userId}`).value;
+                document.getElementById(`hidden-email-${userId}`).value = document.getElementById(
+                    `email-${userId}`).value;
+                document.getElementById(`hidden-usertype-${userId}`).value = document.getElementById(
+                    `usertype-${userId}`).value;
+                document.getElementById(`hidden-mfa_enabled-${userId}`).value = document.getElementById(
+                    `mfa_enabled-${userId}`).checked ? 1 : 0;
+                document.getElementById(`hidden-mfa_method-${userId}`).value = document.getElementById(
+                    `mfa_method-${userId}`).value;
+            });
+        });
+    </script>
+
+    <script>
+        function searchUsers() {
+            let inputQuery = document.getElementById("search-input").value;
+            let params = {
+                search: "",
+                mfa_enabled: "",
+                mfa_method: "",
+                usertype: ""
+            };
+
+            // Extract filters using regex
+            const matches = inputQuery.match(/(\w+):(\w+)/g);
+            if (matches) {
+                matches.forEach(match => {
+                    let [key, value] = match.split(":");
+                    if (params.hasOwnProperty(key)) {
+                        params[key] = value.toLowerCase();
+                    }
+                });
+            }
+
+            // Remove filters from the search query
+            params.search = inputQuery.replace(/(\w+):(\w+)/g, "").trim();
+
+            let queryString = Object.keys(params)
+                .filter(key => params[key] !== "")
+                .map(key => `${key}=${encodeURIComponent(params[key])}`)
+                .join("&");
+
+            fetch("{{ route('profile.admin.manageuser') }}?" + queryString)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById("user-list").innerHTML = new DOMParser()
+                        .parseFromString(html, "text/html")
+                        .getElementById("user-list").innerHTML;
+                })
+                .catch(error => console.error("Error:", error));
+        }
+
+    </script>
+
+
 </body>
 
 </html>

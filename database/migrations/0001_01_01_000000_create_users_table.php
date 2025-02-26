@@ -21,7 +21,7 @@ return new class extends Migration
             $table->rememberToken();
             $table->timestamps();
             $table->integer('two_factor_code')->nullable();
-            $table->boolean('mfa_enabled')->default(true);
+            $table->boolean('mfa_enabled')->default(false);
             $table->string('mfa_method')->default('email'); // Default to email
             $table->string('google2fa_secret')->nullable();
         });
