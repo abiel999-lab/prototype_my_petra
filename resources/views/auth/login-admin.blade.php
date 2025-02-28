@@ -253,9 +253,9 @@
 
                                         <!-- Domain Selection -->
                                         <select class="form-control" id="emailDomain" name="emailDomain" required>
+                                            <option value="@petra.ac.id">@petra.ac.id</option>
                                             <option value="@john.petra.ac.id">@john.petra.ac.id</option>
                                             <option value="@peter.petra.ac.id">@peter.petra.ac.id</option>
-                                            <option value="@petra.ac.id">@petra.ac.id</option>
                                         </select>
                                     </div>
 

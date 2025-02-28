@@ -23,8 +23,50 @@
     <!-- Theme style -->
     <link rel="stylesheet" href="https://my.petra.ac.id/adminlte/dist/css/adminlte.min.css">
     <link rel="shortcut icon" href="https://login.petra.ac.id/images/favicon.png" type="image/x-icon">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <!-- DataTables JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 </head>
+<style>
+    .dataTables_length select {
+        padding-right: 20px;
+        background-position: right;
+    }
 
+    .dataTables_wrapper .dataTables_length select {
+        border: 1px solid #aaa;
+        border-radius: 3px;
+        padding: 5px;
+        background-color: transparent;
+        color: inherit;
+        padding: 4px;
+        padding-right: 20px;
+    }
+
+    /* Ensure "Revoke All" button is always visible */
+    .revoke-all-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .revoke-all-container button {
+        background-color: #dc2626; /* Red color */
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+    }
+
+    .revoke-all-container button:hover {
+        background-color: #b91c1c; /* Darker red */
+    }
+</style>
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
 
@@ -181,34 +223,56 @@
                                 <!-- /.card-header -->
                                 <div class="card-body">
 
-                                    <table class="datatable table table-bordered table-striped table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>#</th>
-                                                <th>IP</th>
-                                                <th>Device</th>
-                                                <th>Login At</th>
-                                                <th>Expired At</th>
-                                                <th class="text-center">Aksi</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>1</td>
-                                                <td>203.189.120.68</td>
-                                                <td>Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
-                                                    like Gecko) Chrome/132.0.0.0 Safari/537.36</td>
-                                                <td>27 Jan 2025 21:29</td>
-                                                <td>27 Jan 2025 23:29</td>
-                                                <td class="text-center">
-                                                    <button class="btn btn-danger btn-sm" data-toggle="tooltip"
-                                                        title="Revoke"
-                                                        onclick="confirmDeleteSession(`233243`, `203.189.120.68`, `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36`)"><i
-                                                            class="fa fa-trash"></i></a>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div class="container mx-auto p-6 bg-white shadow-lg rounded-lg">
+                                        <div class="revoke-all-container">
+                                            <h3 class="text-lg font-semibold">List Session</h3>
+
+                                            <!-- Force "Revoke All" Button to Always Show -->
+                                            <form id="revokeAllForm" action="{{ route('session.revokeAll') }}" method="POST">
+                                                @csrf
+                                                <button type="button" onclick="confirmRevokeAll()">
+                                                    <span>Revoke All</span>
+                                                    🗑
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                        <!-- Session Table -->
+                                        <table id="sessionTable" class="display w-full">
+                                            <thead>
+                                                <tr class="bg-gray-200">
+                                                    <th>#</th>
+                                                    <th>IP</th>
+                                                    <th>Device</th>
+                                                    <th>OS</th>
+                                                    <th>Login At</th>
+                                                    <th>Expired At</th>
+                                                    <th>Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($sessions as $index => $session)
+                                                    <tr>
+                                                        <td>{{ $index + 1 }}</td>
+                                                        <td>{{ $session->ip_address }}</td>
+                                                        <td>{{ $session->user_agent }}</td>
+                                                        <td>{{ $session->os }}</td> <!-- OS Column -->
+                                                        <td>{{ $session->login_time }}</td>
+                                                        <td>{{ $session->expires_at }}</td>
+                                                        <td>
+                                                            <form id="deleteForm-{{ $session->id }}" action="{{ route('session.revoke', $session->id) }}" method="POST">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="button" onclick="confirmDelete('{{ $session->id }}')" class="bg-red-500 text-white px-2 py-1 rounded">
+                                                                    🗑
+                                                                </button>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                                 <!-- /.card-body -->
                             </div>
@@ -338,6 +402,53 @@
             });
         }
     </script>
+     <!-- Include SweetAlert2 -->
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+     <!-- DataTables Script -->
+     <script>
+         $(document).ready(function() {
+             $('#sessionTable').DataTable({
+                 "searching": true, // Enables search bar
+                 "ordering": true,
+                 "paging": true
+             });
+         });
+
+         // Confirmation alert for deleting a session
+         function confirmDelete(sessionId) {
+             Swal.fire({
+                 title: "Are you sure?",
+                 text: "This session will be deleted permanently!",
+                 icon: "warning",
+                 showCancelButton: true,
+                 confirmButtonColor: "#d33",
+                 cancelButtonColor: "#3085d6",
+                 confirmButtonText: "Yes, delete it!"
+             }).then((result) => {
+                 if (result.isConfirmed) {
+                     document.getElementById('deleteForm-' + sessionId).submit();
+                 }
+             });
+         }
+
+         // Confirmation alert for revoking all sessions
+         function confirmRevokeAll() {
+             Swal.fire({
+                 title: "Are you sure?",
+                 text: "This will remove all active sessions!",
+                 icon: "warning",
+                 showCancelButton: true,
+                 confirmButtonColor: "#d33",
+                 cancelButtonColor: "#3085d6",
+                 confirmButtonText: "Yes, revoke all!"
+             }).then((result) => {
+                 if (result.isConfirmed) {
+                     document.getElementById('revokeAllForm').submit();
+                 }
+             });
+         }
+     </script>
 </body>
 
 </html>

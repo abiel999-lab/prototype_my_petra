@@ -7,6 +7,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\UserController;
+// use App\Http\Controllers\SessionController;
+// use App\Http\Middleware\StoreUserSession;
 
 // Redirect root URL ('/') to the correct dashboard or login
 Route::get('/', function () {
@@ -46,12 +48,17 @@ Route::middleware(['auth', 'mfachallenge'])->group(function () {
         Route::get('/admin/dashboard', [HomeController::class, 'indexAdmin'])->name('admin.dashboard');
         Route::get('/admin/setting', [ProfileController::class, 'adminprofile'])->name('profile.admin.setting');
         Route::get('/admin/setting/profile', [ProfileController::class, 'admineditprofile'])->name('profile.admin.profile');
-        Route::get('/admin/setting/session', [ProfileController::class, 'adminsession'])->name('profile.admin.session');
+
         Route::get('/admin/setting/mfa', [ProfileController::class, 'adminmfasetting'])->name('profile.admin.mfa');
         Route::get('/admin/setting/manage-user', [UserController::class, 'index'])->name('profile.admin.manageuser');
         Route::post('/admin/setting/manage-user/store', [UserController::class, 'store'])->name('profile.admin.manageuser.store');
         Route::put('/admin/setting/manage-user/update/{user}', [UserController::class, 'update'])->name('profile.admin.manageuser.update');
         Route::delete('/admin/setting/manage-user/delete/{user}', [UserController::class, 'destroy'])->name('profile.admin.manageuser.delete');
+
+        Route::get('/admin/setting/session', [ProfileController::class, 'adminsession'])->name('profile.admin.session');
+        // Route::get('/admin/setting/session', [SessionController::class, 'show'])->name('session.show');
+        // Route::delete('/admin/setting/session/{id}', [SessionController::class, 'revoke'])->name('session.revoke');
+        // Route::post('/admin/setting/session/revoke-all', [SessionController::class, 'revokeAll'])->name('session.revokeAll');
     });
 
     // 🔹 Student Routes (Restricted to Students)
@@ -59,8 +66,13 @@ Route::middleware(['auth', 'mfachallenge'])->group(function () {
         Route::get('/student/dashboard', [HomeController::class, 'indexStudent'])->name('student.dashboard');
         Route::get('/student/setting', [ProfileController::class, 'studentprofile'])->name('profile.student.setting');
         Route::get('/student/setting/profile', [ProfileController::class, 'studenteditprofile'])->name('profile.student.profile');
-        Route::get('/student/setting/session', [ProfileController::class, 'studentsession'])->name('profile.student.session');
+
         Route::get('/student/setting/mfa', [ProfileController::class, 'studentmfasetting'])->name('profile.student.mfa');
+
+        Route::get('/student/setting/session/', [ProfileController::class, 'studentsession'])->name('profile.student.session');
+        // Route::get('/student/setting/session', [SessionController::class, 'show'])->name('session.show');
+        // Route::delete('/student/setting/session/{id}', [SessionController::class, 'revoke'])->name('session.revoke');
+        // Route::post('/student/setting/session/revoke-all', [SessionController::class, 'revokeAll'])->name('session.revokeAll');
     });
 
     // 🔹 Staff Routes (Restricted to Staff)
@@ -68,8 +80,13 @@ Route::middleware(['auth', 'mfachallenge'])->group(function () {
         Route::get('/staff/dashboard', [HomeController::class, 'indexStaff'])->name('staff.dashboard');
         Route::get('/staff/setting', [ProfileController::class, 'staffprofile'])->name('profile.staff.setting');
         Route::get('/staff/setting/profile', [ProfileController::class, 'staffeditprofile'])->name('profile.staff.profile');
-        Route::get('/staff/setting/session', [ProfileController::class, 'staffsession'])->name('profile.staff.session');
+
         Route::get('/staff/setting/mfa', [ProfileController::class, 'staffmfasetting'])->name('profile.staff.mfa');
+
+        Route::get('/staff/setting/session', [ProfileController::class, 'staffsession'])->name('profile.staff.session');
+        // Route::get('/staff/setting/session', [SessionController::class, 'show'])->name('session.show');
+        // Route::delete('/staff/setting/session/{id}', [SessionController::class, 'revoke'])->name('session.revoke');
+        // Route::post('/staff/setting/session/revoke-all', [SessionController::class, 'revokeAll'])->name('session.revokeAll');
     });
 
     // 🔹 General User Routes (Restricted to General Users)
@@ -80,7 +97,12 @@ Route::middleware(['auth', 'mfachallenge'])->group(function () {
         Route::get('/setting', [ProfileController::class, 'profile'])->name('profile.setting');
         Route::get('/setting/profile', [ProfileController::class, 'editprofile'])->name('profile.profile');
         Route::get('/setting/mfa', [ProfileController::class, 'mfasetting'])->name('profile.mfa');
+
+
         Route::get('/setting/session', [ProfileController::class, 'editsession'])->name('profile.session');
+        // Route::get('/setting/session', [SessionController::class, 'show'])->name('session.show');
+        // Route::delete('/setting/session/{id}', [SessionController::class, 'revoke'])->name('session.revoke');
+        // Route::post('/setting/session/revoke-all', [SessionController::class, 'revokeAll'])->name('session.revokeAll');
     });
 
 });
