@@ -280,7 +280,7 @@
 
 
                                 <div>
-                                    <a href="https://login.petra.ac.id/login/google/redirect"
+                                    <a href="{{ route('google.login') }}"
                                         class="btn btn-lg login-btn" style="margin-top: 10px;">
                                         <img src="https://login.petra.ac.id/img/logo-google.png" alt="Auth" width="24"
                                             style="margin-right: 10px;">

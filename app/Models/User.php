@@ -21,6 +21,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone_number', // Menambahkan nomor HP ke fillable
         'password',
         'email_verified_at',
         'remember_token',
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'mfa_method',
         'usertype',
     ];
+
 
 
     /**

@@ -19,33 +19,32 @@
     <link rel="stylesheet" href="https://login.petra.ac.id/css/all.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="https://login.petra.ac.id/css/loading.css">
     <style>
-    .login-wrapper .login-title {
-        font-style: normal;
-        font-weight: 800;
-        font-size: 36px;
-        color: #1E3258;
-        line-height: 1.4em;
-        margin-top: 30px;
-    }
+        .login-wrapper .login-title {
+            font-style: normal;
+            font-weight: 800;
+            font-size: 36px;
+            color: #1E3258;
+            line-height: 1.4em;
+            margin-top: 30px;
+        }
 
-    .login-wrapper .login-btn {
-        padding: 13px 20px;
-        background-color: #1E3258;
-        border-radius: 0;
-        font-size: 16px;
-        font-weight: 800;
-        color: #fff;
-        width: 100%;
-        margin-top: 10px;
-    }
+        .login-wrapper .login-btn {
+            padding: 13px 20px;
+            background-color: #1E3258;
+            border-radius: 0;
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+            width: 100%;
+            margin-top: 10px;
+        }
     </style>
     </style>
     <!--[if lt IE 9
         ]>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script
-        >
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
         <![endif]-->
-    <!--[if lt IE 9]>
+            <!--[if lt IE 9]>
         <script src="/js/respond.js"></script>
         <![endif]-->
     <script defer="defer" src="https://login.petra.ac.id/js/chunk-vendors.f2b7dbd6.js"></script>
@@ -55,13 +54,13 @@
     <link rel="stylesheet" type="text/css" href="https://login.petra.ac.id/css/870.fb36812f.css">
     <style>
         .login-wrapper .form-control {
-    background: #fdfdfd;
-    border: 1px solid #E6E6E6;
-    border-radius: 0;
-    height: 60px;
-    margin-top: 10px;
-}
-        </style>
+            background: #fdfdfd;
+            border: 1px solid #E6E6E6;
+            border-radius: 0;
+            height: 60px;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 
 <body>
@@ -122,15 +121,12 @@
                                 </form>
 
                                 <!-- Google Login -->
-                                <form method="POST" action="{{ url('/login/google/redirect') }}"
-                                    style="display: inline;">
-                                    @csrf
-                                    <button type="submit" class="btn btn-lg login-btn" style="margin-top: 10px;">
-                                        <img src="https://login.petra.ac.id/img/logo-google.png" alt="Auth" width="24"
-                                            style="margin-right: 10px;">
-                                        Sign In with Google Mail
-                                    </button>
-                                </form>
+                                <a href="{{ route('google.login') }}" class="btn btn-lg login-btn"
+                                    style="margin-top: 10px;">
+                                    <img src="https://login.petra.ac.id/img/logo-google.png" alt="Auth"
+                                        width="24" style="margin-right: 10px;">
+                                    Sign In with Google Mail
+                                </a>
 
                                 <!-- Forgot Password -->
                                 <p class="login-wrapper-footer-text"
@@ -145,8 +141,7 @@
                                     <br />
                                     <!-- Student or staff login -->
                                     You are student or staff, click
-                                    <a href="{{ route('login') }}"
-                                        class="text-reset"><strong>here</strong></a>.
+                                    <a href="{{ route('login') }}" class="text-reset"><strong>here</strong></a>.
                                 </p>
                             </div>
                         </div>
@@ -197,7 +192,7 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             @if ($errors->any())
                 Swal.fire({
                     icon: 'error',
