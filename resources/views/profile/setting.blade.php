@@ -106,7 +106,7 @@
 
 
                 <li class="nav-item">
-                    <a href="{{ route('profile.session') }}" class="nav-link ">
+                    <a href="{{ route('profile.session.show') }}" class="nav-link ">
                         <i class="nav-icon fas fa-stopwatch"></i>
                         <p>
                             Session

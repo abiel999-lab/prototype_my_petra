@@ -7,8 +7,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\UserController;
-// use App\Http\Controllers\SessionController;
-// use App\Http\Middleware\StoreUserSession;
+use App\Http\Controllers\SessionController;
+use App\Http\Middleware\StoreUserSession;
 
 // Redirect root URL ('/') to the correct dashboard or login
 Route::get('/', function () {
@@ -41,7 +41,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Authenticated & MFA Middleware Group (Protects all dashboard and settings pages)
-Route::middleware(['auth', 'mfachallenge'])->group(function () {
+Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(function () {
 
     // 🔹 Admin Routes (Restricted to Admins)
     Route::middleware(['role:admin'])->group(function () {
@@ -55,10 +55,10 @@ Route::middleware(['auth', 'mfachallenge'])->group(function () {
         Route::put('/admin/setting/manage-user/update/{user}', [UserController::class, 'update'])->name('profile.admin.manageuser.update');
         Route::delete('/admin/setting/manage-user/delete/{user}', [UserController::class, 'destroy'])->name('profile.admin.manageuser.delete');
 
-        Route::get('/admin/setting/session', [ProfileController::class, 'adminsession'])->name('profile.admin.session');
-        // Route::get('/admin/setting/session', [SessionController::class, 'show'])->name('session.show');
-        // Route::delete('/admin/setting/session/{id}', [SessionController::class, 'revoke'])->name('session.revoke');
-        // Route::post('/admin/setting/session/revoke-all', [SessionController::class, 'revokeAll'])->name('session.revokeAll');
+
+        Route::get('/admin/setting/session', [SessionController::class, 'Adminshow'])->name('profile.admin.session.show');
+        Route::delete('/admin/setting/session/{id}', [SessionController::class, 'Adminrevoke'])->name('profile.admin.session.revoke');
+        Route::post('/admin/setting/session/revoke-all', [SessionController::class, 'AdminrevokeAll'])->name('profile.admin.session.revokeAll');
     });
 
     // 🔹 Student Routes (Restricted to Students)
@@ -69,10 +69,9 @@ Route::middleware(['auth', 'mfachallenge'])->group(function () {
 
         Route::get('/student/setting/mfa', [ProfileController::class, 'studentmfasetting'])->name('profile.student.mfa');
 
-        Route::get('/student/setting/session/', [ProfileController::class, 'studentsession'])->name('profile.student.session');
-        // Route::get('/student/setting/session', [SessionController::class, 'show'])->name('session.show');
-        // Route::delete('/student/setting/session/{id}', [SessionController::class, 'revoke'])->name('session.revoke');
-        // Route::post('/student/setting/session/revoke-all', [SessionController::class, 'revokeAll'])->name('session.revokeAll');
+        Route::get('/student/setting/session', [SessionController::class, 'Studentshow'])->name('profile.student.session.show');
+        Route::delete('/student/setting/session/{id}', [SessionController::class, 'Studentrevoke'])->name('profile.student.session.revoke');
+        Route::post('/student/setting/session/revoke-all', [SessionController::class, 'StudentrevokeAll'])->name('profile.student.session.revokeAll');
     });
 
     // 🔹 Staff Routes (Restricted to Staff)
@@ -83,10 +82,9 @@ Route::middleware(['auth', 'mfachallenge'])->group(function () {
 
         Route::get('/staff/setting/mfa', [ProfileController::class, 'staffmfasetting'])->name('profile.staff.mfa');
 
-        Route::get('/staff/setting/session', [ProfileController::class, 'staffsession'])->name('profile.staff.session');
-        // Route::get('/staff/setting/session', [SessionController::class, 'show'])->name('session.show');
-        // Route::delete('/staff/setting/session/{id}', [SessionController::class, 'revoke'])->name('session.revoke');
-        // Route::post('/staff/setting/session/revoke-all', [SessionController::class, 'revokeAll'])->name('session.revokeAll');
+        Route::get('/staff/setting/session', [SessionController::class, 'Staffshow'])->name('profile.staff.session.show');
+        Route::delete('/staff/setting/session/{id}', [SessionController::class, 'Staffrevoke'])->name('profile.staff.session.revoke');
+        Route::post('/staff/setting/session/revoke-all', [SessionController::class, 'StaffrevokeAll'])->name('profile.staff.session.revokeAll');
     });
 
     // 🔹 General User Routes (Restricted to General Users)
@@ -99,10 +97,9 @@ Route::middleware(['auth', 'mfachallenge'])->group(function () {
         Route::get('/setting/mfa', [ProfileController::class, 'mfasetting'])->name('profile.mfa');
 
 
-        Route::get('/setting/session', [ProfileController::class, 'editsession'])->name('profile.session');
-        // Route::get('/setting/session', [SessionController::class, 'show'])->name('session.show');
-        // Route::delete('/setting/session/{id}', [SessionController::class, 'revoke'])->name('session.revoke');
-        // Route::post('/setting/session/revoke-all', [SessionController::class, 'revokeAll'])->name('session.revokeAll');
+        Route::get('/setting/session', [SessionController::class, 'show'])->name('profile.session.show');
+        Route::delete('/setting/session/{id}', [SessionController::class, 'revoke'])->name('profile.session.revoke');
+        Route::post('/setting/session/revoke-all', [SessionController::class, 'revokeAll'])->name('profile.session.revokeAll');
     });
 
 });

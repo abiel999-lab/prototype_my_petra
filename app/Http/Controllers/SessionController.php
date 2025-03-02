@@ -9,6 +9,7 @@ use Carbon\Carbon;
 
 class SessionController extends Controller
 {
+    // general
     public function show()
     {
         $sessions = DB::table('sessions')
@@ -21,24 +22,131 @@ class SessionController extends Controller
                     'user_agent' => $session->user_agent,
                     'os' => $this->getOS($session->user_agent), // Extract OS
                     'login_time' => Carbon::parse($session->last_activity)->format('d M Y H:i'),
-                    'expires_at' => Carbon::parse($session->last_activity)->addMinutes(config('session.lifetime'))->format('d M Y H:i'),
+                    'expires_at' => Carbon::parse($session->last_activity)
+                        ->addMinutes((int) config('session.lifetime'))
+                        ->format('d M Y H:i'),
                 ];
             });
 
-        return view('session', compact('sessions'));
+        return view('profile.session', compact('sessions'));
     }
 
 
     public function revoke($id)
     {
         DB::table('sessions')->where('id', $id)->delete();
-        return redirect()->route('session.show')->with('success', 'Session revoked.');
+        return redirect()->route('profile.session.show')->with('success', 'Session revoked.');
     }
 
     public function revokeAll()
     {
         DB::table('sessions')->where('user_id', Auth::id())->delete();
-        return redirect()->route('session.show')->with('success', 'All sessions revoked.');
+        return redirect()->route('profile.session.show')->with('success', 'All sessions revoked.');
+    }
+
+    // admin
+    public function Adminshow()
+    {
+        $sessions = DB::table('sessions')
+            ->where('user_id', Auth::id())
+            ->get()
+            ->map(function ($session) {
+                return (object) [
+                    'id' => $session->id,
+                    'ip_address' => $session->ip_address,
+                    'user_agent' => $session->user_agent,
+                    'os' => $this->getOS($session->user_agent), // Extract OS
+                    'login_time' => Carbon::parse($session->last_activity)->format('d M Y H:i'),
+                    'expires_at' => Carbon::parse($session->last_activity)
+                        ->addMinutes((int) config('session.lifetime'))
+                        ->format('d M Y H:i'),
+                ];
+            });
+
+        return view('profile.admin.session', compact('sessions'));
+    }
+
+
+    public function Adminrevoke($id)
+    {
+        DB::table('sessions')->where('id', $id)->delete();
+        return redirect()->route('profile.admin.session.show')->with('success', 'Session revoked.');
+    }
+
+    public function AdminrevokeAll()
+    {
+        DB::table('sessions')->where('user_id', Auth::id())->delete();
+        return redirect()->route('profile.admin.session.show')->with('success', 'All sessions revoked.');
+    }
+
+    // student
+    public function Studentshow()
+    {
+        $sessions = DB::table('sessions')
+            ->where('user_id', Auth::id())
+            ->get()
+            ->map(function ($session) {
+                return (object) [
+                    'id' => $session->id,
+                    'ip_address' => $session->ip_address,
+                    'user_agent' => $session->user_agent,
+                    'os' => $this->getOS($session->user_agent), // Extract OS
+                    'login_time' => Carbon::parse($session->last_activity)->format('d M Y H:i'),
+                    'expires_at' => Carbon::parse($session->last_activity)
+                        ->addMinutes((int) config('session.lifetime'))
+                        ->format('d M Y H:i'),
+                ];
+            });
+
+        return view('profile.student.session', compact('sessions'));
+    }
+
+
+    public function Studentrevoke($id)
+    {
+        DB::table('sessions')->where('id', $id)->delete();
+        return redirect()->route('profile.student.session.show')->with('success', 'Session revoked.');
+    }
+
+    public function StudentrevokeAll()
+    {
+        DB::table('sessions')->where('user_id', Auth::id())->delete();
+        return redirect()->route('profile.student.session.show')->with('success', 'All sessions revoked.');
+    }
+
+    // staff
+    public function Staffshow()
+    {
+        $sessions = DB::table('sessions')
+            ->where('user_id', Auth::id())
+            ->get()
+            ->map(function ($session) {
+                return (object) [
+                    'id' => $session->id,
+                    'ip_address' => $session->ip_address,
+                    'user_agent' => $session->user_agent,
+                    'os' => $this->getOS($session->user_agent), // Extract OS
+                    'login_time' => Carbon::parse($session->last_activity)->format('d M Y H:i'),
+                    'expires_at' => Carbon::parse($session->last_activity)
+                        ->addMinutes((int) config('session.lifetime'))
+                        ->format('d M Y H:i'),
+                ];
+            });
+
+        return view('profile.staff.session', compact('sessions'));
+    }
+
+
+    public function Staffrevoke($id)
+    {
+        DB::table('sessions')->where('id', $id)->delete();
+        return redirect()->route('profile.staff.session.show')->with('success', 'Session revoked.');
+    }
+
+    public function StaffrevokeAll()
+    {
+        DB::table('sessions')->where('user_id', Auth::id())->delete();
+        return redirect()->route('profile.staff.session.show')->with('success', 'All sessions revoked.');
     }
 
     private function getOS($userAgent)

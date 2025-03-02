@@ -66,6 +66,16 @@
     .revoke-all-container button:hover {
         background-color: #b91c1c; /* Darker red */
     }
+    .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #aaa;
+            border-radius: 3px;
+            padding: 5px;
+            background-color: transparent;
+            color: inherit;
+            padding: 4px;
+            font-size: 15px;
+            padding-right: 20px;
+        }
 </style>
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
@@ -161,7 +171,7 @@
 
 
                         <li class="nav-item">
-                            <a href="{{ route('profile.session') }}" class="nav-link  active ">
+                            <a href="{{ route('profile.session.show') }}" class="nav-link  active ">
                                 <i class="nav-icon fas fa-stopwatch"></i>
                                 <p>
                                     Session
@@ -210,44 +220,36 @@
             <section class="content">
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h3 class="card-title">List Session</h3>
-                                    <div class="card-tools">
-                                        <button class="btn btn-danger" data-toggle="tooltip" title="Revoke All"
-                                            onclick="confirmDeleteSessionAll()">Revoke All <i
-                                                class="fa fa-trash"></i></a>
+                        <div class="col-md-12 mx-auto">
+                            <div class="card shadow-lg">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h3 class="card-title">List of Active Sessions</h3>
+                                    <div class="ml-auto">
+                                        <form id="revokeAllForm"
+                                            action="{{ route('profile.admin.session.revokeAll') }}" method="POST">
+                                            @csrf
+                                            <button type="button" class="btn btn-danger btn-sm px-3"
+                                                onclick="confirmRevokeAll()">
+                                                <i class="fas fa-trash"></i> Revoke All
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
-                                <!-- /.card-header -->
+
+
+
                                 <div class="card-body">
-
-                                    <div class="container mx-auto p-6 bg-white shadow-lg rounded-lg">
-                                        <div class="revoke-all-container">
-                                            <h3 class="text-lg font-semibold">List Session</h3>
-
-                                            <!-- Force "Revoke All" Button to Always Show -->
-                                            <form id="revokeAllForm" action="{{ route('session.revokeAll') }}" method="POST">
-                                                @csrf
-                                                <button type="button" onclick="confirmRevokeAll()">
-                                                    <span>Revoke All</span>
-                                                    🗑
-                                                </button>
-                                            </form>
-                                        </div>
-
-                                        <!-- Session Table -->
-                                        <table id="sessionTable" class="display w-full">
-                                            <thead>
-                                                <tr class="bg-gray-200">
+                                    <div class="table-responsive">
+                                        <table id="sessionTable" class="table table-bordered table-hover text-center">
+                                            <thead class="thead-light">
+                                                <tr>
                                                     <th>#</th>
                                                     <th>IP</th>
                                                     <th>Device</th>
                                                     <th>OS</th>
                                                     <th>Login At</th>
                                                     <th>Expired At</th>
-                                                    <th>Aksi</th>
+                                                    <th>Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -255,16 +257,21 @@
                                                     <tr>
                                                         <td>{{ $index + 1 }}</td>
                                                         <td>{{ $session->ip_address }}</td>
-                                                        <td>{{ $session->user_agent }}</td>
-                                                        <td>{{ $session->os }}</td> <!-- OS Column -->
+                                                        <td class="text-break" style="max-width: 200px;">
+                                                            {{ $session->user_agent }}</td>
+                                                        <td>{{ $session->os }}</td>
                                                         <td>{{ $session->login_time }}</td>
                                                         <td>{{ $session->expires_at }}</td>
                                                         <td>
-                                                            <form id="deleteForm-{{ $session->id }}" action="{{ route('session.revoke', $session->id) }}" method="POST">
+                                                            <form id="deleteForm-{{ $session->id }}"
+                                                                action="{{ route('profile.admin.session.revoke', $session->id) }}"
+                                                                method="POST">
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button type="button" onclick="confirmDelete('{{ $session->id }}')" class="bg-red-500 text-white px-2 py-1 rounded">
-                                                                    🗑
+                                                                <button type="button"
+                                                                    onclick="confirmDelete('{{ $session->id }}')"
+                                                                    class="btn btn-sm btn-outline-danger">
+                                                                    <i class="fas fa-trash"></i>
                                                                 </button>
                                                             </form>
                                                         </td>
@@ -273,26 +280,11 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                </div>
-                                <!-- /.card-body -->
-                            </div>
-                            <!-- /.card -->
+                                </div> <!-- /.card-body -->
+                            </div> <!-- /.card -->
                         </div>
                     </div>
-
-                    <form action="https://my.petra.ac.id/setting/session/revoke/:id" method="POST"
-                        id="delete-session">
-                        <input type="hidden" name="_method" value="DELETE"> <input type="hidden" name="_token"
-                            value="iNaLLKim1OL6te1P1U2dE23M9zPRdHMKjM2UHWIN">
-                    </form>
-
-                    <form action="https://my.petra.ac.id/setting/session/revoke/all" method="POST"
-                        id="delete-session-all">
-                        <input type="hidden" name="_method" value="DELETE"> <input type="hidden" name="_token"
-                            value="iNaLLKim1OL6te1P1U2dE23M9zPRdHMKjM2UHWIN">
-                    </form>
-                </div>
-                <!-- /.container-fluid -->
+                </div> <!-- /.container-fluid -->
             </section>
             <!-- /.content -->
         </div>
@@ -386,21 +378,6 @@
             });
         }
 
-        function confirmDeleteSessionAll() {
-            Swal.fire({
-                title: 'Konfirmasi Revoke All',
-                text: `Revoke semua Session?`,
-                type: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Delete'
-            }).then((result) => {
-                if (result.value) {
-                    $('#delete-session-all').submit();
-                }
-            });
-        }
     </script>
      <!-- Include SweetAlert2 -->
      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
