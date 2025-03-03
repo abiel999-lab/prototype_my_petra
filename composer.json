@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.2",
         "directorytree/ldaprecord-laravel": "^3.3",
+        "jenssegers/agent": "^2.6",
         "laravel/framework": "^11.31",
         "laravel/socialite": "^5.18",
         "laravel/tinker": "^2.9",

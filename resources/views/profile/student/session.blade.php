@@ -230,7 +230,7 @@
                                     <h3 class="card-title">List of Active Sessions</h3>
                                     <div class="ml-auto">
                                         <form id="revokeAllForm"
-                                            action="{{ route('profile.admin.session.revokeAll') }}" method="POST">
+                                            action="{{ route('profile.student.session.revokeAll') }}" method="POST">
                                             @csrf
                                             <button type="button" class="btn btn-danger btn-sm px-3"
                                                 onclick="confirmRevokeAll()">
@@ -245,15 +245,16 @@
                                 <div class="card-body">
                                     <div class="table-responsive">
                                         <table id="sessionTable" class="table table-bordered table-hover text-center">
-                                            <thead class="thead-light">
+                                            <thead  class="thead-light">
                                                 <tr>
                                                     <th>#</th>
                                                     <th>IP</th>
                                                     <th>Device</th>
                                                     <th>OS</th>
+                                                    <th>Browser</th>
                                                     <th>Login At</th>
-                                                    <th>Expired At</th>
-                                                    <th>Action</th>
+                                                    <th>Expires At</th>
+                                                    <th>Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -261,22 +262,16 @@
                                                     <tr>
                                                         <td>{{ $index + 1 }}</td>
                                                         <td>{{ $session->ip_address }}</td>
-                                                        <td class="text-break" style="max-width: 200px;">
-                                                            {{ $session->user_agent }}</td>
+                                                        <td>{{ $session->device }}</td>
                                                         <td>{{ $session->os }}</td>
+                                                        <td>{{ $session->browser }}</td>
                                                         <td>{{ $session->login_time }}</td>
                                                         <td>{{ $session->expires_at }}</td>
                                                         <td>
-                                                            <form id="deleteForm-{{ $session->id }}"
-                                                                action="{{ route('profile.admin.session.revoke', $session->id) }}"
-                                                                method="POST">
+                                                            <form id="deleteForm-{{ $session->id }}" action="{{ route('profile.student.session.revoke', $session->id) }}" method="POST">
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button type="button"
-                                                                    onclick="confirmDelete('{{ $session->id }}')"
-                                                                    class="btn btn-sm btn-outline-danger">
-                                                                    <i class="fas fa-trash"></i>
-                                                                </button>
+                                                                <button type="button" onclick="confirmDelete('{{ $session->id }}')" class="btn btn-danger">Delete</button>
                                                             </form>
                                                         </td>
                                                     </tr>
