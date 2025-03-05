@@ -29,13 +29,19 @@ return [
     'connections' => [
 
         'default' => [
-            'hosts' => ['ldap.petra.ac.id'],
-            'username' => env('LDAP_USERNAME', 'jaringan'),
-            'password' => env('LDAP_PASSWORD', 'petra123'),
+            'hosts' => [env('LDAP_HOST', 'ldap.petra.ac.id')],
             'port' => env('LDAP_PORT', 389),
             'base_dn' => env('LDAP_BASE_DN', 'dc=petra,dc=ac,dc=id'),
-            'use_ssl' => env('LDAP_USE_SSL', true),
-            'use_tls' => env('LDAP_USE_TLS', true),
+            'username' => env('LDAP_USERNAME'),
+            'password' => env('LDAP_PASSWORD'),
+            'timeout' => env('LDAP_TIMEOUT', 5),
+            'use_ssl' => env('LDAP_SSL', false),
+            'use_tls' => env('LDAP_TLS', false),
+            'options' => [
+                LDAP_OPT_PROTOCOL_VERSION => 3,
+                LDAP_OPT_REFERRALS => 0,
+                LDAP_OPT_X_TLS_REQUIRE_CERT => LDAP_OPT_X_TLS_NEVER, // Abaikan validasi sertifikat
+            ],
         ],
 
     ],

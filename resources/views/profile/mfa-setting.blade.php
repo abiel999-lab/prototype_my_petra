@@ -79,6 +79,35 @@
             font-weight: 700;
             margin-bottom: 20px;
         }
+
+        /* Improve button spacing & alignment */
+        .btn-group form {
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        /* Button improvements */
+        .btn {
+            padding: 6px 12px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        /* Smooth hover effect */
+        .btn:hover {
+            opacity: 0.85;
+        }
+
+        /* Rounded buttons for a modern look */
+        .btn-danger,
+        .btn-success,
+        .btn-warning {
+            border-radius: 6px;
+        }
     </style>
 </head>
 
@@ -260,7 +289,8 @@
                                                         Google Authenticator</option>
                                                 </select>
                                                 <button type="submit" class="btn btn-primary save-btn">Save</button>
-                                                <p style="margin-top: 1rem;">If you are using Google Auth app, click save to look at your QRCode</p>
+                                                <p style="margin-top: 1rem;">If you are using Google Auth app, click
+                                                    save to look at your QRCode</p>
                                             </form>
 
                                             {{-- QR Code Display --}}
@@ -285,7 +315,87 @@
 
                                         <div class="tab-pane" id="tab_manage">
 
+
+                                            <table id="deviceTable"
+                                                class="table table-bordered table-hover text-center">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>IP</th>
+                                                        <th>Device</th>
+                                                        <th>OS</th>
+                                                        <th>Browser</th>
+                                                        <th>Last Used</th>
+                                                        <th>Trusted</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ($devices as $index => $device)
+                                                        <tr>
+                                                            <td>{{ $index + 1 }}</td>
+                                                            <td>{{ $device['ip_address'] }}</td>
+                                                            <td>Desktop</td>
+                                                            <!-- Assuming all are desktop, modify if needed -->
+                                                            <td>{{ $device['os'] }}</td>
+                                                            <td>{{ $device['browser'] }}</td>
+                                                            <td>{{ $device['last_used'] }}</td>
+                                                            <td>
+                                                                @if ($device['trusted'])
+                                                                    <span>
+                                                                        Trusted
+                                                                    </span>
+                                                                @else
+                                                                    <span>
+                                                                        Not Trusted
+                                                                    </span>
+                                                                @endif
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <div class="btn-group">
+                                                                    <!-- Delete Device -->
+                                                                    <form id="deleteForm-{{ $device['id'] }}"
+                                                                        action="{{ route('profile.mfa.delete', $device['id']) }}"
+                                                                        method="POST">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button type="button"
+                                                                            onclick="confirmDelete('{{ $device['id'] }}')"
+                                                                            class="btn btn-sm btn-danger">
+                                                                            Delete
+                                                                        </button>
+                                                                    </form>
+
+                                                                    <!-- Trust / Untrust Device -->
+                                                                    @if ($device['trusted'])
+                                                                        <form
+                                                                            action="{{ route('profile.mfa.untrust', $device['id']) }}"
+                                                                            method="POST">
+                                                                            @csrf
+                                                                            <button type="submit"
+                                                                                class="btn btn-sm btn-warning">
+                                                                                Untrust
+                                                                            </button>
+                                                                        </form>
+                                                                    @else
+                                                                        <form
+                                                                            action="{{ route('profile.mfa.trust', $device['id']) }}"
+                                                                            method="POST">
+                                                                            @csrf
+                                                                            <button type="submit"
+                                                                                class="btn btn-sm btn-success">
+                                                                                Trust
+                                                                            </button>
+                                                                        </form>
+                                                                    @endif
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
                                         </div>
+
 
 
 
@@ -416,6 +526,38 @@
                                                 })
                                                 .catch(error => console.error('Error:', error));
                                         });
+                                    </script>
+                                    <script>
+                                        $(document).ready(function() {
+                                            $('#deviceTable').DataTable({
+                                                "searching": true,
+                                                "ordering": true,
+                                                "paging": true,
+                                                "responsive": true,
+                                                "columnDefs": [{
+                                                        "orderable": false,
+                                                        "targets": [7]
+                                                    } // Disable sorting for Actions column
+                                                ]
+                                            });
+                                        });
+
+                                        // Confirmation alert for deleting a device
+                                        function confirmDelete(deviceId) {
+                                            Swal.fire({
+                                                title: "Are you sure?",
+                                                text: "This device will be deleted permanently!",
+                                                icon: "warning",
+                                                showCancelButton: true,
+                                                confirmButtonColor: "#d33",
+                                                cancelButtonColor: "#3085d6",
+                                                confirmButtonText: "Yes, delete it!"
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    document.getElementById('deleteForm-' + deviceId).submit();
+                                                }
+                                            });
+                                        }
                                     </script>
 </body>
 

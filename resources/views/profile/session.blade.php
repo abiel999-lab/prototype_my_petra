@@ -250,7 +250,7 @@
                                                     <th>Browser</th>
                                                     <th>Login At</th>
                                                     <th>Expires At</th>
-                                                    <th>Aksi</th>
+                                                    <th>Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
