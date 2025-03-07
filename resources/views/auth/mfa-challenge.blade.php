@@ -65,7 +65,7 @@
 
                                     <form action="{{ route('mfa-challenge.verify') }}" method="POST">
                                         @csrf
-                                        <div class="input-group mb-3">
+                                        <div class="input-group mb-3" style="margin-bottom: 0px !important;">
                                             <input type="text" class="form-control" name="code"
                                                 placeholder="OTP code" id="code" required>
                                         </div>

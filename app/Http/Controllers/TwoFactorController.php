@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use PragmaRX\Google2FA\Google2FA;
 use App\Mail\OtpMail;
+use App\Models\TrustedDevice;
 
 
 class TwoFactorController extends Controller
@@ -39,20 +40,26 @@ class TwoFactorController extends Controller
 
         if ($this->validateOtp($user, $request->code)) {
             session(['two_factor_authenticated' => true]);
-            $user->two_factor_code = null; // Clear the email OTP after successful authentication
+            $user->two_factor_code = null; // Clear email OTP
             $user->save();
 
-            // Redirect based on user type
-            switch ($user->usertype) {
-                case 'student':
-                    return redirect()->route('student.dashboard');
-                case 'admin':
-                    return redirect()->route('admin.dashboard');
-                case 'staff':
-                    return redirect()->route('staff.dashboard');
-                default:
-                    return redirect()->route('dashboard'); // Public dashboard
+            // Check if user wants to trust this device
+            if ($request->has('trust_device') && $request->trust_device == 'yes') {
+                $existingTrusted = TrustedDevice::where('user_id', $user->id)->first();
+                if ($existingTrusted) {
+                    $existingTrusted->delete(); // Remove previous trusted device
+                }
+
+                TrustedDevice::create([
+                    'user_id' => $user->id,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->header('User-Agent'),
+                    'trusted' => true,
+                ]);
             }
+
+            return redirect()->route($this->getUserDashboard($user));
+
         }
 
         return redirect()->route('mfa-challenge.index')->withErrors(['code' => 'The provided code is incorrect.']);
@@ -103,6 +110,20 @@ class TwoFactorController extends Controller
 
         return false;
     }
+    private function getUserDashboard($user)
+    {
+        switch ($user->usertype) {
+            case 'student':
+                return 'student.dashboard';
+            case 'admin':
+                return 'admin.dashboard';
+            case 'staff':
+                return 'staff.dashboard';
+            default:
+                return 'dashboard'; // Public or default dashboard
+        }
+    }
+
 
 
 

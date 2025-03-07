@@ -37,7 +37,7 @@
                             class="fas fa-bars"></i></a>
                 </li>
                 <li class="nav-item d-none d-sm-inline-block">
-                    <a href="{{ route('staff.dashboard') }}" class="nav-link">Gate</a>
+                    <a href="{{ route('admin.dashboard') }}" class="nav-link">Gate</a>
                 </li>
             </ul>
 
@@ -49,7 +49,7 @@
                         <i class="fas fa-caret-down"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-right">
-                        <a href="{{ route('profile.staff.setting') }}" class="dropdown-item">Setting</a>
+                        <a href="{{ route('profile.admin.setting') }}" class="dropdown-item">Setting</a>
                         <a href="{{ route('logout') }}" class="dropdown-item"
                             onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
                         <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
@@ -64,7 +64,7 @@
         <!-- Main Sidebar Container -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
-            <a href="{{ route('staff.dashboard') }}" class="brand-link">
+            <a href="{{ route('admin.dashboard') }}" class="brand-link">
                 <img src="https://my.petra.ac.id/img/logo.png" alt="Gate" class="brand-image img-circle elevation-3"
                     style="opacity: .8">
                 <span class="brand-text font-weight-light">Gate</span>
@@ -78,7 +78,7 @@
                         <img src="https://my.petra.ac.id/img/user.png" class="img-circle elevation-2">
                     </div>
                     <div class="info">
-                        <a href="{{ route('profile.staff.setting') }}"
+                        <a href="{{ route('profile.admin.setting') }}"
                             class="d-block">{{ strtoupper(auth()->user()->name) }}</a>
                     </div>
                 </div>
@@ -238,9 +238,17 @@
                                             <div class="form-group row">
                                                 <div class="col-sm-12">
 
-                                                    <a href="{{ route('logout') }}" action="{{ route('logout') }}"
-                                                        type="submit" class="btn btn-primary"
-                                                        style="margin-top: 15px;">Klik disini untuk ganti Password</a>
+
+                                                    <a href="{{ route('logout') }}" class="btn btn-primary"
+                                                        style="margin-top: 15px;"
+                                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Log
+                                                        out untuk ganti Password</a>
+                                                    <form id="logout-form" action="{{ route('logout') }}"
+                                                        method="POST" style="display: none;">
+                                                        @csrf
+                                                    </form>
+
+
 
 
                                                 </div>

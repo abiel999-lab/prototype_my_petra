@@ -104,9 +104,12 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::post('/admin/setting/manage-user/store', [UserController::class, 'store'])->name('profile.admin.manageuser.store');
         Route::put('/admin/setting/manage-user/update/{user}', [UserController::class, 'update'])->name('profile.admin.manageuser.update');
         Route::delete('/admin/setting/manage-user/delete/{user}', [UserController::class, 'destroy'])->name('profile.admin.manageuser.delete');
+
         Route::get('/admin/setting/session', [SessionController::class, 'Adminshow'])->name('profile.admin.session.show');
         Route::delete('/admin/setting/session/{id}', [SessionController::class, 'Adminrevoke'])->name('profile.admin.session.revoke');
         Route::post('/admin/setting/session/revoke-all', [SessionController::class, 'AdminrevokeAll'])->name('profile.admin.session.revokeAll');
+
+
         Route::get('/admin/setting/mfa', [UserDeviceController::class, 'Adminindex'])->name('profile.admin.mfa');
         Route::delete('/admin/setting/mfa/{id}', [UserDeviceController::class, 'Admindelete'])->name('profile.admin.mfa.delete');
         Route::post('/admin/setting/mfa/{id}/trust', [UserDeviceController::class, 'Admintrust'])->name('profile.admin.mfa.trust');
@@ -119,9 +122,11 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::get('/student/setting', [ProfileController::class, 'studentprofile'])->name('profile.student.setting');
         Route::get('/student/setting/profile', [ProfileController::class, 'studenteditprofile'])->name('profile.student.profile');
         Route::get('/student/setting/mfa', [ProfileController::class, 'studentmfasetting'])->name('profile.student.mfa');
+
         Route::get('/student/setting/session', [SessionController::class, 'Studentshow'])->name('profile.student.session.show');
         Route::delete('/student/setting/session/{id}', [SessionController::class, 'Studentrevoke'])->name('profile.student.session.revoke');
         Route::post('/student/setting/session/revoke-all', [SessionController::class, 'StudentrevokeAll'])->name('profile.student.session.revokeAll');
+
         Route::get('/student/setting/mfa', [UserDeviceController::class, 'Studentindex'])->name('profile.student.mfa');
         Route::delete('/student/setting/mfa/{id}', [UserDeviceController::class, 'Studentdelete'])->name('profile.student.mfa.delete');
         Route::post('/student/setting/mfa/{id}/trust', [UserDeviceController::class, 'Studenttrust'])->name('profile.student.mfa.trust');
@@ -134,9 +139,11 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::get('/staff/setting', [ProfileController::class, 'staffprofile'])->name('profile.staff.setting');
         Route::get('/staff/setting/profile', [ProfileController::class, 'staffeditprofile'])->name('profile.staff.profile');
         Route::get('/staff/setting/mfa', [ProfileController::class, 'staffmfasetting'])->name('profile.staff.mfa');
+
         Route::get('/staff/setting/session', [SessionController::class, 'Staffshow'])->name('profile.staff.session.show');
         Route::delete('/staff/setting/session/{id}', [SessionController::class, 'Staffrevoke'])->name('profile.staff.session.revoke');
         Route::post('/staff/setting/session/revoke-all', [SessionController::class, 'StaffrevokeAll'])->name('profile.staff.session.revokeAll');
+
         Route::get('/staff/setting/mfa', [UserDeviceController::class, 'Staffindex'])->name('profile.staff.mfa');
         Route::delete('/staff/setting/mfa/{id}', [UserDeviceController::class, 'Staffdelete'])->name('profile.staff.mfa.delete');
         Route::post('/staff/setting/mfa/{id}/trust', [UserDeviceController::class, 'Stafftrust'])->name('profile.staff.mfa.trust');
@@ -151,13 +158,16 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::get('/setting', [ProfileController::class, 'profile'])->name('profile.setting');
         Route::get('/setting/profile', [ProfileController::class, 'editprofile'])->name('profile.profile');
         Route::get('/setting/mfa', [ProfileController::class, 'mfasetting'])->name('profile.mfa');
+
         Route::get('/setting/session', [SessionController::class, 'show'])->name('profile.session.show');
         Route::delete('/setting/session/{id}', [SessionController::class, 'revoke'])->name('profile.session.revoke');
         Route::post('/setting/session/revoke-all', [SessionController::class, 'revokeAll'])->name('profile.session.revokeAll');
+
         Route::get('/setting/mfa', [UserDeviceController::class, 'Generalindex'])->name('profile.mfa');
         Route::delete('/setting/mfa/{id}', [UserDeviceController::class, 'Generaldelete'])->name('profile.mfa.delete');
         Route::post('/setting/mfa/{id}/trust', [UserDeviceController::class, 'Generaltrust'])->name('profile.mfa.trust');
         Route::post('/setting/mfa/{id}/untrust', [UserDeviceController::class, 'Generaluntrust'])->name('profile.mfa.untrust');
+
     });
 
 });

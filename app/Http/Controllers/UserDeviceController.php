@@ -7,161 +7,91 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Jenssegers\Agent\Agent;
 use Illuminate\Support\Facades\Auth;
+use App\Models\TrustedDevice;
 
 class UserDeviceController extends Controller
 {
-    // Admin Functions
-    public function Adminindex()
+    private function getUserDevices($userId)
     {
-        return $this->getDevicesView('admin');
+        return TrustedDevice::where('user_id', $userId)->get();
     }
 
-    public function Admindelete($id)
+    private function handleDeviceTracking($userId)
     {
-        return $this->deleteDevice('admin', $id);
-    }
-
-    public function Admintrust($id)
-    {
-        return $this->trustDevice('admin', $id);
-    }
-
-    public function Adminuntrust($id)
-    {
-        return $this->untrustDevice('admin', $id);
-    }
-
-    // Student Functions
-    public function Studentindex()
-    {
-        return $this->getDevicesView('student');
-    }
-
-    public function Studentdelete($id)
-    {
-        return $this->deleteDevice('student', $id);
-    }
-
-    public function Studenttrust($id)
-    {
-        return $this->trustDevice('student', $id);
-    }
-
-    public function Studentuntrust($id)
-    {
-        return $this->untrustDevice('student', $id);
-    }
-
-    // Staff Functions
-    public function Staffindex()
-    {
-        return $this->getDevicesView('staff');
-    }
-
-    public function Staffdelete($id)
-    {
-        return $this->deleteDevice('staff', $id);
-    }
-
-    public function Stafftrust($id)
-    {
-        return $this->trustDevice('staff', $id);
-    }
-
-    public function Staffuntrust($id)
-    {
-        return $this->untrustDevice('staff', $id);
-    }
-
-    // General User Functions (No Folder)
-    public function Generalindex()
-    {
-        return $this->getDevicesView('');
-    }
-
-    public function Generaldelete($id)
-    {
-        return $this->deleteDevice('', $id);
-    }
-
-    public function Generaltrust($id)
-    {
-        return $this->trustDevice('', $id);
-    }
-
-    public function Generaluntrust($id)
-    {
-        return $this->untrustDevice('', $id);
-    }
-
-    // Helper Functions
-    private function getDevicesView($usertype)
-    {
-        $userId = Auth::id();
-        $viewPath = $usertype ? "profile.{$usertype}.mfa-setting" : "profile.mfa-setting";
-
-        $devices = DB::table('sessions')
-            ->where('user_id', $userId)
-            ->get()
-            ->map(function ($session) {
-                $agent = new Agent();
-                $agent->setUserAgent($session->user_agent);
-
-                return [
-                    'id' => $session->id,
-                    'ip_address' => $session->ip_address,
-                    'os' => $agent->platform(),
-                    'browser' => $agent->browser(),
-                    'last_used' => Carbon::parse($session->last_activity)->format('d M Y H:i'),
-                    'trusted' => $session->trusted ?? false,
-                ];
-            })
-            ->unique('ip_address')
-            ->values()
-            ->take(3);
-
-        return view($viewPath,compact('devices'));
-    }
-
-    private function deleteDevice($usertype, $id)
-    {
-        $routeName = $usertype ? "profile.{$usertype}.mfa" : "profile.mfa";
-        DB::table('sessions')->where('id', $id)->delete();
-        return redirect()->route($routeName)->with('success', 'Device removed.');
-    }
-
-    private function trustDevice($usertype, $id)
-    {
-        $userId = Auth::id();
-        $routeName = $usertype ? "profile.{$usertype}.mfa" : "profile.mfa";
-
-        $session = DB::table('sessions')->where('id', $id)->first();
-        if (!$session) {
-            return redirect()->route($routeName)->with('error', 'Device not found.');
-        }
-
+        $currentIp = request()->ip();
         $agent = new Agent();
-        $agent->setUserAgent($session->user_agent);
-        $newTrustedOS = $agent->platform();
-        $newTrustedIP = $session->ip_address;
+        $agent->setUserAgent(request()->header('User-Agent'));
 
-        DB::table('sessions')->where('user_id', $userId)->update(['trusted' => false]);
-        DB::table('sessions')->where('id', $id)->update(['trusted' => true]);
+        $deviceType = $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
+        $now = Carbon::now('Asia/Jakarta');
 
-        return redirect()->route($routeName)->with('success', "{$newTrustedOS} on IP {$newTrustedIP} is now the trusted device.");
-    }
+        // Auto-delete devices not used for 30 days
+        TrustedDevice::where('user_id', $userId)
+            ->where('updated_at', '<', $now->subDays(30))
+            ->delete();
 
-    private function untrustDevice($usertype, $id)
-    {
-        $routeName = $usertype ? "profile.{$usertype}.mfa" : "profile.mfa";
+        $existingDevice = TrustedDevice::where('user_id', $userId)
+            ->where('ip_address', $currentIp)
+            ->first();
 
-        $session = DB::table('sessions')->where('id', $id)->first();
-        if (!$session) {
-            return redirect()->route($routeName)->with('error', 'Device not found.');
+        if (!$existingDevice) {
+            TrustedDevice::create([
+                'user_id' => $userId,
+                'ip_address' => $currentIp,
+                'device' => $deviceType,
+                'os' => $agent->platform() ?? 'Unknown',
+                'trusted' => false,
+                'action' => null,
+                'updated_at' => $now,
+            ]);
+        } else {
+            $existingDevice->touch();
         }
-
-        DB::table('sessions')->where('id', $id)->update(['trusted' => false]);
-
-        return redirect()->route($routeName)->with('success', 'Device is no longer trusted.');
     }
+
+    private function deleteDevice($id, $userId)
+    {
+        $device = TrustedDevice::where('id', $id)->where('user_id', $userId)->first();
+        if (!$device) return false;
+
+        $currentIp = request()->ip();
+        $device->delete();
+
+        if ($device->ip_address === $currentIp) {
+            auth()->logout();
+            return redirect('/login')->with('info', 'Your device was removed, and you have been logged out.');
+        }
+        return true;
+    }
+
+    private function trustDevice($id, $userId)
+    {
+        TrustedDevice::where('user_id', $userId)->update(['trusted' => false]);
+        TrustedDevice::where('id', $id)->where('user_id', $userId)->update(['trusted' => true, 'action' => 'trust']);
+    }
+
+    private function untrustDevice($id, $userId)
+    {
+        TrustedDevice::where('id', $id)->where('user_id', $userId)->update(['trusted' => false, 'action' => 'untrust']);
+    }
+
+    public function Adminindex() { $userId = Auth::id(); $this->handleDeviceTracking($userId); return view('profile.admin.mfa-setting', ['devices' => $this->getUserDevices($userId)]); }
+    public function Admindelete($id) { return $this->deleteDevice($id, Auth::id()) ? redirect()->back()->with('success', 'Device removed.') : redirect()->back()->with('error', 'Device not found.'); }
+    public function Admintrust($id) { $this->trustDevice($id, Auth::id()); return redirect()->back()->with('success', 'Device is now trusted.'); }
+    public function Adminuntrust($id) { $this->untrustDevice($id, Auth::id()); return redirect()->back()->with('success', 'Device is no longer trusted.'); }
+
+    public function Studentindex() { $userId = Auth::id(); $this->handleDeviceTracking($userId); return view('profile.student.mfa-setting', ['devices' => $this->getUserDevices($userId)]); }
+    public function Studentdelete($id) { return $this->deleteDevice($id, Auth::id()) ? redirect()->back()->with('success', 'Device removed.') : redirect()->back()->with('error', 'Device not found.'); }
+    public function Studenttrust($id) { $this->trustDevice($id, Auth::id()); return redirect()->back()->with('success', 'Device is now trusted.'); }
+    public function Studentuntrust($id) { $this->untrustDevice($id, Auth::id()); return redirect()->back()->with('success', 'Device is no longer trusted.'); }
+
+    public function Staffindex() { $userId = Auth::id(); $this->handleDeviceTracking($userId); return view('profile.staff.mfa-setting', ['devices' => $this->getUserDevices($userId)]); }
+    public function Staffdelete($id) { return $this->deleteDevice($id, Auth::id()) ? redirect()->back()->with('success', 'Device removed.') : redirect()->back()->with('error', 'Device not found.'); }
+    public function Stafftrust($id) { $this->trustDevice($id, Auth::id()); return redirect()->back()->with('success', 'Device is now trusted.'); }
+    public function Staffuntrust($id) { $this->untrustDevice($id, Auth::id()); return redirect()->back()->with('success', 'Device is no longer trusted.'); }
+
+    public function Generalindex() { $userId = Auth::id(); $this->handleDeviceTracking($userId); return view('profile.mfa-setting', ['devices' => $this->getUserDevices($userId)]); }
+    public function Generaldelete($id) { return $this->deleteDevice($id, Auth::id()) ? redirect()->back()->with('success', 'Device removed.') : redirect()->back()->with('error', 'Device not found.'); }
+    public function Generaltrust($id) { $this->trustDevice($id, Auth::id()); return redirect()->back()->with('success', 'Device is now trusted.'); }
+    public function Generaluntrust($id) { $this->untrustDevice($id, Auth::id()); return redirect()->back()->with('success', 'Device is no longer trusted.'); }
 }

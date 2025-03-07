@@ -231,9 +231,14 @@
                                             <div class="form-group row">
                                                 <div class="col-sm-12">
 
-                                                    <a href="{{ route('logout') }}" action="{{ route('logout') }}"
-                                                        type="submit" class="btn btn-primary"
-                                                        style="margin-top: 15px;">Klik disini untuk ganti Password</a>
+                                                    <a href="{{ route('logout') }}" class="btn btn-primary"
+                                                        style="margin-top: 15px;"
+                                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Log
+                                                        out untuk ganti Password</a>
+                                                    <form id="logout-form" action="{{ route('logout') }}"
+                                                        method="POST" style="display: none;">
+                                                        @csrf
+                                                    </form>
 
 
                                                 </div>
