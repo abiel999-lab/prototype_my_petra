@@ -392,80 +392,81 @@
                                                     @endforeach
                                                 </tbody>
                                             </table> --}}
-                                            <table id="deviceTable"
-                                            class="table table-bordered table-hover text-center">
-                                            <thead class="thead-light">
-                                                <tr>
-                                                    <th>#</th>
-                                                    <th>IP Address</th>
-                                                    <th>Device</th>
-                                                    <th>OS</th>
-                                                    <th>Last Used</th>
-                                                    <th>Status</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($devices as $index => $device)
-                                                    <tr>
-                                                        <td>{{ $index + 1 }}</td>
-                                                        <td>{{ $device->ip_address }}</td>
-                                                        <td>{{ $device->device ?? 'Unknown' }}</td>
-                                                        <td>{{ $device->os ?? 'Unknown' }}</td>
-                                                        <td>{{ $device->updated_at->format('d M Y H:i') }}</td>
-                                                        <td>
-                                                            @if ($device->trusted)
-                                                                ✅ Trusted
-                                                            @else
-                                                                ❌ Not Trusted
-                                                            @endif
-                                                        </td>
-                                                        <td>
-                                                            <div class="action-buttons">
+                                            <div class="table-responsive">
+                                                <table id="deviceTable"
+                                                    class="table table-bordered table-hover text-center">
+                                                    <thead class="thead-light">
+                                                        <tr>
+                                                            <th>#</th>
+                                                            <th>IP Address</th>
+                                                            <th>Device</th>
+                                                            <th>OS</th>
+                                                            <th class="d-none d-md-table-cell">Last Used</th>
+                                                            <!-- Hidden on small screens -->
+                                                            <th class="d-none d-md-table-cell">Status</th>
+                                                            <!-- Hidden on small screens -->
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach ($devices as $index => $device)
+                                                            <tr>
+                                                                <td>{{ $index + 1 }}</td>
+                                                                <td>{{ $device->ip_address }}</td>
+                                                                <td>{{ $device->device ?? 'Unknown' }}</td>
+                                                                <td>{{ $device->os ?? 'Unknown' }}</td>
+                                                                <td class="d-none d-md-table-cell">
+                                                                    {{ $device->updated_at->format('d M Y H:i') }}</td>
+                                                                <td class="d-none d-md-table-cell">
+                                                                    @if ($device->trusted)
+                                                                        ✅ Trusted
+                                                                    @else
+                                                                        ❌ Not Trusted
+                                                                    @endif
+                                                                </td>
+                                                                <td>
+                                                                    <div class="d-flex justify-content-center" style="gap: 5px">
+                                                                        <!-- Adds spacing between buttons -->
+                                                                        <!-- Delete Device -->
+                                                                        <form id="deleteForm-{{ $device->id }}"
+                                                                            action="{{ route('profile.student.mfa.delete', $device->id) }}"
+                                                                            method="POST">
+                                                                            @csrf
+                                                                            @method('DELETE')
+                                                                            <button type="button"
+                                                                                onclick="confirmDelete('{{ $device->id }}')"
+                                                                                class="btn btn-danger btn-sm">Delete</button>
+                                                                        </form>
 
-                                                                <!-- Delete Device -->
-                                                                <form id="deleteForm-{{ $device->id }}"
-                                                                    action="{{ route('profile.student.mfa.delete', $device->id) }}"
-                                                                    method="POST">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="button"
-                                                                        onclick="confirmDelete('{{ $device->id }}')"
-                                                                        class="btn-delete">🗑</button>
-                                                                </form>
-
-
-                                                                <!-- Trust / Untrust Device Button -->
-                                                                @if ($device->trusted)
-                                                                    <!-- Untrust Button -->
-                                                                    <form
-                                                                        action="{{ route('profile.student.mfa.untrust', $device->id) }}"
-                                                                        method="POST">
-                                                                        @csrf
-                                                                        <input type="hidden" name="device_id"
-                                                                            value="{{ $device->id }}">
-                                                                        <button type="submit"
-                                                                            class="btn-untrust">🚫 Untrust</button>
-                                                                    </form>
-                                                                @else
-                                                                    <!-- Trust Button -->
-                                                                    <form
-                                                                        action="{{ route('profile.student.mfa.trust', $device->id) }}"
-                                                                        method="POST">
-                                                                        @csrf
-                                                                        <input type="hidden" name="device_id"
-                                                                            value="{{ $device->id }}">
-                                                                        <button type="submit" class="btn-trust">✅
-                                                                            Trust</button>
-                                                                    </form>
-                                                                @endif
-
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
+                                                                        <!-- Trust / Untrust Device -->
+                                                                        @if ($device->trusted)
+                                                                            <form
+                                                                                action="{{ route('profile.student.mfa.untrust', $device->id) }}"
+                                                                                method="POST">
+                                                                                @csrf
+                                                                                <input type="hidden" name="device_id"
+                                                                                    value="{{ $device->id }}">
+                                                                                <button type="submit"
+                                                                                    class="btn btn-warning btn-sm">Untrust</button>
+                                                                            </form>
+                                                                        @else
+                                                                            <form
+                                                                                action="{{ route('profile.student.mfa.trust', $device->id) }}"
+                                                                                method="POST">
+                                                                                @csrf
+                                                                                <input type="hidden" name="device_id"
+                                                                                    value="{{ $device->id }}">
+                                                                                <button type="submit"
+                                                                                    class="btn btn-success btn-sm">Trust</button>
+                                                                            </form>
+                                                                        @endif
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
 
                                         </div>
 

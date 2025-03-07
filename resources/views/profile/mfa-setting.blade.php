@@ -395,245 +395,246 @@
                                             </table> --}}
 
                                             <!-- Device Table -->
-                                            <table id="deviceTable"
-                                                class="table table-bordered table-hover text-center">
-                                                <thead class="thead-light">
-                                                    <tr>
-                                                        <th>#</th>
-                                                        <th>IP Address</th>
-                                                        <th>Device</th>
-                                                        <th>OS</th>
-                                                        <th>Last Used</th>
-                                                        <th>Status</th>
-                                                        <th>Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach ($devices as $index => $device)
+                                            <div class="table-responsive">
+                                                <table id="deviceTable"
+                                                    class="table table-bordered table-hover text-center">
+                                                    <thead class="thead-light">
                                                         <tr>
-                                                            <td>{{ $index + 1 }}</td>
-                                                            <td>{{ $device->ip_address }}</td>
-                                                            <td>{{ $device->device ?? 'Unknown' }}</td>
-                                                            <td>{{ $device->os ?? 'Unknown' }}</td>
-                                                            <td>{{ $device->updated_at->format('d M Y H:i') }}</td>
-                                                            <td>
-                                                                @if ($device->trusted)
-                                                                    ✅ Trusted
-                                                                @else
-                                                                    ❌ Not Trusted
-                                                                @endif
-                                                            </td>
-                                                            <td>
-                                                                <div class="action-buttons">
-
-                                                                    <!-- Delete Device -->
-                                                                    <form id="deleteForm-{{ $device->id }}"
-                                                                        action="{{ route('profile.mfa.delete', $device->id) }}"
-                                                                        method="POST">
-                                                                        @csrf
-                                                                        @method('DELETE')
-                                                                        <button type="button"
-                                                                            onclick="confirmDelete('{{ $device->id }}')"
-                                                                            class="btn-delete">🗑</button>
-                                                                    </form>
-
-
-                                                                    <!-- Trust / Untrust Device Button -->
-                                                                    @if ($device->trusted)
-                                                                        <!-- Untrust Button -->
-                                                                        <form
-                                                                            action="{{ route('profile.mfa.untrust', $device->id) }}"
-                                                                            method="POST">
-                                                                            @csrf
-                                                                            <input type="hidden" name="device_id"
-                                                                                value="{{ $device->id }}">
-                                                                            <button type="submit"
-                                                                                class="btn-untrust">🚫 Untrust</button>
-                                                                        </form>
-                                                                    @else
-                                                                        <!-- Trust Button -->
-                                                                        <form
-                                                                            action="{{ route('profile.mfa.trust', $device->id) }}"
-                                                                            method="POST">
-                                                                            @csrf
-                                                                            <input type="hidden" name="device_id"
-                                                                                value="{{ $device->id }}">
-                                                                            <button type="submit" class="btn-trust">✅
-                                                                                Trust</button>
-                                                                        </form>
-                                                                    @endif
-
-                                                                </div>
-                                                            </td>
+                                                            <th>#</th>
+                                                            <th>IP Address</th>
+                                                            <th>Device</th>
+                                                            <th>OS</th>
+                                                            <th class="d-none d-md-table-cell">Last Used</th>
+                                                            <!-- Hidden on small screens -->
+                                                            <th class="d-none d-md-table-cell">Status</th>
+                                                            <!-- Hidden on small screens -->
+                                                            <th>Actions</th>
                                                         </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach ($devices as $index => $device)
+                                                            <tr>
+                                                                <td>{{ $index + 1 }}</td>
+                                                                <td>{{ $device->ip_address }}</td>
+                                                                <td>{{ $device->device ?? 'Unknown' }}</td>
+                                                                <td>{{ $device->os ?? 'Unknown' }}</td>
+                                                                <td class="d-none d-md-table-cell">
+                                                                    {{ $device->updated_at->format('d M Y H:i') }}</td>
+                                                                <td class="d-none d-md-table-cell">
+                                                                    @if ($device->trusted)
+                                                                        ✅ Trusted
+                                                                    @else
+                                                                        ❌ Not Trusted
+                                                                    @endif
+                                                                </td>
+                                                                <td>
+                                                                    <div class="d-flex justify-content-center" style="gap: 5px">
+                                                                        <!-- Adds spacing between buttons -->
+                                                                        <!-- Delete Device -->
+                                                                        <form id="deleteForm-{{ $device->id }}"
+                                                                            action="{{ route('profile.mfa.delete', $device->id) }}"
+                                                                            method="POST">
+                                                                            @csrf
+                                                                            @method('DELETE')
+                                                                            <button type="button"
+                                                                                onclick="confirmDelete('{{ $device->id }}')"
+                                                                                class="btn btn-danger btn-sm">Delete</button>
+                                                                        </form>
 
-
-
-
-
-                                        <footer class="main-footer">
-                                            <strong>Copyright &copy; 2023 <a href="https://petra.ac.id">Petra Christian
-                                                    University</a>.</strong>
-                                            All rights reserved.
-                                            <div class="float-right d-none d-sm-inline-block">
-                                                Pusat Pengembangan Sistem Informasi <span>version: v1.0.18</span>
+                                                                        <!-- Trust / Untrust Device -->
+                                                                        @if ($device->trusted)
+                                                                            <form
+                                                                                action="{{ route('profile.mfa.untrust', $device->id) }}"
+                                                                                method="POST">
+                                                                                @csrf
+                                                                                <input type="hidden" name="device_id"
+                                                                                    value="{{ $device->id }}">
+                                                                                <button type="submit"
+                                                                                    class="btn btn-warning btn-sm">Untrust</button>
+                                                                            </form>
+                                                                        @else
+                                                                            <form
+                                                                                action="{{ route('profile.mfa.trust', $device->id) }}"
+                                                                                method="POST">
+                                                                                @csrf
+                                                                                <input type="hidden" name="device_id"
+                                                                                    value="{{ $device->id }}">
+                                                                                <button type="submit"
+                                                                                    class="btn btn-success btn-sm">Trust</button>
+                                                                            </form>
+                                                                        @endif
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
                                             </div>
-                                        </footer>
-                                    </div>
-                                    <!-- ./wrapper -->
-
-                                    <!-- jQuery -->
-                                    <script src="https://my.petra.ac.id/adminlte/plugins/jquery/jquery.min.js"></script>
-                                    <!-- jQuery UI 1.11.4 -->
-                                    <script src="https://my.petra.ac.id/adminlte/plugins/jquery-ui/jquery-ui.min.js"></script>
-                                    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
-                                    <script>
-                                        $.widget.bridge('uibutton', $.ui.button)
-                                    </script>
-                                    <!-- Bootstrap 4 -->
-                                    <script src="https://my.petra.ac.id/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-                                    <!-- overlayScrollbars -->
-                                    <script src="https://my.petra.ac.id/adminlte/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
-                                    <!-- AdminLTE App -->
-                                    <script src="https://my.petra.ac.id/adminlte/dist/js/adminlte.js"></script>
-                                    <script src="https://my.petra.ac.id/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
-                                    <script type="text/javascript">
-                                        const Toast = Swal.mixin({
-                                            toast: true,
-                                            position: 'top-end',
-                                            showConfirmButton: false,
-                                            showCloseButton: true,
-                                            timer: 5000
-                                        });
 
 
 
 
 
-                                        function showLoading() {
-                                            Swal.fire({
-                                                title: 'Loading ...',
-                                                allowOutsideClick: false,
-                                                allowEscapeKey: false,
-                                                allowEnterKey: false,
-                                                didOpen: () => {
-                                                    Swal.showLoading()
-                                                },
+                                            <footer class="main-footer">
+                                                <strong>Copyright &copy; 2023 <a href="https://petra.ac.id">Petra
+                                                        Christian
+                                                        University</a>.</strong>
+                                                All rights reserved.
+                                                <div class="float-right d-none d-sm-inline-block">
+                                                    Pusat Pengembangan Sistem Informasi <span>version: v1.0.18</span>
+                                                </div>
+                                            </footer>
+                                        </div>
+                                        <!-- ./wrapper -->
+
+                                        <!-- jQuery -->
+                                        <script src="https://my.petra.ac.id/adminlte/plugins/jquery/jquery.min.js"></script>
+                                        <!-- jQuery UI 1.11.4 -->
+                                        <script src="https://my.petra.ac.id/adminlte/plugins/jquery-ui/jquery-ui.min.js"></script>
+                                        <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+                                        <script>
+                                            $.widget.bridge('uibutton', $.ui.button)
+                                        </script>
+                                        <!-- Bootstrap 4 -->
+                                        <script src="https://my.petra.ac.id/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+                                        <!-- overlayScrollbars -->
+                                        <script src="https://my.petra.ac.id/adminlte/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+                                        <!-- AdminLTE App -->
+                                        <script src="https://my.petra.ac.id/adminlte/dist/js/adminlte.js"></script>
+                                        <script src="https://my.petra.ac.id/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
+                                        <script type="text/javascript">
+                                            const Toast = Swal.mixin({
+                                                toast: true,
+                                                position: 'top-end',
+                                                showConfirmButton: false,
+                                                showCloseButton: true,
+                                                timer: 5000
                                             });
-                                        }
-                                    </script>
-                                    <script type="text/javascript">
-                                        $(function() {
-                                            $('[data-toggle="tooltip"]').tooltip()
-                                        })
-                                    </script>
-                                    <script type="text/javascript">
-                                        $(function() {
-                                            var tab = ``;
-                                            if (tab) {
-                                                $(`a[href="#tab_${tab}"]`).addClass('active');
-                                                $(`#tab_${tab}`).addClass('active');
-                                            } else {
-                                                $(`a[href="#tab_activation"]`).addClass('active');
-                                                $(`#tab_activation`).addClass('active');
+
+
+
+
+
+                                            function showLoading() {
+                                                Swal.fire({
+                                                    title: 'Loading ...',
+                                                    allowOutsideClick: false,
+                                                    allowEscapeKey: false,
+                                                    allowEnterKey: false,
+                                                    didOpen: () => {
+                                                        Swal.showLoading()
+                                                    },
+                                                });
                                             }
-                                        });
-                                    </script>
-                                    <script>
-                                        // Handle MFA method selection and display QR code
-                                        document.getElementById('mfa-method-form').addEventListener('submit', function(e) {
-                                            e.preventDefault(); // Prevent default form submission
-
-                                            const formData = new FormData(this);
-
-                                            fetch("{{ route('set-mfa-method') }}", {
-                                                    method: 'POST',
-                                                    headers: {
-                                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                    },
-                                                    body: formData,
-                                                })
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    if (data.status === 'success') {
-                                                        alert(data.message);
-
-                                                        // Display QR code if Google Authenticator is selected
-                                                        if (data.qrCodeUrl) {
-                                                            const qrCodeContainer = document.getElementById('qr-code-container');
-                                                            const qrCodeImage = document.getElementById('qr-code-image');
-
-                                                            qrCodeImage.src =
-                                                                `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.qrCodeUrl)}&size=200x200`;
-                                                            qrCodeContainer.style.display = 'block';
-                                                        } else {
-                                                            // Hide QR code if Email is selected
-                                                            document.getElementById('qr-code-container').style.display = 'none';
-                                                        }
-                                                    } else {
-                                                        alert('Failed to update MFA method.');
-                                                    }
-                                                })
-                                                .catch(error => console.error('Error:', error));
-                                        });
-
-                                        // Handle MFA toggle
-                                        document.getElementById('mfa-toggle').addEventListener('change', function() {
-                                            fetch("{{ route('toggle-mfa') }}", {
-                                                    method: 'POST',
-                                                    headers: {
-                                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                        'Content-Type': 'application/json',
-                                                    },
-                                                    body: JSON.stringify({}),
-                                                })
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    if (data.status === 'success') {
-                                                        alert(`MFA is now ${data.mfa_enabled ? 'enabled' : 'disabled'}.`);
-                                                    } else {
-                                                        alert('Failed to toggle MFA.');
-                                                    }
-                                                })
-                                                .catch(error => console.error('Error:', error));
-                                        });
-                                    </script>
-                                    <script>
-                                        $(document).ready(function() {
-                                            $('#deviceTable').DataTable({
-                                                "searching": true,
-                                                "ordering": true,
-                                                "paging": true,
-                                                "responsive": true,
-                                                "columnDefs": [{
-                                                        "orderable": false,
-                                                        "targets": [7]
-                                                    } // Disable sorting for Actions column
-                                                ]
-                                            });
-                                        });
-
-                                        // Confirmation alert for deleting a device
-                                        function confirmDelete(deviceId) {
-                                            Swal.fire({
-                                                title: "Are you sure?",
-                                                text: "This device will be deleted permanently!",
-                                                icon: "warning",
-                                                showCancelButton: true,
-                                                confirmButtonColor: "#d33",
-                                                cancelButtonColor: "#3085d6",
-                                                confirmButtonText: "Yes, delete it!"
-                                            }).then((result) => {
-                                                if (result.isConfirmed) {
-                                                    document.getElementById('deleteForm-' + deviceId).submit();
+                                        </script>
+                                        <script type="text/javascript">
+                                            $(function() {
+                                                $('[data-toggle="tooltip"]').tooltip()
+                                            })
+                                        </script>
+                                        <script type="text/javascript">
+                                            $(function() {
+                                                var tab = ``;
+                                                if (tab) {
+                                                    $(`a[href="#tab_${tab}"]`).addClass('active');
+                                                    $(`#tab_${tab}`).addClass('active');
+                                                } else {
+                                                    $(`a[href="#tab_activation"]`).addClass('active');
+                                                    $(`#tab_activation`).addClass('active');
                                                 }
                                             });
-                                        }
-                                    </script>
+                                        </script>
+                                        <script>
+                                            // Handle MFA method selection and display QR code
+                                            document.getElementById('mfa-method-form').addEventListener('submit', function(e) {
+                                                e.preventDefault(); // Prevent default form submission
+
+                                                const formData = new FormData(this);
+
+                                                fetch("{{ route('set-mfa-method') }}", {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                        },
+                                                        body: formData,
+                                                    })
+                                                    .then(response => response.json())
+                                                    .then(data => {
+                                                        if (data.status === 'success') {
+                                                            alert(data.message);
+
+                                                            // Display QR code if Google Authenticator is selected
+                                                            if (data.qrCodeUrl) {
+                                                                const qrCodeContainer = document.getElementById('qr-code-container');
+                                                                const qrCodeImage = document.getElementById('qr-code-image');
+
+                                                                qrCodeImage.src =
+                                                                    `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.qrCodeUrl)}&size=200x200`;
+                                                                qrCodeContainer.style.display = 'block';
+                                                            } else {
+                                                                // Hide QR code if Email is selected
+                                                                document.getElementById('qr-code-container').style.display = 'none';
+                                                            }
+                                                        } else {
+                                                            alert('Failed to update MFA method.');
+                                                        }
+                                                    })
+                                                    .catch(error => console.error('Error:', error));
+                                            });
+
+                                            // Handle MFA toggle
+                                            document.getElementById('mfa-toggle').addEventListener('change', function() {
+                                                fetch("{{ route('toggle-mfa') }}", {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                            'Content-Type': 'application/json',
+                                                        },
+                                                        body: JSON.stringify({}),
+                                                    })
+                                                    .then(response => response.json())
+                                                    .then(data => {
+                                                        if (data.status === 'success') {
+                                                            alert(`MFA is now ${data.mfa_enabled ? 'enabled' : 'disabled'}.`);
+                                                        } else {
+                                                            alert('Failed to toggle MFA.');
+                                                        }
+                                                    })
+                                                    .catch(error => console.error('Error:', error));
+                                            });
+                                        </script>
+                                        <script>
+                                            $(document).ready(function() {
+                                                $('#deviceTable').DataTable({
+                                                    "searching": true,
+                                                    "ordering": true,
+                                                    "paging": true,
+                                                    "responsive": true,
+                                                    "columnDefs": [{
+                                                            "orderable": false,
+                                                            "targets": [7]
+                                                        } // Disable sorting for Actions column
+                                                    ]
+                                                });
+                                            });
+
+                                            // Confirmation alert for deleting a device
+                                            function confirmDelete(deviceId) {
+                                                Swal.fire({
+                                                    title: "Are you sure?",
+                                                    text: "This device will be deleted permanently!",
+                                                    icon: "warning",
+                                                    showCancelButton: true,
+                                                    confirmButtonColor: "#d33",
+                                                    cancelButtonColor: "#3085d6",
+                                                    confirmButtonText: "Yes, delete it!"
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        document.getElementById('deleteForm-' + deviceId).submit();
+                                                    }
+                                                });
+                                            }
+                                        </script>
 </body>
 
 </html>
