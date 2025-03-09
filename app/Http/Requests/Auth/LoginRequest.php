@@ -6,8 +6,12 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use LdapRecord\Models\ActiveDirectory\User as LdapUser;
+use App\Models\User;
 
 class LoginRequest extends FormRequest
 {
@@ -41,15 +45,43 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+        $credentials = $this->only('email', 'password');
 
-            throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
-            ]);
+        // 🔹 Attempt Laravel Database Authentication First
+        if (Auth::attempt($credentials, $this->boolean('remember'))) {
+            RateLimiter::clear($this->throttleKey());
+            return;
         }
 
-        RateLimiter::clear($this->throttleKey());
+        // 🔹 If Database Authentication Fails, Attempt LDAP Authentication
+        try {
+            $ldapUser = LdapUser::where('mail', $credentials['email'])->first();
+
+            if ($ldapUser && $ldapUser->authenticate($credentials['password'])) {
+                // Sync LDAP user into Laravel database
+                $user = User::updateOrCreate(
+                    ['email' => $ldapUser->mail[0]],
+                    [
+                        'name' => $ldapUser->cn[0] ?? 'Unknown',
+                        'password' => Hash::make($credentials['password']), // Store hashed password
+                        'usertype' => 'general', // Default role for LDAP users
+                    ]
+                );
+
+                Auth::login($user);
+                RateLimiter::clear($this->throttleKey());
+                return;
+            }
+        } catch (\Exception $e) {
+            Log::error('LDAP Authentication Error: ' . $e->getMessage());
+        }
+
+        // 🔹 If both Database and LDAP Authentication Fail
+        RateLimiter::hit($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'email' => trans('auth.failed'),
+        ]);
     }
 
     /**

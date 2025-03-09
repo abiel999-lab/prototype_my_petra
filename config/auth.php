@@ -35,14 +35,16 @@ return [
     |
     */
 
-   'guards' => [
+'guards' => [
     'web' => [
         'driver' => 'session',
         'provider' => 'users',
     ],
 
-
-
+    'ldap' => [
+        'driver' => 'session',
+        'provider' => 'ldap_users',
+    ],
 ],
 
     /*
@@ -61,16 +63,29 @@ return [
     | Supported: "database", "eloquent"
     |
     */
-
-    'providers' => [
+    
+'providers' => [
     'users' => [
         'driver' => 'eloquent',
         'model' => App\Models\User::class,
     ],
 
-
-
+    'ldap_users' => [
+        'driver' => 'ldap',
+        'model' => LdapRecord\Models\ActiveDirectory\User::class,
+        'rules' => [],
+        'database' => [
+            'model' => App\Models\User::class,
+            'sync_passwords' => true, // Sync passwords from LDAP to Laravel
+            'sync_attributes' => [
+                'name' => 'cn',
+                'email' => 'mail',
+            ],
+            'bind_user_to_model' => false,
+        ],
+    ],
 ],
+
 
     /*
     |--------------------------------------------------------------------------

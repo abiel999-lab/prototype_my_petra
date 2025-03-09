@@ -14,8 +14,9 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 
-// 🔹 Redirect root URL ('/') to the correct dashboard or login
+// ðŸ”¹ Redirect root URL ('/') to the correct dashboard or login
 Route::get('/', function () {
     if (Auth::check()) {
         switch (Auth::user()->usertype) {
@@ -34,7 +35,7 @@ Route::get('/', function () {
     return redirect()->route('login'); // Redirect to login if not logged in
 })->name('home');
 
-// 🔹 Google OAuth Routes
+// ðŸ”¹ Google OAuth Routes
 Route::get('auth/google', function () {
     return Socialite::driver('google')->redirect();
 })->name('google.login');
@@ -82,7 +83,68 @@ Route::get('auth/google/callback', function () {
     }
 })->name('google.callback');
 
-// 🔹 Authentication Middleware
+// 🔹 LDAP Authentication (Custom Login Handler)
+Route::post('/login', function (Request $request) {
+    // If the request contains emailLocalPart, construct the email address
+    $email = $request->has('emailLocalPart') 
+        ? $request->emailLocalPart . $request->emailDomain 
+        : $request->email;
+
+    $credentials = [
+        'email' => $email,
+        'password' => $request->password,
+    ];
+
+    // 🔹 Attempt database login first
+    if (Auth::attempt($credentials)) {
+        switch (Auth::user()->usertype) {
+            case 'admin':
+                return redirect()->route('admin.dashboard');
+            case 'student':
+                return redirect()->route('student.dashboard');
+            case 'staff':
+                return redirect()->route('staff.dashboard');
+            default:
+                return redirect()->route('dashboard');
+        }
+    }
+
+    // 🔹 Attempt LDAP authentication if database login fails
+    try {
+        $ldapUser = LdapUser::where('mail', $credentials['email'])->first();
+
+        if ($ldapUser && $ldapUser->authenticate($credentials['password'])) {
+            // Sync LDAP user into Laravel database
+            $user = User::updateOrCreate(
+                ['email' => $ldapUser->mail[0]],
+                [
+                    'name' => $ldapUser->cn[0] ?? 'Unknown',
+                    'password' => Hash::make($credentials['password']),
+                    'usertype' => 'general',
+                ]
+            );
+
+            Auth::login($user);
+
+            switch ($user->usertype) {
+                case 'admin':
+                    return redirect()->route('admin.dashboard');
+                case 'student':
+                    return redirect()->route('student.dashboard');
+                case 'staff':
+                    return redirect()->route('staff.dashboard');
+                default:
+                    return redirect()->route('dashboard');
+            }
+        }
+    } catch (\Exception $e) {
+        Log::error('LDAP Authentication Error: ' . $e->getMessage());
+    }
+
+    return back()->withErrors(['email' => 'Invalid credentials']);
+})->name('login');
+
+// ðŸ”¹ Authentication Middleware
 Route::middleware('auth')->group(function () {
     Route::get('/mfa-challenge', [TwoFactorController::class, 'index'])->name('mfa-challenge.index');
     Route::post('/mfa-challenge', [TwoFactorController::class, 'verify'])->name('mfa-challenge.verify');
@@ -91,10 +153,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/set-mfa-method', [ProfileController::class, 'setMfaMethod'])->name('set-mfa-method');
 });
 
-// 🔹 Authenticated Routes (Protected by MFA & Session Middleware)
+// ðŸ”¹ Authenticated Routes (Protected by MFA & Session Middleware)
 Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(function () {
 
-    // 🔹 Admin Routes
+    // ðŸ”¹ Admin Routes
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/admin/dashboard', [HomeController::class, 'indexAdmin'])->name('admin.dashboard');
         Route::get('/admin/setting', [ProfileController::class, 'adminprofile'])->name('profile.admin.setting');
@@ -116,7 +178,7 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::post('/admin/setting/mfa/{id}/untrust', [UserDeviceController::class, 'Adminuntrust'])->name('profile.admin.mfa.untrust');
     });
 
-    // 🔹 Student Routes
+    // ðŸ”¹ Student Routes
     Route::middleware(['role:student'])->group(function () {
         Route::get('/student/dashboard', [HomeController::class, 'indexStudent'])->name('student.dashboard');
         Route::get('/student/setting', [ProfileController::class, 'studentprofile'])->name('profile.student.setting');
@@ -133,7 +195,7 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::post('/student/setting/mfa/{id}/untrust', [UserDeviceController::class, 'Studentuntrust'])->name('profile.student.mfa.untrust');
     });
 
-    // 🔹 Staff Routes
+    // ðŸ”¹ Staff Routes
     Route::middleware(['role:staff'])->group(function () {
         Route::get('/staff/dashboard', [HomeController::class, 'indexStaff'])->name('staff.dashboard');
         Route::get('/staff/setting', [ProfileController::class, 'staffprofile'])->name('profile.staff.setting');
@@ -150,7 +212,7 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::post('/staff/setting/mfa/{id}/untrust', [UserDeviceController::class, 'Staffuntrust'])->name('profile.staff.mfa.untrust');
     });
 
-    // 🔹 General User Routes
+    // ðŸ”¹ General User Routes
     Route::middleware(['role:general'])->group(function () {
         Route::get('/dashboard', function () {
             return view('dashboard');
@@ -173,12 +235,12 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
 });
 
 
-// 🔹 Authentication Routes (Login & Authentication)
+// ðŸ”¹ Authentication Routes (Login & Authentication)
 require __DIR__ . '/auth.php';
 
-// 🔹 Public Login Pages
+// ðŸ”¹ Public Login Pages
 Route::get('/login/public', [AuthenticatedSessionController::class, 'createPublic'])->name('login.public');
 Route::get('/login/admin', [AuthenticatedSessionController::class, 'createAdmin'])->name('login.admin');
 
-// 🔹 Email & Password Check
+// ðŸ”¹ Email & Password Check
 Route::post('/check-email-password', [AuthController::class, 'checkEmailAndPassword'])->name('checkEmailAndPassword');
