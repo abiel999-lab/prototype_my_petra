@@ -287,6 +287,9 @@
                                                     <option value="google_auth"
                                                         {{ auth()->user()->mfa_method === 'google_auth' ? 'selected' : '' }}>
                                                         Google Authenticator</option>
+                                                    <option value="sms" disabled>
+                                                        SMS (Coming Soon)
+                                                    </option>
                                                 </select>
                                                 <button type="submit" class="btn btn-primary save-btn">Save</button>
                                                 <p style="margin-top: 1rem;">If you are using Google Auth app, click
@@ -452,7 +455,8 @@
                                                                     @endif
                                                                 </td>
                                                                 <td>
-                                                                    <div class="d-flex justify-content-center" style="gap: 5px">
+                                                                    <div class="d-flex justify-content-center"
+                                                                        style="gap: 5px">
                                                                         <!-- Adds spacing between buttons -->
                                                                         <!-- Delete Device -->
                                                                         <form id="deleteForm-{{ $device->id }}"

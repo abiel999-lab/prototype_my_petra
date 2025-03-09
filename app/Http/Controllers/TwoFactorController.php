@@ -22,6 +22,9 @@ class TwoFactorController extends Controller
             }
         } elseif ($user->mfa_method === 'google_auth') {
             $qrCodeUrl = $this->generateGoogleQrCode($user);
+        }elseif ($user->mfa_method === 'sms') {
+            // Placeholder for future SMS implementation
+            session()->flash('message', 'SMS authentication is coming soon.');
         }
 
         return view('auth.mfa-challenge', [
@@ -106,6 +109,11 @@ class TwoFactorController extends Controller
         if ($user->mfa_method === 'google_auth') {
             $google2fa = new Google2FA();
             return $google2fa->verifyKey($user->google2fa_secret, $code);
+        }
+
+        if ($user->mfa_method === 'sms') {
+            session()->flash('message', 'SMS authentication is coming soon.');
+            return false;
         }
 
         return false;
