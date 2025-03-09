@@ -306,6 +306,30 @@
                                             <div id="qr-code-container"
                                                 class="mt-4 p-4 border border-gray-300 rounded bg-gray-50"
                                                 style="display: none;">
+                                                <p class="important">Important!!!!</p>
+                                                <style>
+                                                    .important {
+                                                        font-size: 24px;
+                                                        font-weight: bold;
+                                                        color: red;
+                                                        text-transform: uppercase;
+                                                        background-color: yellow;
+                                                        padding: 10px;
+                                                        border: 2px solid red;
+                                                        display: inline-block;
+                                                        animation: blink 1s infinite alternate;
+                                                    }
+
+                                                    @keyframes blink {
+                                                        0% {
+                                                            opacity: 1;
+                                                        }
+
+                                                        100% {
+                                                            opacity: 0.5;
+                                                        }
+                                                    }
+                                                </style>
                                                 <p><b>Guide:</b></p>
                                                 <p>1. Install Google Authentication app on Playstore</p>
                                                 <img src="{{ asset('images/google_auth.jpg') }}"
