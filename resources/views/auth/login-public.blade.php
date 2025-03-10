@@ -44,7 +44,7 @@
         ]>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
         <![endif]-->
-            <!--[if lt IE 9]>
+    <!--[if lt IE 9]>
         <script src="/js/respond.js"></script>
         <![endif]-->
     <script defer="defer" src="https://login.petra.ac.id/js/chunk-vendors.f2b7dbd6.js"></script>
@@ -142,6 +142,11 @@
                                     <!-- Student or staff login -->
                                     You are student or staff, click
                                     <a href="{{ route('login') }}" class="text-reset"><strong>here</strong></a>.
+                                    <br />
+                                    <!-- support -->
+                                    Need support? click
+                                    <a href="{{ route('customer-support') }}"
+                                        class="text-reset"><strong>here</strong></a>.
                                 </p>
                             </div>
                         </div>

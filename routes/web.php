@@ -13,6 +13,7 @@ use App\Http\Controllers\UserDeviceController; // Added UserDeviceController
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\SupportController;
 use Illuminate\Support\Facades\Log;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 
@@ -86,8 +87,8 @@ Route::get('auth/google/callback', function () {
 // 🔹 LDAP Authentication (Custom Login Handler)
 Route::post('/login', function (Request $request) {
     // If the request contains emailLocalPart, construct the email address
-    $email = $request->has('emailLocalPart') 
-        ? $request->emailLocalPart . $request->emailDomain 
+    $email = $request->has('emailLocalPart')
+        ? $request->emailLocalPart . $request->emailDomain
         : $request->email;
 
     $credentials = [
@@ -147,7 +148,10 @@ Route::post('/login', function (Request $request) {
 // ðŸ”¹ Authentication Middleware
 Route::middleware('auth')->group(function () {
     Route::get('/mfa-challenge', [TwoFactorController::class, 'index'])->name('mfa-challenge.index');
-    Route::post('/mfa-challenge', [TwoFactorController::class, 'verify'])->name('mfa-challenge.verify');
+    Route::post('/mfa-challenge/verify', [TwoFactorController::class, 'verify'])->name('mfa-challenge.verify');
+    Route::post('/mfa-challenge/resend', [TwoFactorController::class, 'resendEmailOtp'])->name('mfa-challenge.resend');
+    Route::post('/mfa-challenge/cancel', [TwoFactorController::class, 'cancel'])->name('mfa-challenge.cancel');
+
 
     Route::post('/toggle-mfa', [ProfileController::class, 'toggleMfa'])->name('toggle-mfa');
     Route::post('/set-mfa-method', [ProfileController::class, 'setMfaMethod'])->name('set-mfa-method');
@@ -244,3 +248,6 @@ Route::get('/login/admin', [AuthenticatedSessionController::class, 'createAdmin'
 
 // ðŸ”¹ Email & Password Check
 Route::post('/check-email-password', [AuthController::class, 'checkEmailAndPassword'])->name('checkEmailAndPassword');
+Route::get('/customer-support', [SupportController::class, 'index'])->name('customer-support');
+Route::post('/customer-support/send', [SupportController::class, 'sendEmail'])->name('customer-support.send');
+Route::put('/profile/update-phone', [ProfileController::class, 'updatePhone'])->name('profile.update.phone');

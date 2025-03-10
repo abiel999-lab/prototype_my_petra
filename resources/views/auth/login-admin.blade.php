@@ -187,16 +187,16 @@
                 display: none;
             }
         }
+
         .mb-3 {
-    margin-bottom: 0px !important;
-}
+            margin-bottom: 0px !important;
+        }
     </style>
     <!--[if lt IE 9
         ]>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script
-        >
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
         <![endif]-->
-    <!--[if lt IE 9]>
+            <!--[if lt IE 9]>
         <script src="/js/respond.js"></script>
         <![endif]-->
     <script defer="defer" src="https://login.petra.ac.id/js/chunk-vendors.f2b7dbd6.js"></script>
@@ -248,8 +248,9 @@
                                     <!-- Email and Domain -->
                                     <div class="input-group mb-3">
                                         <!-- Email Local Part -->
-                                        <input type="text" class="form-control" id="emailLocalPart" name="emailLocalPart"
-                                            placeholder="Username" value="{{ old('emailLocalPart') }}" required>
+                                        <input type="text" class="form-control" id="emailLocalPart"
+                                            name="emailLocalPart" placeholder="Username"
+                                            value="{{ old('emailLocalPart') }}" required>
 
                                         <!-- Domain Selection -->
                                         <select class="form-control" id="emailDomain" name="emailDomain" required>
@@ -261,7 +262,8 @@
 
                                     <!-- Hidden Email Field -->
                                     <input type="email" class="form-control" id="email" name="email"
-                                        placeholder="Email (e.g., user@domain.com)" value="{{ old('email') }}" required style="display: none;">
+                                        placeholder="Email (e.g., user@domain.com)" value="{{ old('email') }}" required
+                                        style="display: none;">
 
                                     <!-- Password -->
                                     <div class="input-group mb-3">
@@ -280,10 +282,10 @@
 
 
                                 <div>
-                                    <a href="{{ route('google.login') }}"
-                                        class="btn btn-lg login-btn" style="margin-top: 10px;">
-                                        <img src="https://login.petra.ac.id/img/logo-google.png" alt="Auth" width="24"
-                                            style="margin-right: 10px;">
+                                    <a href="{{ route('google.login') }}" class="btn btn-lg login-btn"
+                                        style="margin-top: 10px;">
+                                        <img src="https://login.petra.ac.id/img/logo-google.png" alt="Auth"
+                                            width="24" style="margin-right: 10px;">
                                         Sign In with Google Mail
                                     </a>
                                     <p class="login-wrapper-footer-text"
@@ -292,16 +294,20 @@
                                         <a href="{{ route('password.request') }}"
                                             class="text-reset"><strong>here</strong></a>.
 
-                                            <br />
-                                            <!-- Student or staff login -->
-                                            You are not a student or staff, click
-                                            <a href="{{ route('login.public') }}"
-                                                class="text-reset"><strong>here</strong></a>.
-                                                <br />
-                                            <!-- Student or staff login -->
-                                            You are not an admin, click
-                                            <a href="{{ route('login') }}"
-                                                class="text-reset"><strong>here</strong></a>.
+                                        <br />
+                                        <!-- Student or staff login -->
+                                        You are not a student or staff, click
+                                        <a href="{{ route('login.public') }}"
+                                            class="text-reset"><strong>here</strong></a>.
+                                        <br />
+                                        <!-- Student or staff login -->
+                                        You are not an admin, click
+                                        <a href="{{ route('login') }}" class="text-reset"><strong>here</strong></a>.
+                                        <br />
+                                        <!-- support -->
+                                        Need support? click
+                                        <a href="{{ route('customer-support') }}"
+                                            class="text-reset"><strong>here</strong></a>.
 
                                     </p>
                                 </div>
@@ -353,7 +359,7 @@
         });
     </script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             const emailLocalPart = document.getElementById("emailLocalPart");
             const emailDomain = document.getElementById("emailDomain");
             const email = document.getElementById("email");
@@ -369,7 +375,7 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             @if ($errors->any())
                 Swal.fire({
                     icon: 'error',
@@ -385,11 +391,12 @@
         });
     </script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             @if (Auth::check())
                 var userType = "{{ Auth::user()->usertype }}"; // Get usertype from Laravel
 
-                if (userType === 'student' || userType === 'staff' || userType === 'general') { // Restrict students (change as needed)
+                if (userType === 'student' || userType === 'staff' || userType ===
+                    'general') { // Restrict students (change as needed)
                     Swal.fire({
                         icon: 'error',
                         title: 'Access Denied',

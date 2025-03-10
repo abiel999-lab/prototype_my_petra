@@ -232,6 +232,23 @@
                                                 </div>
 
                                             </form>
+                                            <form class="form-horizontal" action="{{ route('profile.update.phone') }}" method="POST">
+                                                @csrf
+                                                @method('PUT')
+
+                                                <!-- Input Nomor HP -->
+                                                <div class="form-group row">
+                                                    <label for="phone_number" class="col-sm-2 col-form-label">Nomor HP</label>
+                                                    <div class="col-sm-8">
+                                                        <input type="text" class="form-control" id="phone_number"
+                                                            name="phone_number" placeholder="Nomor HP"
+                                                            value="{{ auth()->user()->phone_number ?? '' }}" required>
+                                                    </div>
+                                                    <div class="col-sm-2">
+                                                        <button type="submit" class="btn btn-primary">Simpan</button>
+                                                    </div>
+                                                </div>
+                                            </form>
                                         </div>
 
                                         <div class="tab-pane" id="tab_password">

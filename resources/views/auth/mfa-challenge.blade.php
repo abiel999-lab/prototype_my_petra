@@ -65,25 +65,32 @@
 
                                     <form action="{{ route('mfa-challenge.verify') }}" method="POST">
                                         @csrf
-                                        <div class="input-group mb-3" style="margin-bottom: 0px !important;">
+                                        <div class="input-group mb-3">
                                             <input type="text" class="form-control" name="code"
                                                 placeholder="OTP code" id="code" required>
                                         </div>
+
                                         <div class="form-group">
                                             <button type="submit" class="btn btn-lg login-btn">Verify</button>
-
                                         </div>
-
-
-
                                     </form>
+                                    <!-- Tombol Resend OTP dan Cancel dalam satu baris -->
+                                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                        <form action="{{ route('mfa-challenge.resend') }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-secondary">Resend OTP</button>
+                                        </form>
+                                        <form action="{{ route('mfa-challenge.cancel') }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-danger">Cancel</button>
+                                        </form>
+                                    </div>
 
-
-
-
-
-
-
+                                    </br>
+                                    <!-- support -->
+                                    Need support? click
+                                    <a href="{{ route('customer-support') }}"
+                                        class="text-reset"><strong>here</strong></a>.
 
 
                                 </div>
@@ -176,10 +183,13 @@
                     });
             });
         });
-
-
-
     </script>
+    <script>
+        window.addEventListener("popstate", function(event) {
+            window.location.href = "{{ route('mfa-challenge.cancel') }}";
+        });
+    </script>
+
 
 
 

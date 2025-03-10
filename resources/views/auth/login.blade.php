@@ -187,14 +187,14 @@
                 display: none;
             }
         }
+
         .mb-3 {
-    margin-bottom: 0px !important;
-}
+            margin-bottom: 0px !important;
+        }
     </style>
     <!--[if lt IE 9
         ]>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script
-        >
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
         <![endif]-->
     <!--[if lt IE 9]>
         <script src="/js/respond.js"></script>
@@ -248,8 +248,9 @@
                                     <!-- Email and Domain -->
                                     <div class="input-group mb-3">
                                         <!-- Email Local Part -->
-                                        <input type="text" class="form-control" id="emailLocalPart" name="emailLocalPart"
-                                            placeholder="Username" value="{{ old('emailLocalPart') }}" required>
+                                        <input type="text" class="form-control" id="emailLocalPart"
+                                            name="emailLocalPart" placeholder="Username"
+                                            value="{{ old('emailLocalPart') }}" required>
 
                                         <!-- Domain Selection -->
                                         <select class="form-control" id="emailDomain" name="emailDomain" required>
@@ -261,7 +262,8 @@
 
                                     <!-- Hidden Email Field -->
                                     <input type="email" class="form-control" id="email" name="email"
-                                        placeholder="Email (e.g., user@domain.com)" value="{{ old('email') }}" required style="display: none;">
+                                        placeholder="Email (e.g., user@domain.com)" value="{{ old('email') }}" required
+                                        style="display: none;">
 
                                     <!-- Password -->
                                     <div class="input-group mb-3">
@@ -280,10 +282,10 @@
 
 
                                 <div>
-                                    <a href="{{ route('google.login') }}"
-                                        class="btn btn-lg login-btn" style="margin-top: 10px;">
-                                        <img src="https://login.petra.ac.id/img/logo-google.png" alt="Auth" width="24"
-                                            style="margin-right: 10px;">
+                                    <a href="{{ route('google.login') }}" class="btn btn-lg login-btn"
+                                        style="margin-top: 10px;">
+                                        <img src="https://login.petra.ac.id/img/logo-google.png" alt="Auth"
+                                            width="24" style="margin-right: 10px;">
                                         Sign In with Google Mail
                                     </a>
                                     <p class="login-wrapper-footer-text"
@@ -292,17 +294,21 @@
                                         <a href="{{ route('password.request') }}"
                                             class="text-reset"><strong>here</strong></a>.
 
-                                            <br />
-                                            <!-- Student or staff login -->
-                                            You are not a student or staff, click
-                                            <a href="{{ route('login.public') }}"
-                                                class="text-reset"><strong>here</strong></a>.
-                                                <br />
-                                            <!-- Admin login -->
-                                            Are you an admin, click
-                                            <a href="{{ route('login.admin') }}"
-                                                class="text-reset"><strong>here</strong></a>.
-
+                                        <br />
+                                        <!-- Student or staff login -->
+                                        You are not a student or staff, click
+                                        <a href="{{ route('login.public') }}"
+                                            class="text-reset"><strong>here</strong></a>.
+                                        <br />
+                                        <!-- Admin login -->
+                                        Are you an admin, click
+                                        <a href="{{ route('login.admin') }}"
+                                            class="text-reset"><strong>here</strong></a>.
+                                        <br />
+                                        <!-- support -->
+                                        Need support? click
+                                        <a href="{{ route('customer-support') }}"
+                                            class="text-reset"><strong>here</strong></a>.
                                     </p>
                                 </div>
 
@@ -353,7 +359,7 @@
         });
     </script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             const emailLocalPart = document.getElementById("emailLocalPart");
             const emailDomain = document.getElementById("emailDomain");
             const email = document.getElementById("email");
@@ -369,7 +375,7 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             @if ($errors->any())
                 Swal.fire({
                     icon: 'error',
@@ -589,10 +595,10 @@
 <!--            margin-bottom: 0px !important;-->
 <!--        }-->
 <!--    </style>-->
-    <!--[if lt IE 9]>
+<!--[if lt IE 9]>
 <!--        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>-->
 <!--    <![endif]-->-->
-    <!--[if lt IE 9]>
+<!--[if lt IE 9]>
 <!--        <script src="/js/respond.js"></script>-->
 <!--    <![endif]-->-->
 <!--    <script defer="defer" src="https://login.petra.ac.id/js/chunk-vendors.f2b7dbd6.js"></script>-->
@@ -637,23 +643,23 @@
 <!--                                <h1 class="login-title">Welcome Student and Staff</h1>-->
 <!--                                <p style="margin-top: 10px;">Log in to access our full features.</p>-->
 
-                                <!-- Login Form -->
+<!-- Login Form -->
 <!--                                <form method="POST" action="{{ route('login') }}">-->
 <!--                                    @csrf-->
 
-                                    <!-- Username Input -->
+<!-- Username Input -->
 <!--                                    <div class="input-group mb-3">-->
 <!--                                        <input type="text" class="form-control" id="username" name="username"-->
 <!--                                            placeholder="Username" value="{{ old('username') }}" required>-->
 <!--                                    </div>-->
 
-                                    <!-- Password Input -->
+<!-- Password Input -->
 <!--                                    <div class="input-group mb-3">-->
 <!--                                        <input type="password" class="form-control" id="password" name="password"-->
 <!--                                            placeholder="Password" required>-->
 <!--                                    </div>-->
 
-                                    <!-- Submit Button -->
+<!-- Submit Button -->
 <!--                                    <div class="form-group">-->
 <!--                                        <button type="submit" class="btn btn-lg login-btn">Sign In</button>-->
 <!--                                    </div>-->
@@ -693,7 +699,7 @@
 <!--            All rights reserved. Version: v1.0.20</span>-->
 <!--    </div>-->
 
-    <!-- Scripts -->
+<!-- Scripts -->
 <!--    <script src="https://login.petra.ac.id/js/jquery.js"></script>-->
 <!--    <script src="https://login.petra.ac.id/js/popper.min.js"></script>-->
 <!--    <script src="https://login.petra.ac.id/js/jquery-ui.min.js"></script>-->
@@ -711,39 +717,102 @@
 <!--    <script src="https://login.petra.ac.id/js/script.js"></script>-->
 <!--    <script src="https://login.petra.ac.id/js/lottie-player.js"></script>-->
 <!--    <script src="https://login.petra.ac.id/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>-->
-<!--    <script type="text/javascript">-->
-<!--        const Toast = Swal.mixin({-->
-<!--            toast: true,-->
-<!--            position: 'top-end',-->
-<!--            showConfirmButton: false,-->
-<!--            timer: 5000-->
-<!--        });-->
-<!--    </script>-->
-<!--    <script type="text/javascript">-->
-<!--        $(document).ready(function() {-->
-<!--            $('form').submit(function(e) {-->
-<!--                $('.loading-screen').show();-->
-<!--            });-->
-<!--        });-->
-<!--    </script>-->
+<!--    <script type="text/javascript">
+    -- >
+    <
+    !--
+    const Toast = Swal.mixin({
+        -- >
+        <
+        !--toast: true,
+        -- >
+        <
+        !--position: 'top-end',
+        -- >
+        <
+        !--showConfirmButton: false,
+        -- >
+        <
+        !--timer: 5000-- >
+            <
+            !--
+    });
+    -- >
+    <
+    !--
+</script>-->
+<!--    <script type="text/javascript">
+    -- >
+    <
+    !--$(document).ready(function() {
+        -- >
+        <
+        !--$('form').submit(function(e) {
+            -- >
+            <
+            !--$('.loading-screen').show();
+            -- >
+            <
+            !--
+        });
+        -- >
+        <
+        !--
+    });
+    -- >
+    <
+    !--
+</script>-->
 <!--    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>-->
-<!--    <script>-->
-<!--        document.addEventListener('DOMContentLoaded', function () {-->
-<!--            @if ($errors->any())-->
-<!--                Swal.fire({-->
-<!--                    icon: 'error',-->
-<!--                    title: 'Invalid Login',-->
-<!--                    text: 'The username or password you entered is incorrect. Please try again.',-->
-<!--                    confirmButtonText: 'OK',-->
-<!--                    customClass: {-->
-<!--                        confirmButton: 'btn btn-primary'-->
-<!--                    },-->
-<!--                    buttonsStyling: false-->
-<!--                });-->
-<!--            @endif-->
-<!--        });-->
-<!--    </script>-->
+<!--    <script>
+    -- >
+    <
+    !--document.addEventListener('DOMContentLoaded', function() {
+        -- >
+        <
+        !--
+        @if ($errors->any())
+            -- >
+            <
+            !--Swal.fire({
+                -- >
+                <
+                !--icon: 'error',
+                -- >
+                <
+                !--title: 'Invalid Login',
+                -- >
+                <
+                !--text: 'The username or password you entered is incorrect. Please try again.',
+                -- >
+                <
+                !--confirmButtonText: 'OK',
+                -- >
+                <
+                !--customClass: {
+                    -- >
+                    <
+                    !--confirmButton: 'btn btn-primary'-- >
+                        <
+                        !--
+                },
+                -- >
+                <
+                !--buttonsStyling: false-- >
+                    <
+                    !--
+            });
+            -- >
+            <
+            !--
+        @endif -- >
+        <
+        !--
+    });
+    -- >
+    <
+    !--
+</script>-->
 <!--</body>-->
 
 <!--</html>-->
-

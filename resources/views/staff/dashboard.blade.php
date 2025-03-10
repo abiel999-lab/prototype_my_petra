@@ -244,6 +244,9 @@
                     <a class="thing" href="https://sim-eltc.petra.ac.id">
                         <i class="fas fa-shield-alt"></i> Activate MFA
                     </a>
+                    <a class="thing" href="{{ route('customer-support') }}">
+                        <i class=""></i> Support
+                    </a>
                 </div>
 
                 <!-- Mutu Section -->

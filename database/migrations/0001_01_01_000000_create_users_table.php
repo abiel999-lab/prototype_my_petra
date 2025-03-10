@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
-            $table->integer('two_factor_code')->nullable();
+            $table->text('two_factor_code')->nullable(); // Mengubah dari integer ke text untuk enkripsi
             $table->boolean('mfa_enabled')->default(false);
             $table->string('mfa_method')->default('email'); // Default to email
             $table->string('google2fa_secret')->nullable();

@@ -38,8 +38,8 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
 {
     // Check if the request contains emailLocalPart (for Student/Staff/Admin)
-    $email = $request->has('emailLocalPart') 
-        ? $request->emailLocalPart . $request->emailDomain 
+    $email = $request->has('emailLocalPart')
+        ? $request->emailLocalPart . $request->emailDomain
         : $request->email;
 
     $credentials = [
@@ -50,7 +50,7 @@ class AuthenticatedSessionController extends Controller
     // Attempt database login first
     if (Auth::attempt($credentials)) {
         $request->session()->regenerate();
-        return $this->redirectUser(Auth::user());
+        return $this->redirectUser(Auth::user() instanceof User ? Auth::user() : new User());
     }
 
     // Attempt LDAP authentication if database login fails

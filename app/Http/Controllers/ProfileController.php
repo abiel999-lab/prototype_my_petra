@@ -118,50 +118,64 @@ class ProfileController extends Controller
         ]);
     }
     public function toggleMfa(Request $request)
-{
-    $user = auth()->user();
-    $user->mfa_enabled = !$user->mfa_enabled;
-    $user->save();
+    {
+        $user = auth()->user();
+        $user->mfa_enabled = !$user->mfa_enabled;
+        $user->save();
 
-    return response()->json([
-        'status' => 'success',
-        'mfa_enabled' => $user->mfa_enabled,
-    ]);
-}
-public function setMfaMethod(Request $request)
-{
-    $request->validate([
-        'mfa_method' => 'required|in:email,google_auth',
-    ]);
+        return response()->json([
+            'status' => 'success',
+            'mfa_enabled' => $user->mfa_enabled,
+        ]);
+    }
+    public function setMfaMethod(Request $request)
+    {
+        $request->validate([
+            'mfa_method' => 'required|in:email,google_auth',
+        ]);
 
-    $user = auth()->user();
-    $user->mfa_method = $request->mfa_method;
+        $user = auth()->user();
+        $user->mfa_method = $request->mfa_method;
 
-    // Handle Google Authenticator-specific logic
-    $qrCodeUrl = null;
-    if ($user->mfa_method === 'google_auth') {
-        $google2fa = new \PragmaRX\Google2FA\Google2FA();
+        // Handle Google Authenticator-specific logic
+        $qrCodeUrl = null;
+        if ($user->mfa_method === 'google_auth') {
+            $google2fa = new \PragmaRX\Google2FA\Google2FA();
 
-        // Check if the user already has a secret, generate one if not
-        if (!$user->google2fa_secret) {
-            $user->google2fa_secret = $google2fa->generateSecretKey();
+            // Check if the user already has a secret, generate one if not
+            if (!$user->google2fa_secret) {
+                $user->google2fa_secret = $google2fa->generateSecretKey();
+            }
+
+            // Generate the QR code URL
+            $qrCodeUrl = $google2fa->getQRCodeUrl(
+                config('app.name'),      // App name
+                $user->email,            // User email
+                $user->google2fa_secret  // Secret key
+            );
         }
 
-        // Generate the QR code URL
-        $qrCodeUrl = $google2fa->getQRCodeUrl(
-            config('app.name'),      // App name
-            $user->email,            // User email
-            $user->google2fa_secret  // Secret key
-        );
+        // Save changes to the database
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'MFA method updated successfully.',
+            'qrCodeUrl' => $qrCodeUrl,
+        ]);
     }
 
-    // Save changes to the database
-    $user->save();
+    public function updatePhone(Request $request)
+    {
+        $request->validate([
+            'phone_number' => 'required|string|max:15',
+        ]);
 
-    return response()->json([
-        'status' => 'success',
-        'message' => 'MFA method updated successfully.',
-        'qrCodeUrl' => $qrCodeUrl,
-    ]);
-}
+        auth()->user()->update([
+            'phone_number' => $request->phone_number,
+        ]);
+
+        return back()->with('success', 'Nomor HP berhasil diperbarui!');
+    }
+
 }
