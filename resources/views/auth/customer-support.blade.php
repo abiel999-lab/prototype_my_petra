@@ -101,7 +101,7 @@
 
                                     <div>
                                         <p class="login-wrapper-footer-text" style="margin-top: 20px; margin-bottom: 10px; display: block;">
-                                            Go to the login page
+                                            Go to the previous page
                                             <a href="{{ route('login') }}" class="text-reset"><strong>here</strong></a>
                                         </p>
                                     </div>

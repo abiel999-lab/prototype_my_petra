@@ -151,10 +151,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/mfa-challenge/verify', [TwoFactorController::class, 'verify'])->name('mfa-challenge.verify');
     Route::post('/mfa-challenge/resend', [TwoFactorController::class, 'resendEmailOtp'])->name('mfa-challenge.resend');
     Route::post('/mfa-challenge/cancel', [TwoFactorController::class, 'cancel'])->name('mfa-challenge.cancel');
-
-
     Route::post('/toggle-mfa', [ProfileController::class, 'toggleMfa'])->name('toggle-mfa');
     Route::post('/set-mfa-method', [ProfileController::class, 'setMfaMethod'])->name('set-mfa-method');
+    Route::post('/mfa-challenge/send-otp', [TwoFactorController::class, 'handleWhatsAppOtp'])
+    ->name('mfa-challenge.send-otp');
+
 });
 
 // ðŸ”¹ Authenticated Routes (Protected by MFA & Session Middleware)

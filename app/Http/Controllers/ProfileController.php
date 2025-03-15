@@ -131,31 +131,38 @@ class ProfileController extends Controller
     public function setMfaMethod(Request $request)
     {
         $request->validate([
-            'mfa_method' => 'required|in:email,google_auth',
+            'mfa_method' => 'required|in:email,google_auth,sms',
         ]);
 
         $user = auth()->user();
         $user->mfa_method = $request->mfa_method;
 
-        // Handle Google Authenticator-specific logic
+        // Jika memilih Google Authenticator, buat QR Code
         $qrCodeUrl = null;
         if ($user->mfa_method === 'google_auth') {
             $google2fa = new \PragmaRX\Google2FA\Google2FA();
 
-            // Check if the user already has a secret, generate one if not
             if (!$user->google2fa_secret) {
                 $user->google2fa_secret = $google2fa->generateSecretKey();
             }
 
-            // Generate the QR code URL
             $qrCodeUrl = $google2fa->getQRCodeUrl(
-                config('app.name'),      // App name
-                $user->email,            // User email
-                $user->google2fa_secret  // Secret key
+                config('app.name'),
+                $user->email,
+                $user->google2fa_secret
             );
         }
 
-        // Save changes to the database
+        // Simpan nomor HP jika memilih SMS
+        if ($user->mfa_method === 'sms') {
+            if (!$user->phone_number) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Nomor HP belum diatur. Silakan update nomor HP di profil.',
+                ], 400);
+            }
+        }
+
         $user->save();
 
         return response()->json([
@@ -164,6 +171,7 @@ class ProfileController extends Controller
             'qrCodeUrl' => $qrCodeUrl,
         ]);
     }
+
 
     public function updatePhone(Request $request)
     {

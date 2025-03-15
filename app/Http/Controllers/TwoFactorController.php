@@ -8,6 +8,7 @@ use PragmaRX\Google2FA\Google2FA;
 use App\Mail\OtpMail;
 use App\Models\TrustedDevice;
 use Illuminate\Support\Facades\Crypt;
+use App\Services\WhatsAppService;
 
 
 class TwoFactorController extends Controller
@@ -24,8 +25,9 @@ class TwoFactorController extends Controller
         } elseif ($user->mfa_method === 'google_auth') {
             $qrCodeUrl = $this->generateGoogleQrCode($user);
         } elseif ($user->mfa_method === 'sms') {
-            // Placeholder for future SMS implementation
-            session()->flash('message', 'SMS authentication is coming soon.');
+            if (!$user->two_factor_code) {
+                $this->handleWhatsAppOtp($user);
+            }
         }
 
         return view('auth.mfa-challenge', [
@@ -123,7 +125,12 @@ class TwoFactorController extends Controller
         $user->save();
 
         // Kirim OTP baru
-        $this->handleEmailOtp($user);
+        // Resend new OTP
+        if ($user->mfa_method === 'email') {
+            $this->handleEmailOtp($user);
+        } elseif ($user->mfa_method === 'sms') {
+            $this->handleWhatsAppOtp($user);
+        }
 
         return back()->with('success', 'A new OTP has been sent to your email.');
     }
@@ -151,6 +158,18 @@ class TwoFactorController extends Controller
             $google2fa = new Google2FA();
             return $google2fa->verifyKey($user->google2fa_secret, $code);
         }
+        if ($user->mfa_method === 'sms') {
+            try {
+                $decryptedOtp = Crypt::decryptString($user->two_factor_code);
+
+                if ($code == $decryptedOtp && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
+                    return true;
+                }
+            } catch (\Exception $e) {
+                return false;
+            }
+        }
+
 
         return false;
     }
@@ -174,6 +193,25 @@ class TwoFactorController extends Controller
         auth()->logout(); // Logout pengguna
         session()->forget('two_factor_authenticated'); // Hapus sesi MFA
         return redirect()->route('login')->with('info', 'MFA verification canceled.');
+    }
+    private function handleWhatsAppOtp($user)
+    {
+        $now = now();
+
+        // Jika OTP masih berlaku, jangan generate ulang
+        if ($user->two_factor_code && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
+            return;
+        }
+
+        // Generate OTP baru
+        $code = rand(100000, 999999);
+        $user->two_factor_code = Crypt::encryptString($code);
+        $user->otp_expires_at = $now->addMinutes(5);
+        $user->save();
+
+        // Kirim OTP ke WhatsApp/SMS
+        $whatsappService = new WhatsAppService();
+        $whatsappService->sendOTP($user->phone_number, $code);
     }
 
 

@@ -296,10 +296,20 @@
                                                     <option value="google_auth"
                                                         {{ auth()->user()->mfa_method === 'google_auth' ? 'selected' : '' }}>
                                                         Google Authenticator</option>
-                                                    <option value="sms" disabled>
-                                                        SMS (Coming Soon)
-                                                    </option>
+                                                    <option value="sms"
+                                                        {{ auth()->user()->mfa_method === 'sms' ? 'selected' : '' }}>
+                                                        SMS / WhatsApp OTP</option>
                                                 </select>
+
+                                                <div id="sms-warning">
+                                                    <p class="important">Important!!!!</p>
+                                                    <p><b>Warning:</b> You have selected **SMS / WhatsApp OTP**, but
+                                                        your phone number is not set!</p>
+                                                    <p>Please update your phone number in the <a
+                                                            href="{{ route('profile.profile') }}"
+                                                            style="color: blue; font-weight: bold;">Profile</a> page
+                                                        before proceeding.</p>
+                                                </div>
                                                 <button type="submit" class="btn btn-primary save-btn">Save</button>
                                                 <p style="margin-top: 1rem;">If you are using Google Auth app, click
                                                     save to look at your QRCode</p>
@@ -676,6 +686,29 @@
                                                 }
                                             });
                                         }
+                                    </script>
+                                    <script>
+                                        document.addEventListener("DOMContentLoaded", function() {
+                                            const mfaSelect = document.getElementById("mfa_method");
+                                            const smsWarning = document.getElementById("sms-warning");
+
+                                            mfaSelect.addEventListener("change", function() {
+                                                if (mfaSelect.value === "sms") {
+                                                    // Check if the user has a registered phone number
+                                                    let phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
+                                                    if (!phoneNumber) {
+                                                        smsWarning.style.display = "block";
+                                                    } else {
+                                                        smsWarning.style.display = "none";
+                                                    }
+                                                } else {
+                                                    smsWarning.style.display = "none";
+                                                }
+                                            });
+
+                                            // Trigger change event on page load to ensure correct state
+                                            mfaSelect.dispatchEvent(new Event("change"));
+                                        });
                                     </script>
 </body>
 
