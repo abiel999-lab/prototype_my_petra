@@ -20,16 +20,17 @@ class WhatsAppService
     public function sendOTP($phone, $otpCode)
     {
         // Enhanced OTP message format
-        $message = "*[My Petra] 🔐 Secure OTP Code*\n\n";
-        $message .= "🔹 *Your OTP Code:* *$otpCode*\n";
-        $message .= "❗ *Do not share this code with anyone.*\n";
-        $message .= "⏳ *Expires in 5 minutes.*\n\n";
-        $message .= "---------------------------\n";
-        $message .= "📌 This code is for authentication purposes only.\n";
-        $message .= "✅ If you requested this, proceed to enter the code.\n";
-        $message .= "🚨 *If you did NOT request this, please ignore this message.*\n";
-        $message .= "---------------------------\n\n";
-        $message .= "🕒 *Sent on:* " . now()->format('d-m-Y H:i:s') . "\n";
+        $message = "[My Petra] Secure OTP Verification\n\n";
+        $message .= "Your OTP Code: $otpCode\n";
+        $message .= "This code is valid for 5 minutes.\n";
+        $message .= "Do NOT share this code with anyone.\n\n";
+        $message .= "--------------------------------------\n";
+        $message .= "This code is for secure authentication purposes only.\n";
+        $message .= "If you requested this, enter the code to proceed.\n";
+        $message .= "If you did NOT request this, please ignore this message.\n";
+        $message .= "--------------------------------------\n\n";
+        $message .= "Timestamp: " . now()->format('d-m-Y H:i:s') . "\n";
+        $message .= "For assistance, please contact our support team.";
 
         // Send OTP via WhatsApp API
         $response = Http::asForm()->post($this->apiUrl, [

@@ -40,5 +40,10 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
+    'zenziva' => [
+        'url' => env('ZENZIVA_URL'),
+        'userkey' => env('ZENZIVA_USERKEY'),
+        'passkey' => env('ZENZIVA_PASSKEY'),
+    ],
 
 ];

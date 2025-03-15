@@ -14,20 +14,23 @@ class UserDeviceController extends Controller
 {
     private function normalizeOS($os)
     {
+        if (!$os || $os === 'Unknown') {
+            return 'Unknown';
+        }
+
         $osMappings = [
-            'Windows NT 10.0' => 'Windows',
-            'Windows NT 6.3' => 'Windows',
-            'Windows NT 6.2' => 'Windows',
-            'Windows NT 6.1' => 'Windows',
-            'Windows NT 6.0' => 'Windows',
-            'Windows NT 5.1' => 'Windows',
+            'Windows NT' => 'Windows',
+            'Windows' => 'Windows',
+            'Mac' => 'MacOS',
             'Macintosh' => 'MacOS',
-            'X11; Linux' => 'Linux',
-            'X11; Ubuntu' => 'Linux',
-            'X11; Fedora' => 'Linux',
+            'iOS' => 'iOS',
             'Android' => 'Android',
-            'iPhone' => 'iOS',
-            'iPad' => 'iOS'
+            'Linux' => 'Linux',
+            'Ubuntu' => 'Linux',
+            'Fedora' => 'Linux',
+            'X11' => 'Linux',
+            'Debian' => 'Linux',
+            'Chrome OS' => 'ChromeOS'
         ];
 
         foreach ($osMappings as $key => $value) {
@@ -36,8 +39,9 @@ class UserDeviceController extends Controller
             }
         }
 
-        return 'Unknown';
+        return $os; // Instead of returning "Unknown", return the detected OS if it exists.
     }
+
 
     private function getUserDevices($userId)
     {
@@ -48,10 +52,24 @@ class UserDeviceController extends Controller
     {
         $currentIp = request()->ip();
         $agent = new Agent();
-        $agent->setUserAgent(request()->header('User-Agent'));
+        $userAgent = request()->header('User-Agent');
+
+        // Log the User-Agent string for debugging
+        \Log::info('User-Agent: ' . $userAgent);
+
+        // Set User-Agent for detection
+        $agent->setUserAgent($userAgent);
+
+        // Detect OS
+        $detectedOS = $agent->platform() ?? 'Unknown';
+        \Log::info('Detected OS before normalization: ' . $detectedOS);
+
+        // Normalize OS name
+        $os = $this->normalizeOS($detectedOS);
+        \Log::info('Normalized OS: ' . $os);
 
         $deviceType = $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
-        $os = $this->normalizeOS($agent->platform() ?? 'Unknown');
+
         $now = Carbon::now('Asia/Jakarta');
 
         // Auto-delete devices not used for 30 days
@@ -66,7 +84,7 @@ class UserDeviceController extends Controller
         if (!$existingDevice) {
             // Ensure the user has at most 3 trusted OS entries
             $osCount = TrustedDevice::where('user_id', $userId)->count();
-            if ($osCount >= 1) {
+            if ($osCount >= 3) {
                 return redirect()->back()->with('error', 'You can only trust up to 3 operating systems. Remove one first.');
             }
 
@@ -83,6 +101,7 @@ class UserDeviceController extends Controller
             $existingDevice->touch();
         }
     }
+
 
     private function deleteDevice($id, $userId)
     {
