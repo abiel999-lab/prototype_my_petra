@@ -86,6 +86,7 @@
                                         </form>
                                     </div>
 
+
                                     </br>
                                     <!-- support -->
                                     Need support? click
@@ -144,10 +145,33 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             @if ($errors->any())
+                let errorMessage = '{{ $errors->first('code') }}';
+                let remainingAttempts = "{{ session('remaining_otp_attempts ') }}";
+                let banUntil = "{{ session('otp_banned_until') }}";
+
+                let displayMessage = errorMessage;
+
+                if (remainingAttempts > 0) {
+                    displayMessage += `\nYou have ${remainingAttempts} attempts left before a temporary ban.`;
+                }
+
+                if (banUntil) {
+                    let banTime = new Date(banUntil);
+                    let currentTime = new Date();
+                    let diff = Math.round((banTime - currentTime) / 1000); // Convert to seconds
+
+                    if (diff > 0) {
+                        let minutes = Math.floor(diff / 60);
+                        let seconds = diff % 60;
+                        displayMessage =
+                            `Too many failed OTP attempts. You are temporarily banned for ${minutes} minutes and ${seconds} seconds.`;
+                    }
+                }
+
                 Swal.fire({
                     icon: 'error',
-                    title: 'Invalid Code',
-                    text: 'The OTP code you entered is incorrect. Please try again.',
+                    title: 'Invalid OTP',
+                    text: displayMessage,
                     confirmButtonText: 'OK',
                     customClass: {
                         confirmButton: 'btn btn-primary'
@@ -157,23 +181,38 @@
             @endif
         });
     </script>
+
     <script>
         $(document).ready(function() {
             $('#otp-form').submit(function(e) {
-
                 $('.loading-screen').show();
                 let form = $(this);
                 $.post(form.attr('action'), form.serialize())
                     .done(function(response) {
                         window.location.href = response.redirect;
                     })
-                    .fail(function() {
-
+                    .fail(function(jqXHR) {
                         $('.loading-screen').hide();
+
+                        let responseText = jqXHR.responseText;
+                        let jsonResponse = JSON.parse(responseText);
+                        let errorMessage = jsonResponse.message ||
+                            "The OTP code you entered is incorrect.";
+                        let remainingAttempts = jsonResponse.remaining_otp_attempts || 10;
+                        let banUntil = jsonResponse.otp_banned_until || null;
+
+                        let displayMessage = errorMessage;
+
+                        if (remainingAttempts > 0) {
+                            displayMessage +=
+                                `\nYou have ${remainingAttempts} attempts left before a temporary ban.`;
+                        }
+
+
                         Swal.fire({
                             icon: 'error',
-                            title: 'Invalid Code',
-                            text: 'The OTP code you entered is incorrect. Please try again.',
+                            title: 'Invalid OTP',
+                            text: displayMessage,
                             confirmButtonText: 'OK',
                             customClass: {
                                 confirmButton: 'btn btn-primary'
@@ -184,15 +223,56 @@
             });
         });
     </script>
+
     <script>
         window.addEventListener("popstate", function(event) {
             window.location.href = "{{ route('mfa-challenge.cancel') }}";
         });
     </script>
+    @if (session('otp_banned_until'))
+        <div class="alert alert-danger text-center" id="otp-ban-alert">
+            Too many incorrect OTP attempts. <br>
+            You can try again in <strong id="otp-ban-timer"></strong>.
+        </div>
+    @endif
 
+    @if (session('remaining_otp_attempts') && session('remaining_otp_attempts') > 0)
+        <div class="alert alert-warning text-center">
+            Warning: You have <strong>{{ session('remaining_otp_attempts') }}</strong> attempts left before a ban!
+        </div>
+    @endif
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            @if (session('otp_failed_limit'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Sorry, you cannot input anymore.',
+                    text: 'You have reached the maximum OTP attempts.',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    // ✅ Create a form dynamically to send a POST request
+                    let form = document.createElement("form");
+                    form.method = "POST";
+                    form.action = "{{ route('mfa-challenge.cancel') }}";
 
+                    // ✅ Add CSRF token for Laravel security
+                    let csrfInput = document.createElement("input");
+                    csrfInput.type = "hidden";
+                    csrfInput.name = "_token";
+                    csrfInput.value = "{{ csrf_token() }}";
+
+                    form.appendChild(csrfInput);
+                    document.body.appendChild(form);
+
+                    // ✅ Submit the form to send a POST request
+                    form.submit();
+                });
+            @endif
+        });
+    </script>
 
 
 

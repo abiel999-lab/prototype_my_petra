@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -26,6 +25,11 @@ return new class extends Migration
             $table->boolean('mfa_enabled')->default(false);
             $table->string('mfa_method')->default('email'); // Default to email
             $table->string('google2fa_secret')->nullable();
+            $table->integer('failed_login_attempts')->default(0);
+            $table->timestamp('login_ban_until')->nullable();
+            $table->integer('failed_otp_attempts')->default(0);
+            $table->boolean('banned_status')->default(false);
+
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

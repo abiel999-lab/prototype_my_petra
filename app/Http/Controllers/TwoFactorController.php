@@ -9,6 +9,8 @@ use App\Mail\OtpMail;
 use App\Models\TrustedDevice;
 use Illuminate\Support\Facades\Crypt;
 use App\Services\WhatsAppService;
+use Carbon\Carbon;
+use App\Mail\ViolationMail;
 
 
 class TwoFactorController extends Controller
@@ -35,62 +37,86 @@ class TwoFactorController extends Controller
         ]);
     }
 
-
     public function verify(Request $request)
     {
         $request->validate([
-            'code' => 'required|integer',
+            'code' => 'required|string',
         ]);
 
         $user = auth()->user();
 
-        if ($this->validateOtp($user, $request->code)) {
-            session(['two_factor_authenticated' => true]);
-            $user->two_factor_code = null;
-            $user->otp_expires_at = null; // Hapus waktu kadaluarsa juga
-            $user->save();
-
-
-            // Check if user wants to trust this device
-            if ($request->has('trust_device') && $request->trust_device == 'yes') {
-                $existingTrusted = TrustedDevice::where('user_id', $user->id)->first();
-                if ($existingTrusted) {
-                    $existingTrusted->delete(); // Remove previous trusted device
-                }
-
-                TrustedDevice::create([
-                    'user_id' => $user->id,
-                    'ip_address' => $request->ip(),
-                    'user_agent' => $request->header('User-Agent'),
-                    'trusted' => true,
-                ]);
-            }
-
-            return redirect()->route($this->getUserDashboard($user));
-
+        // 🚨 If user has failed 10 OTP attempts, lock them out instantly
+        if ($user->failed_otp_attempts >= 10) {
+            return redirect()->route('mfa-challenge.index')->with([
+                'otp_failed_limit' => true
+            ]);
         }
 
-        return redirect()->route('mfa-challenge.index')->withErrors(['code' => 'The provided code is incorrect.']);
-    }
+        // ✅ Ensure OTP is numeric & exactly 6 digits
+        if (!ctype_digit($request->code) || strlen($request->code) !== 6) {
+            $user->increment('failed_otp_attempts');
+            $user->save();
 
+            // 🚨 Send violation email at exactly 10 failed attempts
+            if ($user->failed_otp_attempts == 10) {
+                Mail::to('mfa.mypetra@petra.ac.id')->send(new ViolationMail($user, 'otp'));
+            }
+
+            return redirect()->route('mfa-challenge.index')->withErrors([
+                'code' => "Invalid OTP format. You have " . (10 - $user->failed_otp_attempts) . " attempts left."
+            ]);
+        }
+
+        // ✅ Validate OTP
+        if ($this->validateOtp($user, $request->code)) {
+            session(['two_factor_authenticated' => true]);
+
+            // ✅ Reset failed attempts and clear OTP data
+            $user->update([
+                'two_factor_code' => null,
+                'otp_expires_at' => null,
+                'failed_otp_attempts' => 0,
+            ]);
+
+            return redirect()->route($this->getUserDashboard($user));
+        }
+
+        // ❌ OTP is incorrect, increase failed attempts
+        $user->increment('failed_otp_attempts');
+        $user->save();
+
+        // 🚨 If failed 10 times, trigger lockout
+        if ($user->failed_otp_attempts == 10) {
+            Mail::to('mfa.mypetra@petra.ac.id')->send(new ViolationMail($user, 'otp'));
+            return redirect()->route('mfa-challenge.index')->with([
+                'otp_failed_limit' => true
+            ]);
+        }
+
+        return redirect()->route('mfa-challenge.index')->withErrors([
+            'code' => "Incorrect OTP. You have " . (10 - $user->failed_otp_attempts) . " attempts left."
+        ]);
+    }
 
     private function handleEmailOtp($user)
     {
         $now = now();
 
-        // Jika OTP masih berlaku, jangan generate ulang
+        // Prevent generating a new OTP if still valid
         if ($user->two_factor_code && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
             return;
         }
 
-        // Generate OTP baru
+        // Generate new OTP
         $code = rand(100000, 999999);
-        $user->two_factor_code = Crypt::encryptString($code); // Enkripsi sebelum disimpan
-        $user->otp_expires_at = $now->addMinutes(10); // OTP berlaku 10 menit
+        $user->two_factor_code = Crypt::encryptString($code);
+        $user->otp_expires_at = $now->addMinutes(10);
+        $user->failed_otp_attempts = 0; // Reset failed attempts on new OTP generation
+        $user->otp_ban_until = null; // Remove ban
         $user->save();
 
         try {
-            Mail::to($user->email)->send(new OtpMail($code)); // Kirim OTP asli ke email
+            Mail::to($user->email)->send(new OtpMail($code));
         } catch (\Exception $e) {
             return back()->withErrors(['email' => 'Failed to send email. Please try again.']);
         }
@@ -119,21 +145,37 @@ class TwoFactorController extends Controller
     {
         $user = auth()->user();
 
-        // Hapus OTP lama agar bisa digenerate ulang
+        // Prevent OTP resend if the user is banned
+        if ($user->otp_ban_until && now()->lt($user->otp_ban_until)) {
+            return back()->withErrors([
+                'code' => 'You cannot request a new OTP yet. Try again at ' . $user->otp_ban_until->format('H:i:s'),
+            ]);
+        }
+
+        // Preserve failed OTP attempts before resetting OTP
+        $failedAttempts = $user->failed_otp_attempts;
+
+        // **Reset OTP but keep failed attempts**
         $user->two_factor_code = null;
         $user->otp_expires_at = null;
         $user->save();
 
-        // Kirim OTP baru
-        // Resend new OTP
+        // Generate and send new OTP
         if ($user->mfa_method === 'email') {
             $this->handleEmailOtp($user);
         } elseif ($user->mfa_method === 'sms') {
             $this->handleWhatsAppOtp($user);
         }
 
-        return back()->with('success', 'A new OTP has been sent to your email.');
+        // Restore failed OTP attempts after regenerating OTP
+        $user->failed_otp_attempts = $failedAttempts;
+        $user->save();
+
+        return back()->with('success', 'A new OTP has been sent.');
     }
+
+
+
 
 
 
@@ -190,10 +232,22 @@ class TwoFactorController extends Controller
 
     public function cancel()
     {
-        auth()->logout(); // Logout pengguna
-        session()->forget('two_factor_authenticated'); // Hapus sesi MFA
+        $user = auth()->user();
+
+        if ($user) {
+            // ✅ Ensure the failed attempts reset before logout
+            $user->failed_otp_attempts = 0;
+            $user->save(); // ✅ Force save to database
+        }
+
+        auth()->logout(); // ✅ Log out the user
+        session()->invalidate(); // ✅ Clear session completely
+        session()->regenerateToken(); // ✅ Prevent CSRF issues
+
         return redirect()->route('login')->with('info', 'MFA verification canceled.');
     }
+
+
     private function handleWhatsAppOtp($user)
     {
         $now = now();

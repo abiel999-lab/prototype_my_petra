@@ -8,63 +8,63 @@ use Illuminate\Http\Request;
 class UserController extends Controller
 {
     public function index(Request $request)
-{
-    $search = $request->input('search');
-    $mfaEnabled = $request->input('mfa_enabled');
-    $mfaMethod = $request->input('mfa_method');
-    $userType = $request->input('usertype');
+    {
+        $search = $request->input('search');
+        $mfaEnabled = $request->input('mfa_enabled');
+        $mfaMethod = $request->input('mfa_method');
+        $userType = $request->input('usertype');
 
-    $users = User::query();
+        $users = User::query();
 
-    // Regular Search (by name or email)
-    if ($search) {
-        $users->where(function ($query) use ($search) {
-            $query->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%");
-        });
+        // Regular Search (by name or email)
+        if ($search) {
+            $users->where(function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // MFA Enabled Filter (yes/no or on/off)
+        if ($mfaEnabled === "on" || $mfaEnabled === "yes" || $mfaEnabled === "1") {
+            $users->where('mfa_enabled', 1);
+        } elseif ($mfaEnabled === "off" || $mfaEnabled === "no" || $mfaEnabled === "0") {
+            $users->where('mfa_enabled', 0);
+        }
+
+        // MFA Method Filter (email or google_authenticator)
+        if ($mfaMethod) {
+            $users->where('mfa_method', $mfaMethod);
+        }
+
+        // User Type Filter (admin, student, staff, general)
+        if ($userType) {
+            $users->where('usertype', $userType);
+        }
+
+        $users = $users->paginate(5);
+
+        return view('profile.admin.manage-user', compact('users', 'search'));
     }
-
-    // MFA Enabled Filter (yes/no or on/off)
-    if ($mfaEnabled === "on" || $mfaEnabled === "yes" || $mfaEnabled === "1") {
-        $users->where('mfa_enabled', 1);
-    } elseif ($mfaEnabled === "off" || $mfaEnabled === "no" || $mfaEnabled === "0") {
-        $users->where('mfa_enabled', 0);
-    }
-
-    // MFA Method Filter (email or google_authenticator)
-    if ($mfaMethod) {
-        $users->where('mfa_method', $mfaMethod);
-    }
-
-    // User Type Filter (admin, student, staff, general)
-    if ($userType) {
-        $users->where('usertype', $userType);
-    }
-
-    $users = $users->paginate(5);
-
-    return view('profile.admin.manage-user', compact('users', 'search'));
-}
 
 
     public function store(Request $request)
-{
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users',
-        'password' => 'required|min:6',
-        'usertype' => 'required|string|in:admin,staff,student,general'
-    ]);
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6',
+            'usertype' => 'required|string|in:admin,staff,student,general'
+        ]);
 
-    User::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => bcrypt($request->password),
-        'usertype' => $request->usertype, // Ensure usertype is stored correctly
-    ]);
+        User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+            'usertype' => $request->usertype, // Ensure usertype is stored correctly
+        ]);
 
-    return redirect()->route('profile.admin.manageuser')->with('success', 'User created successfully.');
-}
+        return redirect()->route('profile.admin.manageuser')->with('success', 'User created successfully.');
+    }
 
 
 
@@ -100,4 +100,34 @@ class UserController extends Controller
 
         return redirect()->route('profile.admin.manageuser')->with('success', 'User deleted successfully.');
     }
+    public function ban(User $user)
+    {
+        if ($user->banned_status) {
+            return response()->json(["success" => false, "message" => "User is already banned."]);
+        }
+
+        $user->banned_status = 1; // Ban user
+        $user->save();
+
+        return response()->json([
+            "success" => true,
+            "message" => "User has been banned successfully."
+        ]);
+    }
+
+    public function unban(User $user)
+    {
+        if (!$user->banned_status) {
+            return response()->json(["success" => false, "message" => "User is not banned."]);
+        }
+
+        $user->banned_status = 0; // Unban user
+        $user->save();
+
+        return response()->json([
+            "success" => true,
+            "message" => "User has been unbanned successfully."
+        ]);
+    }
+
 }

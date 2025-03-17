@@ -192,13 +192,7 @@
             margin-bottom: 0px !important;
         }
     </style>
-    <!--[if lt IE 9
-        ]>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
-        <![endif]-->
-            <!--[if lt IE 9]>
-        <script src="/js/respond.js"></script>
-        <![endif]-->
+
     <script defer="defer" src="https://login.petra.ac.id/js/chunk-vendors.f2b7dbd6.js"></script>
 
     <link href="https://login.petra.ac.id/css/chunk-vendors.f76ef4e6.css" rel="stylesheet">
@@ -413,6 +407,25 @@
             @endif
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @if ($errors->has('email'))
+                let errorMessage = "{{ $errors->first('email') }}";
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Login Failed',
+                    text: errorMessage,
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    },
+                    buttonsStyling: false
+                });
+            @endif
+        });
+    </script>
+
 
 
 

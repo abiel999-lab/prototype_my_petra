@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SupportController;
 use Illuminate\Support\Facades\Log;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
+use Carbon\Carbon;
 
 // ðŸ”¹ Redirect root URL ('/') to the correct dashboard or login
 Route::get('/', function () {
@@ -154,7 +155,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/toggle-mfa', [ProfileController::class, 'toggleMfa'])->name('toggle-mfa');
     Route::post('/set-mfa-method', [ProfileController::class, 'setMfaMethod'])->name('set-mfa-method');
     Route::post('/mfa-challenge/send-otp', [TwoFactorController::class, 'handleWhatsAppOtp'])
-    ->name('mfa-challenge.send-otp');
+        ->name('mfa-challenge.send-otp');
 
 });
 
@@ -171,6 +172,9 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::post('/admin/setting/manage-user/store', [UserController::class, 'store'])->name('profile.admin.manageuser.store');
         Route::put('/admin/setting/manage-user/update/{user}', [UserController::class, 'update'])->name('profile.admin.manageuser.update');
         Route::delete('/admin/setting/manage-user/delete/{user}', [UserController::class, 'destroy'])->name('profile.admin.manageuser.delete');
+        Route::post('/admin/setting/manageuser/ban/{user}', [UserController::class, 'ban'])->name('profile.admin.manageuser.ban');
+        Route::post('/admin/setting/manageuser/unban/{user}', [UserController::class, 'unban'])->name('profile.admin.manageuser.unban');
+
 
         Route::get('/admin/setting/session', [SessionController::class, 'Adminshow'])->name('profile.admin.session.show');
         Route::delete('/admin/setting/session/{id}', [SessionController::class, 'Adminrevoke'])->name('profile.admin.session.revoke');

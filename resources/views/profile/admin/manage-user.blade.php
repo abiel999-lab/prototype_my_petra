@@ -360,6 +360,21 @@
                                                                     <input type="hidden" name="mfa_method"
                                                                         id="hidden-mfa_method-{{ $user->id }}">
                                                                 </form>
+                                                                <!-- Ban/Unban Buttons -->
+                                                                <form method="POST"
+                                                                    id="ban-form-{{ $user->id }}"
+                                                                    class="d-inline">
+                                                                    @csrf
+                                                                    @if ($user->banned_status)
+                                                                        <button type="button"
+                                                                            class="btn btn-success btn-sm rounded"
+                                                                            onclick="updateBanStatus({{ $user->id }}, false)">Unban</button>
+                                                                    @else
+                                                                        <button type="button"
+                                                                            class="btn btn-danger btn-sm rounded"
+                                                                            onclick="updateBanStatus({{ $user->id }}, true)">Ban</button>
+                                                                    @endif
+                                                                </form>
                                                                 <form method="POST"
                                                                     action="{{ route('profile.admin.manageuser.delete', $user->id) }}"
                                                                     class="d-inline"
@@ -585,8 +600,37 @@
                 })
                 .catch(error => console.error("Error:", error));
         }
-
     </script>
+    <script>
+        function updateBanStatus(userId, isBan) {
+            let actionUrl = isBan ?
+                "{{ url('/admin/setting/manageuser/ban') }}/" + userId :
+                "{{ url('/admin/setting/manageuser/unban') }}/" + userId;
+
+            fetch(actionUrl, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        "Content-Type": "application/json",
+                    }
+                }).then(response => response.json())
+                .then(data => {
+                    Swal.fire({
+                        icon: data.success ? "success" : "error",
+                        title: data.message,
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+
+                    // Reload page to reflect changes
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                }).catch(error => console.log("Error:", error));
+        }
+    </script>
+
+
 
 
 </body>

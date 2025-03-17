@@ -212,6 +212,25 @@
             @endif
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @if ($errors->has('email'))
+                let errorMessage = "{{ $errors->first('email') }}";
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Login Failed',
+                    text: errorMessage,
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    },
+                    buttonsStyling: false
+                });
+            @endif
+        });
+    </script>
+
 
 </body>
 
