@@ -283,7 +283,7 @@
                                                     style="margin-bottom: 20px;" class="form-control" required>
                                                     <option value="email"
                                                         {{ auth()->user()->mfa_method === 'email' ? 'selected' : '' }}>
-                                                        Email (OTP code sent through Email)</option>
+                                                        Email</option>
                                                     <option value="google_auth"
                                                         {{ auth()->user()->mfa_method === 'google_auth' ? 'selected' : '' }}>
                                                         Google Authenticator</option>
@@ -292,12 +292,12 @@
                                                         WhatsApp</option>
                                                     <option value="sms2"
                                                         {{ auth()->user()->mfa_method === 'sms2' ? 'selected' : '' }}>
-                                                        SMS</option>
+                                                        SMS (not recommended)</option>
                                                 </select>
 
                                                 <div id="sms-warning">
                                                     <p class="important">Important!!!!</p>
-                                                    <p><b>Warning:</b> You have selected **SMS / WhatsApp OTP**, but
+                                                    <p><b>Warning:</b> You have selected **SMS / WhatsApp**, but
                                                         your phone number is not set!</p>
                                                     <p>Please update your phone number in the <a
                                                             href="{{ route('profile.profile') }}"
@@ -680,6 +680,67 @@
                                             mfaSelect.dispatchEvent(new Event("change"));
                                         });
                                     </script>
+                                    <script>
+                                        document.addEventListener("DOMContentLoaded", function() {
+                                            const mfaSelect = document.getElementById("mfa_method");
+                                            const smsWarning = document.getElementById("sms-warning");
+
+                                            mfaSelect.addEventListener("change", function() {
+                                                let phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
+
+                                                if (mfaSelect.value === "sms2") {
+                                                    // Show warning if no phone number is registered for SMS2
+                                                    smsWarning.style.display = phoneNumber.trim() ? "none" : "block";
+                                                } else {
+                                                    smsWarning.style.display = "none";
+                                                }
+                                            });
+
+                                            document.getElementById('mfa-method-form').addEventListener('submit', function(e) {
+                                                e.preventDefault(); // Prevent default form submission
+
+                                                let selectedMethod = mfaSelect.value;
+                                                let url = selectedMethod === 'sms2'
+                                                    ? "{{ route('mfa-challenge.send-sms-otp') }}"
+                                                    : "{{ route('mfa-challenge.send-otp') }}";
+
+                                                fetch(url, {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                        'Content-Type': 'application/json',
+                                                    },
+                                                    body: JSON.stringify({}),
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    alert(data.message || 'OTP sent successfully.');
+                                                })
+                                                .catch(error => console.error('Error:', error));
+                                            });
+
+                                            // Ensure correct warning displays on page load
+                                            mfaSelect.dispatchEvent(new Event("change"));
+                                        });
+                                        </script>
+                                        <script>
+                                            document.getElementById("mfa_method").addEventListener("change", function() {
+                                                if (this.value === "sms2") {
+                                                    Swal.fire({
+                                                        icon: "warning",
+                                                        title: "Are you sure?",
+                                                        text: "SMS is slow and less secure. We recommend Email, Google Authenticator, or WhatsApp instead.",
+                                                        showCancelButton: true,
+                                                        confirmButtonText: "Yes, I want SMS",
+                                                        cancelButtonText: "No, choose another method",
+                                                    }).then((result) => {
+                                                        if (!result.isConfirmed) {
+                                                            this.value = "email"; // Default back to email if they cancel
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                            </script>
 
 </body>
 

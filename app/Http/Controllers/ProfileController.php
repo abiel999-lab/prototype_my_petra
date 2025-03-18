@@ -131,7 +131,7 @@ class ProfileController extends Controller
     public function setMfaMethod(Request $request)
     {
         $request->validate([
-            'mfa_method' => 'required|in:email,google_auth,sms',
+            'mfa_method' => 'required|in:email,google_auth,sms,sms2',
         ]);
 
         $user = auth()->user();

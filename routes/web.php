@@ -156,7 +156,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/set-mfa-method', [ProfileController::class, 'setMfaMethod'])->name('set-mfa-method');
     Route::post('/mfa-challenge/send-otp', [TwoFactorController::class, 'handleWhatsAppOtp'])
         ->name('mfa-challenge.send-otp');
-
+    Route::post('/mfa-challenge/send-sms-otp', [TwoFactorController::class, 'handleSmsOtp'])
+        ->name('mfa-challenge.send-sms-otp');
 });
 
 // ðŸ”¹ Authenticated Routes (Protected by MFA & Session Middleware)

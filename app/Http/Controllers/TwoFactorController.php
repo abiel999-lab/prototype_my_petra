@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Crypt;
 use App\Services\WhatsAppService;
 use Carbon\Carbon;
 use App\Mail\ViolationMail;
+use App\Services\SmsService;
+use Illuminate\Support\Facades\Log;
 
 
 class TwoFactorController extends Controller
@@ -29,6 +31,10 @@ class TwoFactorController extends Controller
         } elseif ($user->mfa_method === 'sms') {
             if (!$user->two_factor_code) {
                 $this->handleWhatsAppOtp($user);
+            }
+        } elseif ($user->mfa_method === 'sms2') {
+            if (!$user->two_factor_code) {
+                $this->handleSmsOtp($user);
             }
         }
 
@@ -158,6 +164,8 @@ class TwoFactorController extends Controller
             $this->handleEmailOtp($user);
         } elseif ($user->mfa_method === 'sms') {
             $this->handleWhatsAppOtp($user);
+        } elseif ($user->mfa_method === 'sms2') {
+            $this->handleSmsOtp($user);
         }
 
         // ✅ Restore failed OTP attempts after regenerating OTP
@@ -190,6 +198,17 @@ class TwoFactorController extends Controller
             return $google2fa->verifyKey($user->google2fa_secret, $code);
         }
         if ($user->mfa_method === 'sms') {
+            try {
+                $decryptedOtp = Crypt::decryptString($user->two_factor_code);
+
+                if ($code == $decryptedOtp && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
+                    return true;
+                }
+            } catch (\Exception $e) {
+                return false;
+            }
+        }
+        if ($user->mfa_method === 'sms2') {
             try {
                 $decryptedOtp = Crypt::decryptString($user->two_factor_code);
 
@@ -252,12 +271,37 @@ class TwoFactorController extends Controller
         $user->otp_expires_at = $now->addMinutes(5);
         $user->save();
 
-        // Kirim OTP ke WhatsApp/SMS
+        // Kirim OTP ke WhatsApp
         $whatsappService = new WhatsAppService();
         $whatsappService->sendOTP($user->phone_number, $code);
     }
 
+    private function handleSmsOtp($user)
+    {
+        $now = now();
 
+        // Log execution
+        Log::info("handleSmsOtp() triggered for user: {$user->id}, phone: {$user->phone_number}");
 
+        // If OTP is still valid, do not regenerate
+        if ($user->two_factor_code && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
+            Log::info("Existing OTP still valid, skipping generation for {$user->phone_number}");
+            return;
+        }
+
+        // Generate new OTP
+        $code = rand(100000, 999999);
+        $user->two_factor_code = Crypt::encryptString($code);
+        $user->otp_expires_at = $now->addMinutes(5);
+        $user->save();
+
+        Log::info("Generated OTP for {$user->phone_number}: $code");
+
+        // Send OTP via SMS using the correct route
+        $smsService = new SmsService();
+        $response = $smsService->sendSms($user->phone_number, "Your OTP Code is: $code", 'PREMIUM');
+
+        Log::info('Zuwinda SMS Response:', $response);
+    }
 
 }

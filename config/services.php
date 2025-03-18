@@ -45,5 +45,10 @@ return [
         'userkey' => env('ZENZIVA_USERKEY'),
         'passkey' => env('ZENZIVA_PASSKEY'),
     ],
+    'zuwinda' => [
+        'api_url' => env('ZUWINDA_API_URL'),
+        'api_key' => env('ZUWINDA_API_KEY'),
+        'default_route' => env('ZUWINDA_SMS_ROUTE', 'PREMIUM'), // Default to CHEAP if not set
+    ],
 
 ];

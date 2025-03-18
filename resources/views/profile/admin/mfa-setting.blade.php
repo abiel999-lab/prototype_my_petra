@@ -292,7 +292,7 @@
                                                     style="margin-bottom: 20px;" class="form-control" required>
                                                     <option value="email"
                                                         {{ auth()->user()->mfa_method === 'email' ? 'selected' : '' }}>
-                                                        Email (OTP code sent through Email)</option>
+                                                        Email</option>
                                                     <option value="google_auth"
                                                         {{ auth()->user()->mfa_method === 'google_auth' ? 'selected' : '' }}>
                                                         Google Authenticator</option>
@@ -301,12 +301,12 @@
                                                         WhatsApp</option>
                                                     <option value="sms2"
                                                         {{ auth()->user()->mfa_method === 'sms2' ? 'selected' : '' }}>
-                                                        SMS</option>
+                                                        SMS (not recommended)</option>
                                                 </select>
 
                                                 <div id="sms-warning">
                                                     <p class="important">Important!!!!</p>
-                                                    <p><b>Warning:</b> You have selected **SMS / WhatsApp OTP**, but
+                                                    <p><b>Warning:</b> You have selected **SMS / WhatsApp**, but
                                                         your phone number is not set!</p>
                                                     <p>Please update your phone number in the <a
                                                             href="{{ route('profile.profile') }}"
@@ -363,84 +363,7 @@
                                         </div>
 
                                         <div class="tab-pane" id="tab_manage">
-                                            {{-- <table id="deviceTable"
-                                                class="table table-bordered table-hover text-center">
-                                                <thead class="thead-light">
-                                                    <tr>
-                                                        <th>#</th>
-                                                        <th>IP</th>
-                                                        <th>Device</th>
-                                                        <th>OS</th>
-                                                        <th>Browser</th>
-                                                        <th>Last Used</th>
-                                                        <th>Trusted</th>
-                                                        <th>Action</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach ($devices as $index => $device)
-                                                        <tr>
-                                                            <td>{{ $index + 1 }}</td>
-                                                            <td>{{ $device['ip_address'] }}</td>
-                                                            <td>Desktop</td>
-                                                            <!-- Assuming all are desktop, modify if needed -->
-                                                            <td>{{ $device['os'] }}</td>
-                                                            <td>{{ $device['browser'] }}</td>
-                                                            <td>{{ $device['last_used'] }}</td>
-                                                            <td>
-                                                                @if ($device['trusted'])
-                                                                    <span>
-                                                                        Trusted
-                                                                    </span>
-                                                                @else
-                                                                    <span>
-                                                                        Not Trusted
-                                                                    </span>
-                                                                @endif
-                                                            </td>
-                                                            <td class="text-center">
-                                                                <div class="btn-group">
-                                                                    <!-- Delete Device -->
-                                                                    <form id="deleteForm-{{ $device['id'] }}"
-                                                                        action="{{ route('profile.admin.mfa.delete', $device['id']) }}"
-                                                                        method="POST">
-                                                                        @csrf
-                                                                        @method('DELETE')
-                                                                        <button type="button"
-                                                                            onclick="confirmDelete('{{ $device['id'] }}')"
-                                                                            class="btn btn-sm btn-danger">
-                                                                            Delete
-                                                                        </button>
-                                                                    </form>
 
-                                                                    <!-- Trust / Untrust Device -->
-                                                                    @if ($device['trusted'])
-                                                                        <form
-                                                                            action="{{ route('profile.admin.mfa.untrust', $device['id']) }}"
-                                                                            method="POST">
-                                                                            @csrf
-                                                                            <button type="submit"
-                                                                                class="btn btn-sm btn-warning">
-                                                                                Untrust
-                                                                            </button>
-                                                                        </form>
-                                                                    @else
-                                                                        <form
-                                                                            action="{{ route('profile.admin.mfa.trust', $device['id']) }}"
-                                                                            method="POST">
-                                                                            @csrf
-                                                                            <button type="submit"
-                                                                                class="btn btn-sm btn-success">
-                                                                                Trust
-                                                                            </button>
-                                                                        </form>
-                                                                    @endif
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table> --}}
                                             <div class="table-responsive">
                                                 <table id="deviceTable"
                                                     class="table table-bordered table-hover text-center">
@@ -518,19 +441,6 @@
                                                 </table>
                                             </div>
                                         </div>
-
-
-
-
-
-
-
-
-
-
-                                        <!-- /.content-wrapper -->
-
-
                                         <footer class="main-footer">
                                             <strong>Copyright &copy; 2023 <a href="https://petra.ac.id">Petra Christian
                                                     University</a>.</strong>
@@ -713,6 +623,68 @@
                                             mfaSelect.dispatchEvent(new Event("change"));
                                         });
                                     </script>
+                                    <script>
+                                        document.addEventListener("DOMContentLoaded", function() {
+                                            const mfaSelect = document.getElementById("mfa_method");
+                                            const smsWarning = document.getElementById("sms-warning");
+
+                                            mfaSelect.addEventListener("change", function() {
+                                                let phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
+
+                                                if (mfaSelect.value === "sms2") {
+                                                    // Show warning if no phone number is registered for SMS2
+                                                    smsWarning.style.display = phoneNumber.trim() ? "none" : "block";
+                                                } else {
+                                                    smsWarning.style.display = "none";
+                                                }
+                                            });
+
+                                            document.getElementById('mfa-method-form').addEventListener('submit', function(e) {
+                                                e.preventDefault(); // Prevent default form submission
+
+                                                let selectedMethod = mfaSelect.value;
+                                                let url = selectedMethod === 'sms2'
+                                                    ? "{{ route('mfa-challenge.send-sms-otp') }}"
+                                                    : "{{ route('mfa-challenge.send-otp') }}";
+
+                                                fetch(url, {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                        'Content-Type': 'application/json',
+                                                    },
+                                                    body: JSON.stringify({}),
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    alert(data.message || 'OTP sent successfully.');
+                                                })
+                                                .catch(error => console.error('Error:', error));
+                                            });
+
+                                            // Ensure correct warning displays on page load
+                                            mfaSelect.dispatchEvent(new Event("change"));
+                                        });
+                                        </script>
+                                        <script>
+                                            document.getElementById("mfa_method").addEventListener("change", function() {
+                                                if (this.value === "sms2") {
+                                                    Swal.fire({
+                                                        icon: "warning",
+                                                        title: "Are you sure?",
+                                                        text: "SMS is slow and less secure. We recommend Email, Google Authenticator, or WhatsApp instead.",
+                                                        showCancelButton: true,
+                                                        confirmButtonText: "Yes, I want SMS",
+                                                        cancelButtonText: "No, choose another method",
+                                                    }).then((result) => {
+                                                        if (!result.isConfirmed) {
+                                                            this.value = "email"; // Default back to email if they cancel
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                            </script>
+
 </body>
 
 </html>

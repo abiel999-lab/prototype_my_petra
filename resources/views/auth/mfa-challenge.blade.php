@@ -61,7 +61,7 @@
                                 <div class="tab-content mt-4">
                                     <h1 class="login-title">Input OTP Code</h1>
                                     <p style="margin-top: 10px; margin-bottom: 10px;">Open your authenticator app, Email
-                                        or SMS and enter the 6-digit code to log in.</p>
+                                        Whatsapp or SMS and enter the 6-digit code to log in.</p>
 
                                     <form action="{{ route('mfa-challenge.verify') }}" method="POST">
                                         @csrf
