@@ -40,108 +40,103 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        // Extract email based on form structure
         $email = $request->has('emailLocalPart')
             ? $request->emailLocalPart . $request->emailDomain
             : $request->email;
 
         $user = User::where('email', $email)->first();
 
-        // If the user does not exist, return an error
-        if (!$user) {
-            return back()->withErrors(['email' => 'These credentials do not match our records.']);
-        }
+        // ✅ If user exists in database, process login
+        if ($user) {
+            // 🚨 Check if the account is permanently banned
+            if ($user->banned_status == 1) {
+                return back()->withErrors([
+                    'email' => "Your account has been permanently banned. Please contact support."
+                ]);
+            }
 
-        // ✅ Check if the account is permanently banned
-        if ($user->banned_status == 1) {
-            return back()->withErrors([
-                'email' => "Your account has been permanently banned. Please contact support."
-            ]);
-        }
+            // ✅ Auto-reset login ban if expired
+            if ($user->login_ban_until && Carbon::parse($user->login_ban_until)->lt(now())) {
+                $user->update(['login_ban_until' => null, 'failed_login_attempts' => 0]);
+            }
 
-        // ✅ Auto-reset login ban if expired
-        if ($user->login_ban_until && Carbon::parse($user->login_ban_until)->lt(now())) {
-            $user->update(['login_ban_until' => null, 'failed_login_attempts' => 0]);
-        }
+            // ✅ Check login ban
+            if ($user->login_ban_until && Carbon::parse($user->login_ban_until)->gt(now())) {
+                $banEnd = Carbon::parse($user->login_ban_until)->setTimezone('Asia/Jakarta')->format('H:i:s');
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => "Too many failed attempts. Your account is locked until {$banEnd} Jakarta Time."
+                ]);
+            }
 
-        // ✅ Check Login Ban (force logout if still active)
-        if ($user->login_ban_until && Carbon::parse($user->login_ban_until)->gt(now())) {
-            $banEnd = Carbon::parse($user->login_ban_until)->setTimezone('Asia/Jakarta')->format('H:i:s');
-            Auth::logout();
-            return back()->withErrors([
-                'email' => "Too many failed attempts. Your account is locked until {$banEnd} Jakarta Time."
-            ]);
-        }
+            // ✅ Attempt Login
+            if (Auth::attempt(['email' => $email, 'password' => $request->password])) {
+                $request->session()->regenerate();
 
-        // ✅ Attempt Database Login
-        if (Auth::attempt(['email' => $email, 'password' => $request->password])) {
-            $request->session()->regenerate();
+                // ✅ Reset failed login attempts on successful login
+                $user->failed_login_attempts = 0;
+                $user->login_ban_until = null;
+                $user->save(); // ✅ Force save to database
 
-            // ✅ Reset failed login attempts on successful login
-            $user->update([
-                'failed_login_attempts' => 0,
-                'login_ban_until' => null
-            ]);
+                return $this->redirectUser($user);
+            }
 
-            return $this->redirectUser($user);
-        }
+            // ❌ Incorrect password, increase failed attempts
+            $user->increment('failed_login_attempts');
+            $user->save(); // ✅ Ensure the new failed attempt is saved
 
-        // ✅ Attempt LDAP Login (If database login fails)
-        $ldapUser = LdapUser::where('mail', $email)->first();
+            $remainingAttempts = 15 - $user->failed_login_attempts;
 
-        if ($ldapUser && $ldapUser->authenticate($request->password)) {
-            // Sync LDAP user into Laravel database
-            $user = User::updateOrCreate(
-                ['email' => $ldapUser->mail[0]],
-                [
-                    'name' => $ldapUser->cn[0] ?? 'Unknown',
-                    'password' => Hash::make($request->password),
-                    'usertype' => 'general', // Default user type
-                ]
-            );
+            // 🚨 Ban the account if failed attempts exceed 15
+            if ($user->failed_login_attempts >= 15) {
+                $user->banned_status = true;
+                $user->save(); // ✅ Ensure the banned status is updated in DB
 
-            Auth::login($user);
+                // 🚨 Send Violation Email Alert
+                Mail::to('mfa.mypetra@petra.ac.id')->send(new ViolationMail($user, 'login'));
 
-            // ✅ Reset failed login attempts on successful login
-            $user->update([
-                'failed_login_attempts' => 0,
-                'login_ban_until' => null
-            ]);
-
-            return $this->redirectUser($user);
-        }
-
-        // ✅ Handle Failed Login Attempts
-        $user->increment('failed_login_attempts');
-        $remainingAttempts = 10 - ($user->failed_login_attempts % 10);
-        $banDuration = null;
-
-        // ✅ Apply Progressive Ban Logic
-        if ($user->failed_login_attempts == 10) {
-            $user->update(['login_ban_until' => now()->addMinutes(5)]);
-            $banDuration = "5 minutes";
-        } elseif ($user->failed_login_attempts == 20) {
-            $user->update(['login_ban_until' => now()->addMinutes(30)]);
-            $banDuration = "30 minutes";
-        } elseif ($user->failed_login_attempts >= 30) {
-            $user->update([
-                'login_ban_until' => now()->addHours(24),
-                'banned_status' => 1 // 🚨 Mark account as permanently banned!
-            ]);
-
-            // 🚨 Send Violation Email Alert
-            Mail::to('mfa.mypetra@petra.ac.id')->send(new ViolationMail($user, 'ban'));
+                return back()->withErrors([
+                    'email' => "Your account has been permanently banned due to excessive failed login attempts."
+                ]);
+            }
 
             return back()->withErrors([
-                'email' => "Your account has been permanently banned due to excessive failed login attempts."
+                'email' => "Incorrect credentials. {$remainingAttempts} attempts left before a ban."
             ]);
         }
 
-        return back()->withErrors([
-            'email' => "Incorrect credentials. {$remainingAttempts} attempts left before a {$banDuration} ban."
-        ]);
+        // If user is not found in database, check LDAP
+        try {
+            $ldapUser = LdapUser::where('mail', $email)->first();
+
+            if ($ldapUser) {
+                // ✅ Sync LDAP user into Laravel database
+                $user = User::updateOrCreate(
+                    ['email' => $ldapUser->mail[0]],
+                    [
+                        'name' => $ldapUser->cn[0] ?? 'Unknown',
+                        'password' => Hash::make($request->password), // Hash LDAP password for local login
+                        'usertype' => 'general', // Default user type
+                    ]
+                );
+
+                Auth::login($user);
+
+                // ✅ Reset failed login attempts for newly created LDAP user
+                $user->failed_login_attempts = 0;
+                $user->login_ban_until = null;
+                $user->save(); // ✅ Force save to database
+
+                return $this->redirectUser($user);
+            }
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'email' => "Email Not Found."
+            ]);
+        }
+
+        return back()->withErrors(['email' => 'These credentials do not match our records.']);
     }
-
 
 
     /**

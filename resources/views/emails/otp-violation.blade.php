@@ -32,6 +32,10 @@
                 <p><strong>Email:</strong> {{ $email }}</p>
                 <p><strong>Failed Attempts:</strong> {{ $attempts }}</p>
                 <p><strong>Time of Violation:</strong> {{ $timestamp }}</p>
+                <p><strong>IP Address:</strong> {{ $ipAddress }}</p>
+                <p><strong>Operating System:</strong> {{ $os }}</p>
+                <p><strong>Browser:</strong> {{ $browser }}</p>
+                <p><strong>Device Type:</strong> {{ $device }}</p>
 
                 <h3 align="center" style="font-size: 18px; font-weight: bold; color: red; margin-top: 20px;">
                     Immediate action may be required.

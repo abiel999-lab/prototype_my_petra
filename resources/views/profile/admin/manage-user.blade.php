@@ -163,7 +163,7 @@
                             <a href="{{ route('profile.admin.mfa') }}" class="nav-link ">
                                 <i class="nav-icon fas fa-shield-alt"></i>
                                 <p>
-                                    MFA
+                                    Security
                                 </p>
                             </a>
                         </li>
@@ -238,7 +238,7 @@
 
                                     <!-- Add User Form -->
                                     <div class="row">
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <h4 class="mb-3">Add User</h4>
                                             <form method="POST"
                                                 action="{{ route('profile.admin.manageuser.store') }}">
@@ -274,7 +274,7 @@
                                         </div>
 
                                         <!-- User List -->
-                                        <div class="col-md-8">
+                                        <div class="col-md-9">
                                             <h4 class="mb-3">User List</h4>
                                             <table class="table table-bordered">
                                                 <thead class="thead-light">
@@ -285,6 +285,7 @@
                                                         <th>User Type</th>
                                                         <th>MFA Enabled</th>
                                                         <th>MFA Method</th>
+                                                        <th>Operating Systems</th> <!-- OS Column -->
                                                         <th>Actions</th>
                                                     </tr>
                                                 </thead>
@@ -332,10 +333,62 @@
                                                                         Email</option>
                                                                     <option value="google_authenticator"
                                                                         {{ $user->mfa_method == 'google_authenticator' ? 'selected' : '' }}>
-                                                                        Google Authenticator</option>
+                                                                        Google Authenticator
+                                                                    </option>
+                                                                    <option value="sms"
+                                                                        {{ $user->mfa_method == 'sms' ? 'selected' : '' }}>
+                                                                        WhatsApp</option>
+                                                                    <option value="sms2"
+                                                                        {{ $user->mfa_method == 'sms2' ? 'selected' : '' }}>
+                                                                        SMS</option>
                                                                 </select>
                                                             </td>
+                                                            <td> <!-- 🔹 Operating System Column with Trust/Untrust Buttons in One Line -->
+                                                                @if (count($user->devices) > 0)
+                                                                    @foreach ($user->devices as $device)
+                                                                        <div class="d-flex align-items-center gap-2">
+                                                                            <span
+                                                                                class="badge badge-primary">{{ $device->os }}</span>
+
+                                                                            @if ($device->trusted)
+                                                                                <span
+                                                                                    class="badge bg-success d-flex align-items-center">
+
+                                                                                    Trusted
+                                                                                </span>
+                                                                            @endif
+
+                                                                            <form
+                                                                                action="{{ route('profile.admin.mfa.trust', $device->id) }}"
+                                                                                method="POST" class="d-inline">
+                                                                                @csrf
+                                                                                <button type="submit"
+                                                                                    class="btn btn-success btn-sm"
+                                                                                    onclick="return confirm('Trusting this device will untrust all others for this user. Continue?');"
+                                                                                    {{ $device->trusted ? 'disabled' : '' }}>
+                                                                                    Trust
+                                                                                </button>
+                                                                            </form>
+
+                                                                            <form
+                                                                                action="{{ route('profile.admin.mfa.untrust', $device->id) }}"
+                                                                                method="POST" class="d-inline">
+                                                                                @csrf
+                                                                                <button type="submit"
+                                                                                    class="btn btn-warning btn-sm"
+                                                                                    onclick="return confirm('Are you sure you want to untrust this device?');"
+                                                                                    {{ !$device->trusted ? 'disabled' : '' }}>
+                                                                                    Untrust
+                                                                                </button>
+                                                                            </form>
+                                                                        </div>
+                                                                    @endforeach
+                                                                @else
+                                                                    No Devices
+                                                                @endif
+                                                            </td>
                                                             <td>
+                                                                <!-- 🔹 User Edit Form (Ensures every user has an Edit button) -->
                                                                 <form id="edit-form-{{ $user->id }}"
                                                                     method="POST"
                                                                     action="{{ route('profile.admin.manageuser.update', $user->id) }}">
@@ -354,13 +407,13 @@
                                                                         id="hidden-email-{{ $user->id }}">
                                                                     <input type="hidden" name="usertype"
                                                                         id="hidden-usertype-{{ $user->id }}">
-                                                                    <!-- Added this line -->
                                                                     <input type="hidden" name="mfa_enabled"
                                                                         id="hidden-mfa_enabled-{{ $user->id }}">
                                                                     <input type="hidden" name="mfa_method"
                                                                         id="hidden-mfa_method-{{ $user->id }}">
                                                                 </form>
-                                                                <!-- Ban/Unban Buttons -->
+
+                                                                <!-- 🔹 Ban/Unban User -->
                                                                 <form method="POST"
                                                                     id="ban-form-{{ $user->id }}"
                                                                     class="d-inline">
@@ -375,10 +428,12 @@
                                                                             onclick="updateBanStatus({{ $user->id }}, true)">Ban</button>
                                                                     @endif
                                                                 </form>
+
+                                                                <!-- 🔹 Delete User -->
                                                                 <form method="POST"
                                                                     action="{{ route('profile.admin.manageuser.delete', $user->id) }}"
                                                                     class="d-inline"
-                                                                    onsubmit="return confirmDeletion()">
+                                                                    onsubmit="return confirm('Are you sure you want to delete this user?');">
                                                                     @csrf
                                                                     @method('DELETE')
                                                                     <button type="submit"
@@ -389,6 +444,8 @@
                                                     @endforeach
                                                 </tbody>
                                             </table>
+
+
                                             <div class="d-flex justify-content-center mt-3" id="pagination-links">
                                                 {{ $users->links('pagination::bootstrap-5') }}
                                             </div>

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\TrustedDevice;
+use Jenssegers\Agent\Agent;
 
 class UserController extends Controller
 {
@@ -43,6 +45,17 @@ class UserController extends Controller
 
         $users = $users->paginate(5);
 
+        // Fetch OS details for each user's devices
+        foreach ($users as $user) {
+            $user->devices = TrustedDevice::where('user_id', $user->id)->get();
+
+            foreach ($user->devices as $device) {
+                $agent = new Agent();
+                $agent->setUserAgent($device->user_agent);
+                $device->os = $agent->platform(); // Extract OS from user agent
+            }
+        }
+
         return view('profile.admin.manage-user', compact('users', 'search'));
     }
 
@@ -76,7 +89,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $user->id,
             'usertype' => 'required|string|in:general,admin,staff,student',
             'mfa_enabled' => 'nullable|boolean',
-            'mfa_method' => 'required|string|in:email,google_authenticator',
+            'mfa_method' => 'required|string|in:email,google_authenticator,sms,sms2',
         ]);
 
         // Convert checkbox value to boolean (1 or 0)

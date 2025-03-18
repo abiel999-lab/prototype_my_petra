@@ -186,7 +186,7 @@
                             <a href="{{ route('profile.student.mfa') }}" class="nav-link ">
                                 <i class="nav-icon fas fa-shield-alt"></i>
                                 <p>
-                                    MFA
+                                    Security
                                 </p>
                             </a>
                         </li>

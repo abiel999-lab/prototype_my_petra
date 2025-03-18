@@ -212,6 +212,41 @@
             @endif
         });
     </script>
+    @if (session('login_banned_until'))
+        <div class="alert alert-danger text-center">
+            Your account is temporarily banned due to multiple failed login attempts. <br>
+            You can try again in <strong id="login-ban-timer"></strong>.
+        </div>
+    @endif
+
+    @if (session('remaining_login_attempts'))
+        <div class="alert alert-warning text-center">
+            Warning: You have <strong>{{ session('remaining_login_attempts') }}</strong> attempts left before a ban!
+        </div>
+    @endif
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let loginBanEnd = "{{ session('login_banned_until') }}";
+            if (loginBanEnd) {
+                let banEndTime = new Date(loginBanEnd).getTime();
+                let timer = setInterval(function() {
+                    let now = new Date().getTime();
+                    let timeLeft = banEndTime - now;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        document.getElementById("login-ban-timer").innerHTML = "You can try again now!";
+                    } else {
+                        let minutes = Math.floor(timeLeft / 60000);
+                        let seconds = Math.floor((timeLeft % 60000) / 1000);
+                        document.getElementById("login-ban-timer").innerHTML = minutes + " min " + seconds +
+                            " sec";
+                    }
+                }, 1000);
+            }
+        });
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             @if ($errors->has('email'))

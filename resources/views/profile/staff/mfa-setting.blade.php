@@ -215,7 +215,7 @@
                             <a href="{{ route('profile.staff.mfa') }}" class="nav-link active">
                                 <i class="nav-icon fas fa-shield-alt"></i>
                                 <p>
-                                    MFA
+                                    Security
                                 </p>
                             </a>
                         </li>
@@ -289,7 +289,10 @@
                                                         Google Authenticator</option>
                                                     <option value="sms"
                                                         {{ auth()->user()->mfa_method === 'sms' ? 'selected' : '' }}>
-                                                        SMS / WhatsApp OTP</option>
+                                                        WhatsApp</option>
+                                                    <option value="sms2"
+                                                        {{ auth()->user()->mfa_method === 'sms2' ? 'selected' : '' }}>
+                                                        SMS</option>
                                                 </select>
 
                                                 <div id="sms-warning">

@@ -187,7 +187,7 @@
                             <a href="{{ route('profile.admin.mfa') }}" class="nav-link ">
                                 <i class="nav-icon fas fa-shield-alt"></i>
                                 <p>
-                                    MFA
+                                    Security
                                 </p>
                             </a>
                         </li>

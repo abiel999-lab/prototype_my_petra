@@ -63,7 +63,7 @@ class TwoFactorController extends Controller
             }
 
             return redirect()->route('mfa-challenge.index')->withErrors([
-                'code' => "Invalid OTP format. You have " . (10 - $user->failed_otp_attempts) . " attempts left."
+                'code' => "Incorrect OTP. You have " . (10 - $user->failed_otp_attempts) . " attempts left."
             ]);
         }
 
@@ -112,7 +112,7 @@ class TwoFactorController extends Controller
         $user->two_factor_code = Crypt::encryptString($code);
         $user->otp_expires_at = $now->addMinutes(10);
         $user->failed_otp_attempts = 0; // Reset failed attempts on new OTP generation
-        $user->otp_ban_until = null; // Remove ban
+
         $user->save();
 
         try {
@@ -145,39 +145,28 @@ class TwoFactorController extends Controller
     {
         $user = auth()->user();
 
-        // Prevent OTP resend if the user is banned
-        if ($user->otp_ban_until && now()->lt($user->otp_ban_until)) {
-            return back()->withErrors([
-                'code' => 'You cannot request a new OTP yet. Try again at ' . $user->otp_ban_until->format('H:i:s'),
-            ]);
-        }
-
         // Preserve failed OTP attempts before resetting OTP
         $failedAttempts = $user->failed_otp_attempts;
 
         // **Reset OTP but keep failed attempts**
         $user->two_factor_code = null;
         $user->otp_expires_at = null;
-        $user->save();
+        $user->save(); // ✅ Ensure the database is updated
 
-        // Generate and send new OTP
+        // ✅ Generate and send new OTP
         if ($user->mfa_method === 'email') {
             $this->handleEmailOtp($user);
         } elseif ($user->mfa_method === 'sms') {
             $this->handleWhatsAppOtp($user);
         }
 
-        // Restore failed OTP attempts after regenerating OTP
+        // ✅ Restore failed OTP attempts after regenerating OTP
         $user->failed_otp_attempts = $failedAttempts;
-        $user->save();
+        $user->save(); // ✅ Force save to database
 
-        return back()->with('success', 'A new OTP has been sent.');
+        session()->flash('success', 'A new OTP has been sent.');
+        return back();
     }
-
-
-
-
-
 
     private function validateOtp($user, $code)
     {

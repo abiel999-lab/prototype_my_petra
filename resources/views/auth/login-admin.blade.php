@@ -384,27 +384,39 @@
             @endif
         });
     </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            @if (Auth::check())
-                var userType = "{{ Auth::user()->usertype }}"; // Get usertype from Laravel
+    @if (session('login_banned_until'))
+        <div class="alert alert-danger text-center">
+            Your account is temporarily banned due to multiple failed login attempts. <br>
+            You can try again in <strong id="login-ban-timer"></strong>.
+        </div>
+    @endif
 
-                if (userType === 'student' || userType === 'staff' || userType ===
-                    'general') { // Restrict students (change as needed)
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Access Denied',
-                        text: 'You are not allowed to access this page.',
-                        confirmButtonText: 'OK',
-                        customClass: {
-                            confirmButton: 'btn btn-primary'
-                        },
-                        buttonsStyling: false
-                    }).then(() => {
-                        location.reload(); // Refresh the page after clicking OK
-                    });
-                }
-            @endif
+    @if (session('remaining_login_attempts'))
+        <div class="alert alert-warning text-center">
+            Warning: You have <strong>{{ session('remaining_login_attempts') }}</strong> attempts left before a ban!
+        </div>
+    @endif
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let loginBanEnd = "{{ session('login_banned_until') }}";
+            if (loginBanEnd) {
+                let banEndTime = new Date(loginBanEnd).getTime();
+                let timer = setInterval(function() {
+                    let now = new Date().getTime();
+                    let timeLeft = banEndTime - now;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        document.getElementById("login-ban-timer").innerHTML = "You can try again now!";
+                    } else {
+                        let minutes = Math.floor(timeLeft / 60000);
+                        let seconds = Math.floor((timeLeft % 60000) / 1000);
+                        document.getElementById("login-ban-timer").innerHTML = minutes + " min " + seconds +
+                            " sec";
+                    }
+                }, 1000);
+            }
         });
     </script>
     <script>

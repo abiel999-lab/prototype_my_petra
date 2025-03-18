@@ -152,13 +152,24 @@ class UserDeviceController extends Controller
     }
     public function Admintrust($id)
     {
-        $this->trustDevice($id, Auth::id());
-        return redirect()->back()->with('success', 'OS is now trusted.');
+        $device = TrustedDevice::findOrFail($id);
+        $userId = $device->user_id;
+
+        // Untrust all other devices for the user
+        TrustedDevice::where('user_id', $userId)->update(['trusted' => false]);
+
+        // Trust the selected device
+        $device->update(['trusted' => true]);
+
+        return redirect()->back()->with('success', 'Only one device can be trusted. Other devices have been untrusted.');
     }
+
     public function Adminuntrust($id)
     {
-        $this->untrustDevice($id, Auth::id());
-        return redirect()->back()->with('success', 'OS is no longer trusted.');
+        $device = TrustedDevice::findOrFail($id);
+        $device->update(['trusted' => false]);
+
+        return redirect()->back()->with('success', 'This device is no longer trusted.');
     }
 
     public function Studentindex()

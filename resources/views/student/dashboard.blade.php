@@ -79,26 +79,38 @@
                     </a>
                     <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
                         <div class="mediax">
-                            <div class="card-body box-profile">
-                                <div class="text-center">
-                                    <img class="profile-user-img img-fluid img-circle"
-                                        src="https://my.petra.ac.id/img/user.png" alt="User profile picture">
+                            <div class="card-body box-profile text-center">
+                                <div class="profile-container">
+                                    <div class="profile-pic">
+                                        <img class="profile-user-img img-fluid img-circle"
+                                            src="{{ auth()->user()->profile_picture ?? 'https://my.petra.ac.id/img/user.png' }}"
+                                            alt="User profile picture">
+                                    </div>
                                 </div>
+
                                 <h3 class="profile-username text-center">
                                     {{ strtoupper(auth()->user()->name) }}
-                                    <a href="{{ route('profile.student.setting') }}" class="setting-profile"><i
-                                            class="fas fa-pencil-alt"></i></a>
                                 </h3>
-                                <p class="text-muted text-center">{{ auth()->user()->email }}</p>
+                                <p class="text-muted text-center" style="margin-bottom: 8px">{{ auth()->user()->email }}
+                                </p>
+
+                                <!-- Manage Account Button -->
+                                <a href="{{ route('profile.student.setting') }}" class="btn btn-outline-primary">Manage your
+                                    Account</a>
+                                <center style="margin-top: 8px">
+                                    <a href="{{ route('logout') }}" class="btn btn-danger mb-2"
+                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                        <b>Logout</b>
+                                    </a>
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                                        style="display: none;">
+                                        @csrf
+                                    </form>
+                                </center>
                             </div>
+
                         </div>
-                        <center>
-                            <a href="{{ route('logout') }}" class="btn btn-danger mb-2"
-                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><b>Logout</b></a>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                                @csrf
-                            </form>
-                        </center>
+
                     </div>
                 </li>
             </ul>
