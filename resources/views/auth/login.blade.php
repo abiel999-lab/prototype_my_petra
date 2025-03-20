@@ -122,6 +122,14 @@
                                     </div>
                                 </form>
 
+                                <!-- Google Login -->
+                                <a href="{{ route('google.login') }}" class="btn btn-lg login-btn"
+                                    style="margin-top: 10px;">
+                                    <img src="https://login.petra.ac.id/img/logo-google.png" alt="Auth"
+                                        width="24" style="margin-right: 10px;">
+                                    Sign In with Google Mail
+                                </a>
+
                                 <p class="login-wrapper-footer-text" style="margin-top: 20px;">
                                     Forgot your password? Reset it
                                     <a href="{{ route('password.request') }}"
@@ -153,7 +161,30 @@
     <!-- Scripts -->
     <script src="https://login.petra.ac.id/js/jquery.js"></script>
     <script src="https://login.petra.ac.id/js/bootstrap.min.js"></script>
+    <script src="https://login.petra.ac.id/js/popper.min.js"></script>
+    <script src="https://login.petra.ac.id/js/jquery-ui.min.js"></script>
+    <script src="https://login.petra.ac.id/js/chosen.min.js"></script>
+    <script src="https://login.petra.ac.id/js/jquery.fancybox.js"></script>
+    <script src="https://login.petra.ac.id/js/jquery.modal.min.js"></script>
+    <script src="https://login.petra.ac.id/js/mmenu.polyfills.js"></script>
+    <script src="https://login.petra.ac.id/js/mmenu.js"></script>
+    <script src="https://login.petra.ac.id/js/appear.js"></script>
+    <script src="https://login.petra.ac.id/js/ScrollMagic.min.js"></script>
+    <script src="https://login.petra.ac.id/js/rellax.min.js"></script>
+    <script src="https://login.petra.ac.id/js/owl.js"></script>
+    <script src="https://login.petra.ac.id/js/wow.js"></script>
+    <script src="https://login.petra.ac.id/js/script.js"></script>
+    <script src="https://login.petra.ac.id/js/lottie-player.js"></script>
     <script src="https://login.petra.ac.id/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
+    <script type="text/javascript">
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 5000
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -177,6 +208,9 @@
                     title: 'Login Failed',
                     text: errorMessage,
                     confirmButtonText: 'OK',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    },
                     buttonsStyling: false
                 });
             @endif

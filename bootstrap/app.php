@@ -7,6 +7,7 @@ use App\Http\Middleware\LdapAuthenticate; // Import LDAP Middleware
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\CheckBannedStatus; // ✅ Import the banned status middleware
+use App\Http\Middleware\RestrictToMFA;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -23,7 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'ldap.auth' => LdapAuthenticate::class, // Register LDAP Authentication Middleware
             'check.banned' => CheckBannedStatus::class, // ✅ Register banned user middleware
+
         ]);
+        $middleware->appendToGroup('restrict_to_mfa', [RestrictToMFA::class]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

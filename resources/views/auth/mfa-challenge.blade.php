@@ -61,7 +61,7 @@
                                 <div class="tab-content mt-4">
                                     <h1 class="login-title">Input OTP Code</h1>
                                     <p style="margin-top: 10px; margin-bottom: 10px;">Open your authenticator app, Email
-                                        Whatsapp or SMS and enter the 6-digit code to log in.</p>
+                                        Whatsapp or SMS and enter the 6-digit code to log in. <b>If the correct OTP is error, try resend OTP again.</b></p>
 
                                     <form action="{{ route('mfa-challenge.verify') }}" method="POST">
                                         @csrf
@@ -229,18 +229,6 @@
             window.location.href = "{{ route('mfa-challenge.cancel') }}";
         });
     </script>
-    @if (session('otp_banned_until'))
-        <div class="alert alert-danger text-center" id="otp-ban-alert">
-            Too many incorrect OTP attempts. <br>
-            You can try again in <strong id="otp-ban-timer"></strong>.
-        </div>
-    @endif
-
-    @if (session('remaining_otp_attempts') && session('remaining_otp_attempts') > 0)
-        <div class="alert alert-warning text-center">
-            Warning: You have <strong>{{ session('remaining_otp_attempts') }}</strong> attempts left before a ban!
-        </div>
-    @endif
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

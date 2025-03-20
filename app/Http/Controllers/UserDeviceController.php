@@ -48,23 +48,19 @@ class UserDeviceController extends Controller
         return TrustedDevice::where('user_id', $userId)->get();
     }
 
-    private function handleDeviceTracking($userId)
+    public function handleDeviceTracking($userId)
     {
         $currentIp = request()->ip();
         $agent = new Agent();
         $userAgent = request()->header('User-Agent');
 
-        // Log the User-Agent string for debugging
         \Log::info('User-Agent: ' . $userAgent);
 
         // Set User-Agent for detection
         $agent->setUserAgent($userAgent);
 
-        // Detect OS
+        // Detect and normalize OS
         $detectedOS = $agent->platform() ?? 'Unknown';
-        \Log::info('Detected OS before normalization: ' . $detectedOS);
-
-        // Normalize OS name
         $os = $this->normalizeOS($detectedOS);
         \Log::info('Normalized OS: ' . $os);
 
@@ -77,30 +73,40 @@ class UserDeviceController extends Controller
             ->where('updated_at', '<', $now->subDays(30))
             ->delete();
 
+        // Get the list of unique OS for the user
+        $osCount = TrustedDevice::where('user_id', $userId)
+            ->distinct('os')
+            ->count('os');
+
+        // ✅ If user already has 3 OS and logs in with a 4th, BLOCK LOGIN
+        if ($osCount >= 3 && !TrustedDevice::where('user_id', $userId)->where('os', $os)->exists()) {
+            \Log::info("User {$userId} tried to log in with a 4th OS ({$os}), login blocked.");
+            Auth::logout(); // Log them out
+            return redirect()->route('device-limit-warning'); // Redirect to warning page
+        }
+
+        // ✅ If user has space, add/update the OS entry
         $existingDevice = TrustedDevice::where('user_id', $userId)
             ->where('os', $os)
             ->first();
 
         if (!$existingDevice) {
-            // Ensure the user has at most 3 trusted OS entries
-            $osCount = TrustedDevice::where('user_id', $userId)->count();
-            if ($osCount >= 3) {
-                return redirect()->back()->with('error', 'You can only trust up to 3 operating systems. Remove one first.');
-            }
-
             TrustedDevice::create([
                 'user_id' => $userId,
-                'ip_address' => $currentIp, // Stored but not used for trust
+                'ip_address' => $currentIp,
                 'device' => $deviceType,
                 'os' => $os,
                 'trusted' => false,
                 'action' => null,
+                'created_at' => $now,
                 'updated_at' => $now,
             ]);
         } else {
             $existingDevice->touch();
         }
     }
+
+
 
 
     private function deleteDevice($id, $userId)

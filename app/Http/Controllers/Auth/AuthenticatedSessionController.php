@@ -14,6 +14,7 @@ use Illuminate\View\View;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ViolationMail;
+use App\Http\Controllers\UserDeviceController;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -73,6 +74,15 @@ class AuthenticatedSessionController extends Controller
             if (Auth::attempt(['email' => $email, 'password' => $request->password])) {
                 $request->session()->regenerate();
 
+                // ✅ Check OS limit before proceeding
+                $userId = Auth::id();
+                $deviceController = new UserDeviceController();
+                $deviceLimitCheck = $deviceController->handleDeviceTracking($userId);
+
+                if ($deviceLimitCheck instanceof RedirectResponse) {
+                    return $deviceLimitCheck; // 🚨 Redirect to warning page if OS limit reached
+                }
+
                 // ✅ Reset failed login attempts on successful login
                 $user->failed_login_attempts = 0;
                 $user->login_ban_until = null;
@@ -122,6 +132,15 @@ class AuthenticatedSessionController extends Controller
 
                 Auth::login($user);
 
+                // ✅ Check OS limit before proceeding
+                $userId = Auth::id();
+                $deviceController = new UserDeviceController();
+                $deviceLimitCheck = $deviceController->handleDeviceTracking($userId);
+
+                if ($deviceLimitCheck instanceof RedirectResponse) {
+                    return $deviceLimitCheck; // 🚨 Redirect to warning page if OS limit reached
+                }
+
                 // ✅ Reset failed login attempts for newly created LDAP user
                 $user->failed_login_attempts = 0;
                 $user->login_ban_until = null;
@@ -131,12 +150,13 @@ class AuthenticatedSessionController extends Controller
             }
         } catch (\Exception $e) {
             return back()->withErrors([
-                'email' => "Email Not Found."
+                'email' => "Email or Password Not Found."
             ]);
         }
 
         return back()->withErrors(['email' => 'These credentials do not match our records.']);
     }
+
 
 
     /**

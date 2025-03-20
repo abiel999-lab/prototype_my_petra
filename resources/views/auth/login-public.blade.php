@@ -162,12 +162,11 @@
     </div>
 
     <!-- Scripts -->
-    !-- Scripts -->
     <script src="https://login.petra.ac.id/js/jquery.js"></script>
+    <script src="https://login.petra.ac.id/js/bootstrap.min.js"></script>
     <script src="https://login.petra.ac.id/js/popper.min.js"></script>
     <script src="https://login.petra.ac.id/js/jquery-ui.min.js"></script>
     <script src="https://login.petra.ac.id/js/chosen.min.js"></script>
-    <script src="https://login.petra.ac.id/js/bootstrap.min.js"></script>
     <script src="https://login.petra.ac.id/js/jquery.fancybox.js"></script>
     <script src="https://login.petra.ac.id/js/jquery.modal.min.js"></script>
     <script src="https://login.petra.ac.id/js/mmenu.polyfills.js"></script>
@@ -188,70 +187,27 @@
             timer: 5000
         });
     </script>
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $('form').submit(function(e) {
-                $('.loading-screen').show();
-            });
-        });
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            @if ($errors->any())
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Invalid Login',
-                    text: 'The email or password you entered is incorrect. Please try again.',
-                    confirmButtonText: 'OK',
-                    customClass: {
-                        confirmButton: 'btn btn-primary'
-                    },
-                    buttonsStyling: false
-                });
-            @endif
-        });
-    </script>
-    @if (session('login_banned_until'))
-        <div class="alert alert-danger text-center">
-            Your account is temporarily banned due to multiple failed login attempts. <br>
-            You can try again in <strong id="login-ban-timer"></strong>.
-        </div>
-    @endif
 
-    @if (session('remaining_login_attempts'))
-        <div class="alert alert-warning text-center">
-            Warning: You have <strong>{{ session('remaining_login_attempts') }}</strong> attempts left before a ban!
-        </div>
-    @endif
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            let loginBanEnd = "{{ session('login_banned_until') }}";
-            if (loginBanEnd) {
-                let banEndTime = new Date(loginBanEnd).getTime();
-                let timer = setInterval(function() {
-                    let now = new Date().getTime();
-                    let timeLeft = banEndTime - now;
+            const emailLocalPart = document.getElementById("emailLocalPart");
+            const emailDomain = document.getElementById("emailDomain");
+            const email = document.getElementById("email");
 
-                    if (timeLeft <= 0) {
-                        clearInterval(timer);
-                        document.getElementById("login-ban-timer").innerHTML = "You can try again now!";
-                    } else {
-                        let minutes = Math.floor(timeLeft / 60000);
-                        let seconds = Math.floor((timeLeft % 60000) / 1000);
-                        document.getElementById("login-ban-timer").innerHTML = minutes + " min " + seconds +
-                            " sec";
-                    }
-                }, 1000);
+            function updateEmail() {
+                email.value = emailLocalPart.value + emailDomain.value;
             }
-        });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            @if ($errors->has('email'))
-                let errorMessage = "{{ $errors->first('email') }}";
 
+            emailLocalPart.addEventListener("input", updateEmail);
+            emailDomain.addEventListener("change", updateEmail);
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            @if ($errors->any())
+                let errorMessage = "{{ $errors->first() }}";
                 Swal.fire({
                     icon: 'error',
                     title: 'Login Failed',
@@ -263,6 +219,12 @@
                     buttonsStyling: false
                 });
             @endif
+        });
+
+        $(document).ready(function() {
+            $('form').submit(function() {
+                $('.loading-screen').show();
+            });
         });
     </script>
 

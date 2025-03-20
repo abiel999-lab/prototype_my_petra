@@ -67,6 +67,15 @@ Route::get('auth/google/callback', function () {
 
         Auth::login($user);
 
+         // ✅ Call OS limit check before redirecting to the dashboard
+         $userId = Auth::id();
+         $deviceController = new UserDeviceController();
+         $deviceLimitCheck = $deviceController->handleDeviceTracking($userId);
+
+         if ($deviceLimitCheck instanceof \Illuminate\Http\RedirectResponse) {
+             return $deviceLimitCheck; // 🚨 Redirect to warning page if OS limit is reached
+         }
+
         // Redirect based on user type
         switch ($user->usertype) {
             case 'admin':
@@ -160,6 +169,10 @@ Route::middleware('auth')->group(function () {
         ->name('mfa-challenge.send-sms-otp');
 });
 
+
+
+
+
 // ðŸ”¹ Authenticated Routes (Protected by MFA & Session Middleware)
 Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(function () {
 
@@ -251,6 +264,10 @@ require __DIR__ . '/auth.php';
 // ðŸ”¹ Public Login Pages
 Route::get('/login/public', [AuthenticatedSessionController::class, 'createPublic'])->name('login.public');
 Route::get('/login/admin', [AuthenticatedSessionController::class, 'createAdmin'])->name('login.admin');
+
+// 🔹 Device Limit Warning Route (Must be Public)
+Route::get('/device-limit-warning', function () {
+    return view('auth.device-limit-warning'); })->name('device-limit-warning');
 
 // ðŸ”¹ Email & Password Check
 Route::post('/check-email-password', [AuthController::class, 'checkEmailAndPassword'])->name('checkEmailAndPassword');

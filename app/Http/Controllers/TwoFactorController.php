@@ -84,6 +84,7 @@ class TwoFactorController extends Controller
                 'failed_otp_attempts' => 0,
             ]);
 
+            // ✅ Normal login for users with 1-3 devices
             return redirect()->route($this->getUserDashboard($user));
         }
 
@@ -303,5 +304,13 @@ class TwoFactorController extends Controller
 
         Log::info('Zuwinda SMS Response:', $response);
     }
+
+    private function hasReachedMaxDevices($user)
+    {
+        return TrustedDevice::where('user_id', $user->id)->count() >= 4;
+    }
+
+
+
 
 }
