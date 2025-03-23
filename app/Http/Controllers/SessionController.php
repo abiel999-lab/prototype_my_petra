@@ -9,7 +9,7 @@ use Jenssegers\Agent\Agent;
 
 class SessionController extends Controller
 {
-    protected function getSessionData($userId)
+    public function getSessionData($userId)
     {
         return DB::table('sessions')
             ->where('user_id', $userId)
@@ -71,6 +71,8 @@ class SessionController extends Controller
         return view('profile.admin.session', compact('sessions'));
     }
 
+
+
     public function Adminrevoke($id)
     {
         return $this->revokeSession($id, 'profile.admin.session.show');
@@ -105,6 +107,8 @@ class SessionController extends Controller
         return view('profile.staff.session', compact('sessions'));
     }
 
+
+
     public function Staffrevoke($id)
     {
         return $this->revokeSession($id, 'profile.staff.session.show');
@@ -135,4 +139,9 @@ class SessionController extends Controller
         DB::table('sessions')->where('user_id', auth()->id())->delete();
         return redirect()->route($route)->with('success', 'Semua sesi Anda telah dicabut.');
     }
+
+
+
+
+
 }

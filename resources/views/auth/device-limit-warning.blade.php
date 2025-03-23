@@ -35,7 +35,7 @@
                     <div class="logo-box" style="margin-right: auto;">
                         <div class="logo">
 
-                                <img src="https://login.petra.ac.id/images/logo-ukp.png">
+                            <img src="https://login.petra.ac.id/images/logo-ukp.png">
 
                         </div>
                     </div>
@@ -54,21 +54,26 @@
                                     <h1 class="login-title">Maximum OS Limit Reached</h1>
                                     <p style="margin-top: 10px;">
                                         You have already logged in with 3 different operating systems.
-                                        To log in from a new OS, you must remove one of the existing OS entries first. Ask support for help.
+                                        To log in from a new OS, you must remove one of the existing OS entries first.
+                                        Ask support for help.
                                     </p>
 
                                     <!-- 🚀 Logout Form -->
-                                    <form class="form-group" id="logout-form" action="{{ route('logout') }}" method="POST">
+                                    <form class="form-group" id="logout-form" action="{{ route('logout') }}"
+                                        method="POST">
                                         @csrf
-                                        <button type="submit" class="btn btn-lg btn-danger w-100">Go Back to Login</button>
+                                        <button type="submit" class="btn btn-lg btn-danger w-100">Go Back to
+                                            Login</button>
                                     </form>
 
                                     <br>
-                                                                       <!-- <div class="text-center" style="margin-top: 10px;">
-                                        Can't login? <a href="{{ route('mfa-challenge.index') }}" class="text-reset"><strong>Click here</strong></a>.
-                                    </div>-->
                                     <div class="login-wrapper-footer-text">
-                                        Need help? Contact <a href="{{ route('customer-support') }}" class="text-reset"><strong>Support</strong></a>.
+                                        Can't login? <a href="#" id="cant-login-btn"
+                                            class="text-reset"><strong>Click here</strong></a>.
+                                    </div>
+                                    <div class="login-wrapper-footer-text">
+                                        Need help? Contact <a href="{{ route('customer-support') }}"
+                                            class="text-reset"><strong>Support</strong></a>.
                                     </div>
                                 </div>
                             </div>
@@ -93,6 +98,58 @@
     <script src="https://login.petra.ac.id/js/jquery-ui.min.js"></script>
     <script src="https://login.petra.ac.id/js/bootstrap.min.js"></script>
     <script src="https://login.petra.ac.id/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#cant-login-btn').on('click', function(e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'Are you sure you still want to use this device?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                    reverseButtons: true,
+                    customClass: {
+                        confirmButton: 'btn btn-primary',
+                        cancelButton: 'btn btn-danger me-2'
+                    },
+                    buttonsStyling: false // Needed for Bootstrap classes to work
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Email Sent!',
+                            text: 'We sent you an email with instructions to proceed.',
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                confirmButton: 'btn btn-success'
+                            },
+                            buttonsStyling: false
+                        });
+
+                        // Send request to backend
+                        $.ajax({
+                            url: '{{ route('send.mfa.link') }}',
+                            type: 'POST',
+                            data: {},
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            success: function() {
+                                console.log('Email sent');
+                            },
+                            error: function() {
+                                Swal.fire('Error', 'Failed to send email.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+
 
 </body>
 

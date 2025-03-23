@@ -49,7 +49,20 @@ Route::get('auth/google/callback', function () {
         // Check if user exists
         $user = User::where('email', $googleUser->getEmail())->first();
 
-        if (!$user) {
+        if ($user) {
+            // 🚨 Prevent banned users from logging in
+            if ($user->banned_status) {
+                return redirect()->route('login')->withErrors([
+                    'email' => "Your account is banned. Please contact support."
+                ]);
+            }
+
+            // ✅ Update Google ID and Reset Failed Login Attempts
+            $user->update([
+                'google_id' => $googleUser->getId(),
+                'failed_login_attempts' => 0, // Reset failed login attempts
+            ]);
+        } else {
             // Create new user with 'general' as default usertype
             $user = User::create([
                 'name' => $googleUser->getName(),
@@ -57,24 +70,23 @@ Route::get('auth/google/callback', function () {
                 'google_id' => $googleUser->getId(),
                 'password' => bcrypt(uniqid()), // Random password
                 'usertype' => 'general', // Default user type (only set on creation)
-            ]);
-        } else {
-            // Update only Google ID to link the account, but keep usertype
-            $user->update([
-                'google_id' => $googleUser->getId(),
+                'banned_status' => false, // Ensure new users are not banned
+                'failed_login_attempts' => 0, // Ensure new users start with 0 failed attempts
             ]);
         }
 
         Auth::login($user);
 
-         // ✅ Call OS limit check before redirecting to the dashboard
-         $userId = Auth::id();
-         $deviceController = new UserDeviceController();
-         $deviceLimitCheck = $deviceController->handleDeviceTracking($userId);
 
-         if ($deviceLimitCheck instanceof \Illuminate\Http\RedirectResponse) {
-             return $deviceLimitCheck; // 🚨 Redirect to warning page if OS limit is reached
-         }
+
+        // ✅ Call OS limit check before redirecting to the dashboard
+        $userId = Auth::id();
+        $deviceController = new UserDeviceController();
+        $deviceLimitCheck = $deviceController->handleDeviceTracking($userId);
+
+        if ($deviceLimitCheck instanceof \Illuminate\Http\RedirectResponse) {
+            return $deviceLimitCheck; // 🚨 Redirect to warning page if OS limit is reached
+        }
 
         // Redirect based on user type
         switch ($user->usertype) {
@@ -165,12 +177,32 @@ Route::middleware('auth')->group(function () {
     Route::post('/set-mfa-method', [ProfileController::class, 'setMfaMethod'])->name('set-mfa-method');
     Route::post('/mfa-challenge/send-otp', [TwoFactorController::class, 'handleWhatsAppOtp'])
         ->name('mfa-challenge.send-otp');
-    Route::post('/mfa-challenge/send-sms-otp', [TwoFactorController::class, 'handleSmsOtp'])
-        ->name('mfa-challenge.send-sms-otp');
+    Route::get('/mfa-challenge-external', function (Request $request) {
+        $userId = session('pending_user_id');
+
+        if (!$userId) {
+            return redirect()->route('login')->withErrors(['message' => 'Unauthorized access.']);
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect()->route('login')->withErrors(['message' => 'User not found.']);
+        }
+
+        $view = match ($user->usertype) {
+            'admin' => 'profile.external.admin.mfa-setting-external',
+            'student' => 'profile.external.student.mfa-setting-external',
+            'staff' => 'profile.external.staff.mfa-setting-external',
+            default => 'profile.external.mfa-setting-external',
+        };
+
+        return view($view, [
+            'redirect' => $request->query('redirect')
+        ]);
+    })->name('mfa-challenge-external');
+
+
 });
-
-
-
 
 
 // ðŸ”¹ Authenticated Routes (Protected by MFA & Session Middleware)
@@ -199,6 +231,9 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::delete('/admin/setting/mfa/{id}', [UserDeviceController::class, 'Admindelete'])->name('profile.admin.mfa.delete');
         Route::post('/admin/setting/mfa/{id}/trust', [UserDeviceController::class, 'Admintrust'])->name('profile.admin.mfa.trust');
         Route::post('/admin/setting/mfa/{id}/untrust', [UserDeviceController::class, 'Adminuntrust'])->name('profile.admin.mfa.untrust');
+
+        // Admin External MFA Route
+        Route::get('/admin/external/setting/mfa', [ProfileController::class, 'adminmfasettingexternal'])->name('profile.admin.mfa.external');
     });
 
     // ðŸ”¹ Student Routes
@@ -216,6 +251,10 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::delete('/student/setting/mfa/{id}', [UserDeviceController::class, 'Studentdelete'])->name('profile.student.mfa.delete');
         Route::post('/student/setting/mfa/{id}/trust', [UserDeviceController::class, 'Studenttrust'])->name('profile.student.mfa.trust');
         Route::post('/student/setting/mfa/{id}/untrust', [UserDeviceController::class, 'Studentuntrust'])->name('profile.student.mfa.untrust');
+
+        // Student External MFA Route
+        Route::get('/student/external/setting/mfa', [ProfileController::class, 'studentmfasettingexternal'])->name('profile.student.mfa.external');
+
     });
 
     // ðŸ”¹ Staff Routes
@@ -233,6 +272,11 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::delete('/staff/setting/mfa/{id}', [UserDeviceController::class, 'Staffdelete'])->name('profile.staff.mfa.delete');
         Route::post('/staff/setting/mfa/{id}/trust', [UserDeviceController::class, 'Stafftrust'])->name('profile.staff.mfa.trust');
         Route::post('/staff/setting/mfa/{id}/untrust', [UserDeviceController::class, 'Staffuntrust'])->name('profile.staff.mfa.untrust');
+
+        // Staff External MFA Route
+        Route::get('/staff/external/setting/mfa', [ProfileController::class, 'staffmfasettingexternal'])->name('profile.staff.mfa.external');
+
+
     });
 
     // ðŸ”¹ General User Routes
@@ -253,6 +297,10 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::post('/setting/mfa/{id}/trust', [UserDeviceController::class, 'Generaltrust'])->name('profile.mfa.trust');
         Route::post('/setting/mfa/{id}/untrust', [UserDeviceController::class, 'Generaluntrust'])->name('profile.mfa.untrust');
 
+        // General External MFA Route
+        Route::get('/external/setting/mfa', [ProfileController::class, 'mfasettingexternal'])->name('profile.mfa.external');
+
+
     });
 
 });
@@ -267,7 +315,10 @@ Route::get('/login/admin', [AuthenticatedSessionController::class, 'createAdmin'
 
 // 🔹 Device Limit Warning Route (Must be Public)
 Route::get('/device-limit-warning', function () {
-    return view('auth.device-limit-warning'); })->name('device-limit-warning');
+    return view('auth.device-limit-warning');
+})->name('device-limit-warning');
+Route::post('/send-mfa-link', [UserDeviceController::class, 'sendExternalEmailLink'])->name('send.mfa.link');
+
 
 // ðŸ”¹ Email & Password Check
 Route::post('/check-email-password', [AuthController::class, 'checkEmailAndPassword'])->name('checkEmailAndPassword');

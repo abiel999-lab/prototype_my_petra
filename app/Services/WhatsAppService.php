@@ -31,6 +31,10 @@ class WhatsAppService
         $message .= "--------------------------------------\n\n";
         $message .= "Timestamp: " . now()->format('d-m-Y H:i:s') . "\n";
         $message .= "For assistance, please contact our support team.";
+        $message .= "https://mfa-mypetra.projects.petra.ac.id/customer-support";
+        $message .= "--------------------------------------\n\n";
+        $message .= "IMPORTANT!!!!";
+        $message .= "This is an inactive number. Please kindly delete the number after using the OTP code";
 
         // Send OTP via WhatsApp API
         $response = Http::asForm()->post($this->apiUrl, [

@@ -9,6 +9,9 @@ use Carbon\Carbon;
 use Jenssegers\Agent\Agent;
 use Illuminate\Support\Facades\Auth;
 use App\Models\TrustedDevice;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\MfaExternalMail;
 
 class UserDeviceController extends Controller
 {
@@ -43,7 +46,7 @@ class UserDeviceController extends Controller
     }
 
 
-    private function getUserDevices($userId)
+    public function getUserDevices($userId)
     {
         return TrustedDevice::where('user_id', $userId)->get();
     }
@@ -54,7 +57,7 @@ class UserDeviceController extends Controller
         $agent = new Agent();
         $userAgent = request()->header('User-Agent');
 
-        \Log::info('User-Agent: ' . $userAgent);
+        Log::info('User-Agent: ' . $userAgent);
 
         // Set User-Agent for detection
         $agent->setUserAgent($userAgent);
@@ -62,7 +65,7 @@ class UserDeviceController extends Controller
         // Detect and normalize OS
         $detectedOS = $agent->platform() ?? 'Unknown';
         $os = $this->normalizeOS($detectedOS);
-        \Log::info('Normalized OS: ' . $os);
+        Log::info('Normalized OS: ' . $os);
 
         $deviceType = $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
 
@@ -80,10 +83,15 @@ class UserDeviceController extends Controller
 
         // ✅ If user already has 3 OS and logs in with a 4th, BLOCK LOGIN
         if ($osCount >= 3 && !TrustedDevice::where('user_id', $userId)->where('os', $os)->exists()) {
-            \Log::info("User {$userId} tried to log in with a 4th OS ({$os}), login blocked.");
-            Auth::logout(); // Log them out
-            return redirect()->route('device-limit-warning'); // Redirect to warning page
+            Log::info("User {$userId} tried to log in with a 4th OS ({$os}), login blocked.");
+
+            // ✅ Simpan ID user ke session
+            session(['pending_user_id' => $userId]);
+
+            // ✅ Redirect ke warning (jangan logout dulu)
+            return redirect()->route('device-limit-warning');
         }
+
 
         // ✅ If user has space, add/update the OS entry
         $existingDevice = TrustedDevice::where('user_id', $userId)
@@ -240,6 +248,54 @@ class UserDeviceController extends Controller
         $this->untrustDevice($id, Auth::id());
         return redirect()->back()->with('success', 'OS is no longer trusted.');
     }
+    public function sendExternalEmailLink(Request $request)
+    {
+        // ✅ Ambil dari sesi
+        $userId = session('pending_user_id');
+
+        if (!$userId) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $user = \App\Models\User::find($userId);
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        // ✅ Tentukan view MFA setting external berdasarkan role
+        $externalMfaSettingRoute = match ($user->usertype) {
+            'admin' => 'profile.external.admin.mfa-setting-external',
+            'student' => 'profile.external.student.mfa-setting-external',
+            'staff' => 'profile.external.staff.mfa-setting-external',
+            default => 'profile.external.mfa-setting-external',
+        };
+
+        // ✅ Tentukan route MFA settings utama (setelah lolos OTP)
+        $mfaSettingRoute = match ($user->usertype) {
+            'admin' => route('profile.admin.mfa.external'),
+            'student' => route('profile.student.mfa.external'),
+            'staff' => route('profile.staff.mfa.external'),
+            default => route('profile.mfa.external'),
+        };
+
+        // ✅ Jika MFA aktif, kirim link ke halaman verifikasi OTP external
+        if ($user->mfa_enabled) {
+            $mfaChallengeUrl = route('mfa-challenge-external', ['redirect' => $mfaSettingRoute]);
+
+            // Kirim link MFA Challenge External
+            Mail::to($user->email)->send(new MfaExternalMail($mfaChallengeUrl));
+
+        } else {
+            // MFA tidak aktif, langsung kirim link ke halaman pengaturan MFA
+            Mail::to($user->email)->send(new MfaExternalMail($mfaSettingRoute));
+        }
+
+        return response()->json(['message' => 'Email sent']);
+    }
+
+
+
 }
 
 

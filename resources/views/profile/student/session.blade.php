@@ -190,6 +190,14 @@
                                 </p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('customer-support') }}" class="nav-link ">
+                                <i class="nav-icon fa fa-question-circle"></i>
+                                <p>
+                                    Support
+                                </p>
+                            </a>
+                        </li>
 
                     </ul>
                 </nav>

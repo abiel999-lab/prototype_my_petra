@@ -219,6 +219,14 @@
                                 </p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('customer-support') }}" class="nav-link ">
+                                <i class="nav-icon fa fa-question-circle"></i>
+                                <p>
+                                    Support
+                                </p>
+                            </a>
+                        </li>
 
                     </ul>
                 </nav>
@@ -355,85 +363,6 @@
 
                                         <div class="tab-pane" id="tab_manage">
 
-
-                                            {{-- <table id="deviceTable"
-                                                class="table table-bordered table-hover text-center">
-                                                <thead class="thead-light">
-                                                    <tr>
-                                                        <th>#</th>
-                                                        <th>IP</th>
-                                                        <th>Device</th>
-                                                        <th>OS</th>
-                                                        <th>Browser</th>
-                                                        <th>Last Used</th>
-                                                        <th>Trusted</th>
-                                                        <th>Action</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach ($devices as $index => $device)
-                                                        <tr>
-                                                            <td>{{ $index + 1 }}</td>
-                                                            <td>{{ $device['ip_address'] }}</td>
-                                                            <td>{{ $device['device'] ?? 'Unknown' }}</td>
-                                                            <!-- Ensure device info -->
-                                                            <td>{{ $device['os'] }}</td>
-                                                            <td>{{ $device['browser'] }}</td>
-                                                            <td>{{ $device['last_used'] }}</td>
-                                                            <td>
-                                                                @if ($device['trusted'])
-                                                                    <span>Trusted</span>
-                                                                @else
-                                                                    <span>Not
-                                                                        Trusted</span>
-                                                                @endif
-                                                            </td>
-                                                            <td class="text-center">
-                                                                <div class="btn-group">
-                                                                    <!-- Delete Device -->
-                                                                    <form id="deleteForm-{{ $device['id'] }}"
-                                                                        action="{{ route('profile.mfa.delete', $device['id']) }}"
-                                                                        method="POST">
-                                                                        @csrf
-                                                                        @method('DELETE')
-                                                                        <button type="button"
-                                                                            onclick="confirmDelete('{{ $device['id'] }}')"
-                                                                            class="btn btn-sm btn-danger">
-                                                                            Delete
-                                                                        </button>
-                                                                    </form>
-
-                                                                    <!-- Trust / Untrust Device -->
-                                                                    @if ($device['trusted'])
-                                                                        <form
-                                                                            action="{{ route('profile.mfa.untrust', $device['id']) }}"
-                                                                            method="POST">
-                                                                            @csrf
-                                                                            <button type="submit"
-                                                                                class="btn btn-sm btn-warning">
-                                                                                Untrust
-                                                                            </button>
-                                                                        </form>
-                                                                    @else
-                                                                        @if (!$hasTrustedDevice)
-                                                                            <form
-                                                                                action="{{ route('profile.mfa.trust', $device['id']) }}"
-                                                                                method="POST">
-                                                                                @csrf
-                                                                                <button type="submit"
-                                                                                    class="btn btn-sm btn-success">
-                                                                                    Trust
-                                                                                </button>
-                                                                            </form>
-                                                                        @endif
-                                                                    @endif
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table> --}}
-
                                             <!-- Device Table -->
                                             <div class="table-responsive">
                                                 <table id="deviceTable"
@@ -511,255 +440,259 @@
                                                     </tbody>
                                                 </table>
                                             </div>
-
-
-
-
-
-                                            <footer class="main-footer">
-                                                <strong>Copyright &copy; 2023 <a href="https://petra.ac.id">Petra
-                                                        Christian
-                                                        University</a>.</strong>
-                                                All rights reserved.
-                                                <div class="float-right d-none d-sm-inline-block">
-                                                    Pusat Pengembangan Sistem Informasi <span>version: v1.0.18</span>
-                                                </div>
-                                            </footer>
                                         </div>
-                                        <!-- ./wrapper -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <footer class="main-footer">
+            <strong>Copyright &copy; 2023 <a href="https://petra.ac.id">Petra
+                    Christian
+                    University</a>.</strong>
+            All rights reserved.
+            <div class="float-right d-none d-sm-inline-block">
+                Pusat Pengembangan Sistem Informasi <span>version: v1.0.18</span>
+            </div>
+        </footer>
+    </div>
+    <!-- ./wrapper -->
 
-                                        <!-- jQuery -->
-                                        <script src="https://my.petra.ac.id/adminlte/plugins/jquery/jquery.min.js"></script>
-                                        <!-- jQuery UI 1.11.4 -->
-                                        <script src="https://my.petra.ac.id/adminlte/plugins/jquery-ui/jquery-ui.min.js"></script>
-                                        <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
-                                        <script>
-                                            $.widget.bridge('uibutton', $.ui.button)
-                                        </script>
-                                        <!-- Bootstrap 4 -->
-                                        <script src="https://my.petra.ac.id/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-                                        <!-- overlayScrollbars -->
-                                        <script src="https://my.petra.ac.id/adminlte/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
-                                        <!-- AdminLTE App -->
-                                        <script src="https://my.petra.ac.id/adminlte/dist/js/adminlte.js"></script>
-                                        <script src="https://my.petra.ac.id/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
-                                        <script type="text/javascript">
-                                            const Toast = Swal.mixin({
-                                                toast: true,
-                                                position: 'top-end',
-                                                showConfirmButton: false,
-                                                showCloseButton: true,
-                                                timer: 5000
-                                            });
+    <!-- jQuery -->
+    <script src="https://my.petra.ac.id/adminlte/plugins/jquery/jquery.min.js"></script>
+    <!-- jQuery UI 1.11.4 -->
+    <script src="https://my.petra.ac.id/adminlte/plugins/jquery-ui/jquery-ui.min.js"></script>
+    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+    <script>
+        $.widget.bridge('uibutton', $.ui.button)
+    </script>
+    <!-- Bootstrap 4 -->
+    <script src="https://my.petra.ac.id/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- overlayScrollbars -->
+    <script src="https://my.petra.ac.id/adminlte/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="https://my.petra.ac.id/adminlte/dist/js/adminlte.js"></script>
+    <script src="https://my.petra.ac.id/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
+    <script type="text/javascript">
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            showCloseButton: true,
+            timer: 5000
+        });
 
 
 
 
 
-                                            function showLoading() {
-                                                Swal.fire({
-                                                    title: 'Loading ...',
-                                                    allowOutsideClick: false,
-                                                    allowEscapeKey: false,
-                                                    allowEnterKey: false,
-                                                    didOpen: () => {
-                                                        Swal.showLoading()
-                                                    },
-                                                });
-                                            }
-                                        </script>
-                                        <script type="text/javascript">
-                                            $(function() {
-                                                $('[data-toggle="tooltip"]').tooltip()
-                                            })
-                                        </script>
-                                        <script type="text/javascript">
-                                            $(function() {
-                                                var tab = ``;
-                                                if (tab) {
-                                                    $(`a[href="#tab_${tab}"]`).addClass('active');
-                                                    $(`#tab_${tab}`).addClass('active');
-                                                } else {
-                                                    $(`a[href="#tab_activation"]`).addClass('active');
-                                                    $(`#tab_activation`).addClass('active');
-                                                }
-                                            });
-                                        </script>
-                                        <script>
-                                            // Handle MFA method selection and display QR code
-                                            document.getElementById('mfa-method-form').addEventListener('submit', function(e) {
-                                                e.preventDefault(); // Prevent default form submission
+        function showLoading() {
+            Swal.fire({
+                title: 'Loading ...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                },
+            });
+        }
+    </script>
+    <script type="text/javascript">
+        $(function() {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+    </script>
+    <script type="text/javascript">
+        $(function() {
+            var tab = ``;
+            if (tab) {
+                $(`a[href="#tab_${tab}"]`).addClass('active');
+                $(`#tab_${tab}`).addClass('active');
+            } else {
+                $(`a[href="#tab_activation"]`).addClass('active');
+                $(`#tab_activation`).addClass('active');
+            }
+        });
+    </script>
+    <script>
+        // Handle MFA method selection and display QR code
+        document.getElementById('mfa-method-form').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
 
-                                                const formData = new FormData(this);
+            const formData = new FormData(this);
 
-                                                fetch("{{ route('set-mfa-method') }}", {
-                                                        method: 'POST',
-                                                        headers: {
-                                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                        },
-                                                        body: formData,
-                                                    })
-                                                    .then(response => response.json())
-                                                    .then(data => {
-                                                        if (data.status === 'success') {
-                                                            alert(data.message);
+            fetch("{{ route('set-mfa-method') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    },
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message);
 
-                                                            // Display QR code if Google Authenticator is selected
-                                                            if (data.qrCodeUrl) {
-                                                                const qrCodeContainer = document.getElementById('qr-code-container');
-                                                                const qrCodeImage = document.getElementById('qr-code-image');
+                        // Display QR code if Google Authenticator is selected
+                        if (data.qrCodeUrl) {
+                            const qrCodeContainer = document.getElementById('qr-code-container');
+                            const qrCodeImage = document.getElementById('qr-code-image');
 
-                                                                qrCodeImage.src =
-                                                                    `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.qrCodeUrl)}&size=200x200`;
-                                                                qrCodeContainer.style.display = 'block';
-                                                            } else {
-                                                                // Hide QR code if Email is selected
-                                                                document.getElementById('qr-code-container').style.display = 'none';
-                                                            }
-                                                        } else {
-                                                            alert('Failed to update MFA method.');
-                                                        }
-                                                    })
-                                                    .catch(error => console.error('Error:', error));
-                                            });
+                            qrCodeImage.src =
+                                `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.qrCodeUrl)}&size=200x200`;
+                            qrCodeContainer.style.display = 'block';
+                        } else {
+                            // Hide QR code if Email is selected
+                            document.getElementById('qr-code-container').style.display = 'none';
+                        }
+                    } else {
+                        alert('Failed to update MFA method.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        });
 
-                                            // Handle MFA toggle
-                                            document.getElementById('mfa-toggle').addEventListener('change', function() {
-                                                fetch("{{ route('toggle-mfa') }}", {
-                                                        method: 'POST',
-                                                        headers: {
-                                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                            'Content-Type': 'application/json',
-                                                        },
-                                                        body: JSON.stringify({}),
-                                                    })
-                                                    .then(response => response.json())
-                                                    .then(data => {
-                                                        if (data.status === 'success') {
-                                                            alert(`MFA is now ${data.mfa_enabled ? 'enabled' : 'disabled'}.`);
-                                                        } else {
-                                                            alert('Failed to toggle MFA.');
-                                                        }
-                                                    })
-                                                    .catch(error => console.error('Error:', error));
-                                            });
-                                        </script>
-                                        <script>
-                                            $(document).ready(function() {
-                                                $('#deviceTable').DataTable({
-                                                    "searching": true,
-                                                    "ordering": true,
-                                                    "paging": true,
-                                                    "responsive": true,
-                                                    "columnDefs": [{
-                                                            "orderable": false,
-                                                            "targets": [7]
-                                                        } // Disable sorting for Actions column
-                                                    ]
-                                                });
-                                            });
+        // Handle MFA toggle
+        document.getElementById('mfa-toggle').addEventListener('change', function() {
+            fetch("{{ route('toggle-mfa') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({}),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(`MFA is now ${data.mfa_enabled ? 'enabled' : 'disabled'}.`);
+                    } else {
+                        alert('Failed to toggle MFA.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $('#deviceTable').DataTable({
+                "searching": true,
+                "ordering": true,
+                "paging": true,
+                "responsive": true,
+                "columnDefs": [{
+                        "orderable": false,
+                        "targets": [7]
+                    } // Disable sorting for Actions column
+                ]
+            });
+        });
 
-                                            // Confirmation alert for deleting a device
-                                            function confirmDelete(deviceId) {
-                                                Swal.fire({
-                                                    title: "Are you sure?",
-                                                    text: "This device will be deleted permanently!",
-                                                    icon: "warning",
-                                                    showCancelButton: true,
-                                                    confirmButtonColor: "#d33",
-                                                    cancelButtonColor: "#3085d6",
-                                                    confirmButtonText: "Yes, delete it!"
-                                                }).then((result) => {
-                                                    if (result.isConfirmed) {
-                                                        document.getElementById('deleteForm-' + deviceId).submit();
-                                                    }
-                                                });
-                                            }
-                                        </script>
-                                        <script>
-                                            document.addEventListener("DOMContentLoaded", function() {
-                                                const mfaSelect = document.getElementById("mfa_method");
-                                                const smsWarning = document.getElementById("sms-warning");
+        // Confirmation alert for deleting a device
+        function confirmDelete(deviceId) {
+            Swal.fire({
+                title: "Are you sure?",
+                text: "This device will be deleted permanently!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, delete it!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('deleteForm-' + deviceId).submit();
+                }
+            });
+        }
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const mfaSelect = document.getElementById("mfa_method");
+            const smsWarning = document.getElementById("sms-warning");
 
-                                                mfaSelect.addEventListener("change", function() {
-                                                    if (mfaSelect.value === "sms") {
-                                                        // Check if the user has a registered phone number
-                                                        let phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
-                                                        if (!phoneNumber) {
-                                                            smsWarning.style.display = "block";
-                                                        } else {
-                                                            smsWarning.style.display = "none";
-                                                        }
-                                                    } else {
-                                                        smsWarning.style.display = "none";
-                                                    }
-                                                });
+            mfaSelect.addEventListener("change", function() {
+                if (mfaSelect.value === "sms") {
+                    // Check if the user has a registered phone number
+                    let phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
+                    if (!phoneNumber) {
+                        smsWarning.style.display = "block";
+                    } else {
+                        smsWarning.style.display = "none";
+                    }
+                } else {
+                    smsWarning.style.display = "none";
+                }
+            });
 
-                                                // Trigger change event on page load to ensure correct state
-                                                mfaSelect.dispatchEvent(new Event("change"));
-                                            });
-                                        </script>
-                                        <script>
-                                            document.addEventListener("DOMContentLoaded", function() {
-                                                const mfaSelect = document.getElementById("mfa_method");
-                                                const smsWarning = document.getElementById("sms-warning");
+            // Trigger change event on page load to ensure correct state
+            mfaSelect.dispatchEvent(new Event("change"));
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const mfaSelect = document.getElementById("mfa_method");
+            const smsWarning = document.getElementById("sms-warning");
 
-                                                mfaSelect.addEventListener("change", function() {
-                                                    let phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
+            mfaSelect.addEventListener("change", function() {
+                let phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
 
-                                                    if (mfaSelect.value === "sms2") {
-                                                        // Show warning if no phone number is registered for SMS2
-                                                        smsWarning.style.display = phoneNumber.trim() ? "none" : "block";
-                                                    } else {
-                                                        smsWarning.style.display = "none";
-                                                    }
-                                                });
+                if (mfaSelect.value === "sms2") {
+                    // Show warning if no phone number is registered for SMS2
+                    smsWarning.style.display = phoneNumber.trim() ? "none" : "block";
+                } else {
+                    smsWarning.style.display = "none";
+                }
+            });
 
-                                                document.getElementById('mfa-method-form').addEventListener('submit', function(e) {
-                                                    e.preventDefault(); // Prevent default form submission
+            document.getElementById('mfa-method-form').addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent default form submission
 
-                                                    let selectedMethod = mfaSelect.value;
-                                                    let url = selectedMethod === 'sms2'
-                                                        ? "{{ route('mfa-challenge.send-sms-otp') }}"
-                                                        : "{{ route('mfa-challenge.send-otp') }}";
+                let selectedMethod = mfaSelect.value;
+                let url = selectedMethod === 'sms2' ?
+                    "" :
+                    "{{ route('mfa-challenge.send-otp') }}";
 
-                                                    fetch(url, {
-                                                        method: 'POST',
-                                                        headers: {
-                                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                            'Content-Type': 'application/json',
-                                                        },
-                                                        body: JSON.stringify({}),
-                                                    })
-                                                    .then(response => response.json())
-                                                    .then(data => {
-                                                        alert(data.message || 'OTP sent successfully.');
-                                                    })
-                                                    .catch(error => console.error('Error:', error));
-                                                });
+                fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({}),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message || 'OTP sent successfully.');
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
 
-                                                // Ensure correct warning displays on page load
-                                                mfaSelect.dispatchEvent(new Event("change"));
-                                            });
-                                            </script>
-                                            <script>
-                                                document.getElementById("mfa_method").addEventListener("change", function() {
-                                                    if (this.value === "sms2") {
-                                                        Swal.fire({
-                                                            icon: "warning",
-                                                            title: "Are you sure?",
-                                                            text: "SMS is slow and less secure. We recommend Email, Google Authenticator, or WhatsApp instead.",
-                                                            showCancelButton: true,
-                                                            confirmButtonText: "Yes, I want SMS",
-                                                            cancelButtonText: "No, choose another method",
-                                                        }).then((result) => {
-                                                            if (!result.isConfirmed) {
-                                                                this.value = "email"; // Default back to email if they cancel
-                                                            }
-                                                        });
-                                                    }
-                                                });
-                                                </script>
+            // Ensure correct warning displays on page load
+            mfaSelect.dispatchEvent(new Event("change"));
+        });
+    </script>
+    <script>
+        document.getElementById("mfa_method").addEventListener("change", function() {
+            if (this.value === "sms2") {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Are you sure?",
+                    text: "SMS is slow and less secure. We recommend Email, Google Authenticator, or WhatsApp instead.",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, I want SMS",
+                    cancelButtonText: "No, choose another method",
+                }).then((result) => {
+                    if (!result.isConfirmed) {
+                        this.value = "email"; // Default back to email if they cancel
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

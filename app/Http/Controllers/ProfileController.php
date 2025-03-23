@@ -17,26 +17,54 @@ class ProfileController extends Controller
      */
     public function studentprofile(Request $request): View
     {
+        $user = $request->user();
+        $sessionController = new SessionController();
+        $sessions = $sessionController->getSessionData($user->id);
+        $UserDevuceController = new UserDeviceController();
+        $devices = $UserDevuceController->getUserDevices($user->id);
         return view('profile.student.setting', [
             'user' => $request->user(),
+            'sessions' => $sessions,
+            'devices' => $devices,
         ]);
     }
     public function staffprofile(Request $request): View
     {
+        $user = $request->user();
+        $sessionController = new SessionController();
+        $sessions = $sessionController->getSessionData($user->id);
+        $UserDevuceController = new UserDeviceController();
+        $devices = $UserDevuceController->getUserDevices($user->id);
         return view('profile.staff.setting', [
             'user' => $request->user(),
+            'sessions' => $sessions,
+            'devices' => $devices,
         ]);
     }
     public function adminprofile(Request $request): View
     {
+        $user = $request->user();
+        $sessionController = new SessionController();
+        $sessions = $sessionController->getSessionData($user->id);
+        $UserDevuceController = new UserDeviceController();
+        $devices = $UserDevuceController->getUserDevices($user->id);
         return view('profile.admin.setting', [
             'user' => $request->user(),
+            'sessions' => $sessions,
+            'devices' => $devices,
         ]);
     }
     public function profile(Request $request): View
     {
+        $user = $request->user();
+        $sessionController = new SessionController();
+        $sessions = $sessionController->getSessionData($user->id);
+        $UserDevuceController = new UserDeviceController();
+        $devices = $UserDevuceController->getUserDevices($user->id);
         return view('profile.setting', [
             'user' => $request->user(),
+            'sessions' => $sessions, // Make sure this is being passed correctly
+            'devices' => $devices,
         ]);
     }
     public function studenteditprofile(Request $request): View
@@ -59,6 +87,7 @@ class ProfileController extends Controller
     }
     public function editprofile(Request $request): View
     {
+
         return view('profile.profile', [
             'user' => $request->user(),
         ]);
@@ -117,6 +146,57 @@ class ProfileController extends Controller
             'user' => $request->user(),
         ]);
     }
+
+    // external function
+// External MFA Settings for Student
+    public function studentmfasettingexternal(Request $request): View
+    {
+        $user = $request->user();
+        $deviceController = new UserDeviceController();
+        $devices = $deviceController->getUserDevices($user->id);
+        return view('profile.external.student.mfa-setting-external', [
+            'user' => $user,
+            'devices' => $devices,
+        ]);
+    }
+
+    // External MFA Settings for Staff
+    public function staffmfasettingexternal(Request $request): View
+    {
+        $user = $request->user();
+        $deviceController = new UserDeviceController();
+        $devices = $deviceController->getUserDevices($user->id);
+        return view('profile.external.staff.mfa-setting-external', [
+            'user' => $user,
+            'devices' => $devices,
+        ]);
+    }
+
+    // External MFA Settings for Admin
+    public function adminmfasettingexternal(Request $request): View
+    {
+        $user = $request->user();
+        $deviceController = new UserDeviceController();
+        $devices = $deviceController->getUserDevices($user->id);
+        return view('profile.external.admin.mfa-setting-external', [
+            'user' => $user,
+            'devices' => $devices,
+        ]);
+    }
+
+    // External MFA Settings for General Users
+    public function mfasettingexternal(Request $request): View
+    {
+        $user = $request->user();
+        $deviceController = new UserDeviceController();
+        $devices = $deviceController->getUserDevices($user->id);
+        return view('profile.external.mfa-setting-external', [
+            'user' => $user,
+            'devices' => $devices,
+        ]);
+    }
+
+
     public function toggleMfa(Request $request)
     {
         $user = auth()->user();

@@ -77,6 +77,9 @@ class TwoFactorController extends Controller
         if ($this->validateOtp($user, $request->code)) {
             session(['two_factor_authenticated' => true]);
 
+            // ✅ Hapus pending_user_id dari sesi (jika ada)
+            session()->forget('pending_user_id');
+
             // ✅ Reset failed attempts and clear OTP data
             $user->update([
                 'two_factor_code' => null,

@@ -128,7 +128,7 @@
                             class="fas fa-bars"></i></a>
                 </li>
                 <li class="nav-item d-none d-sm-inline-block">
-                    <a href="{{ route('staff.dashboard') }}" class="nav-link">Gate</a>
+                    <a href="" class="nav-link">Gate</a>
                 </li>
             </ul>
 
@@ -140,7 +140,7 @@
                         <i class="fas fa-caret-down"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-right">
-                        <a href="{{ route('profile.staff.setting') }}" class="dropdown-item">Setting</a>
+                        <a href="" class="dropdown-item">Setting</a>
                         <a href="{{ route('logout') }}" class="dropdown-item"
                             onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
                         <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
@@ -155,7 +155,7 @@
         <!-- Main Sidebar Container -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
-            <a href="{{ route('staff.dashboard') }}" class="brand-link">
+            <a href="" class="brand-link">
                 <img src="https://my.petra.ac.id/img/logo.png" alt="Gate" class="brand-image img-circle elevation-3"
                     style="opacity: .8">
                 <span class="brand-text font-weight-light">Gate</span>
@@ -169,8 +169,7 @@
                         <img src="https://my.petra.ac.id/img/user.png" class="img-circle elevation-2">
                     </div>
                     <div class="info">
-                        <a href="{{ route('profile.staff.setting') }}"
-                            class="d-block">{{ strtoupper(auth()->user()->name) }}</a>
+                        <a href="" class="d-block">{{ strtoupper(auth()->user()->name) }}</a>
                     </div>
                 </div>
 
@@ -193,7 +192,7 @@
                         data-accordion="false">
 
                         <li class="nav-item">
-                            <a href="{{ route('profile.staff.profile') }}" class="nav-link">
+                            <a href="" class="nav-link">
                                 <i class="nav-icon fas fa-user"></i>
                                 <p>
                                     Profile
@@ -204,7 +203,7 @@
 
 
                         <li class="nav-item">
-                            <a href="{{ route('profile.staff.session.show') }}" class="nav-link ">
+                            <a href="" class="nav-link ">
                                 <i class="nav-icon fas fa-stopwatch"></i>
                                 <p>
                                     Session
@@ -212,7 +211,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('profile.staff.mfa') }}" class="nav-link active">
+                            <a href="{{ route('profile.student.mfa') }}" class="nav-link active">
                                 <i class="nav-icon fas fa-shield-alt"></i>
                                 <p>
                                     Security
@@ -220,7 +219,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('customer-support') }}" class="nav-link ">
+                            <a href="" class="nav-link ">
                                 <i class="nav-icon fa fa-question-circle"></i>
                                 <p>
                                     Support
@@ -267,9 +266,9 @@
                             <div class="card">
                                 <div class="card-header p-2">
                                     <ul class="nav nav-pills">
-                                        <li class="nav-item active"><a class="nav-link" href="#tab_activation"
-                                                data-toggle="tab">Activation</a></li>
-                                        <li class="nav-item"><a class="nav-link" href="#tab_manage"
+                                        <li class="nav-item"><a class="nav-link disabled" href="#tab_activation"
+                                                tabindex="-1" aria-disabled="true">Activation</a></li>
+                                        <li class="nav-item active"><a class="nav-link" href="#tab_manage"
                                                 data-toggle="tab">Manage Device</a></li>
                                     </ul>
                                 </div>
@@ -277,7 +276,7 @@
                                     <div class="tab-content">
 
                                         <div class="tab-pane" id="tab_activation">
-                                            {{-- MFA Toggle --}}
+
                                             <label for="mfa-toggle" style="margin-right: 20px;">Enable MFA</label>
                                             <label class="switch">
                                                 <input type="checkbox" id="mfa-toggle"
@@ -307,8 +306,7 @@
                                                     <p class="important">Important!!!!</p>
                                                     <p><b>Warning:</b> You have selected **SMS / WhatsApp**, but
                                                         your phone number is not set!</p>
-                                                    <p>Please update your phone number in the <a
-                                                            href="{{ route('profile.staff.profile') }}"
+                                                    <p>Please update your phone number in the <a href=""
                                                             style="color: blue; font-weight: bold;">Profile</a> page
                                                         before proceeding.</p>
                                                 </div>
@@ -400,7 +398,7 @@
                                                                         <!-- Adds spacing between buttons -->
                                                                         <!-- Delete Device -->
                                                                         <form id="deleteForm-{{ $device->id }}"
-                                                                            action="{{ route('profile.staff.mfa.delete', $device->id) }}"
+                                                                            action="{{ route('profile.student.mfa.delete', $device->id) }}"
                                                                             method="POST">
                                                                             @csrf
                                                                             @method('DELETE')
@@ -412,7 +410,7 @@
                                                                         <!-- Trust / Untrust Device -->
                                                                         @if ($device->trusted)
                                                                             <form
-                                                                                action="{{ route('profile.staff.mfa.untrust', $device->id) }}"
+                                                                                action="{{ route('profile.student.mfa.untrust', $device->id) }}"
                                                                                 method="POST">
                                                                                 @csrf
                                                                                 <input type="hidden" name="device_id"
@@ -422,7 +420,7 @@
                                                                             </form>
                                                                         @else
                                                                             <form
-                                                                                action="{{ route('profile.staff.mfa.trust', $device->id) }}"
+                                                                                action="{{ route('profile.student.mfa.trust', $device->id) }}"
                                                                                 method="POST">
                                                                                 @csrf
                                                                                 <input type="hidden" name="device_id"
@@ -447,6 +445,7 @@
                 </div>
             </section>
         </div>
+        <!-- /.content-wrapper -->
 
         <footer class="main-footer">
             <strong>Copyright &copy; 2023 <a href="https://petra.ac.id">Petra Christian
@@ -457,7 +456,6 @@
             </div>
         </footer>
     </div>
-
     <!-- ./wrapper -->
 
     <!-- jQuery -->
@@ -483,22 +481,6 @@
             showCloseButton: true,
             timer: 5000
         });
-
-
-
-
-
-        function showLoading() {
-            Swal.fire({
-                title: 'Loading ...',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                allowEnterKey: false,
-                didOpen: () => {
-                    Swal.showLoading()
-                },
-            });
-        }
     </script>
     <script type="text/javascript">
         $(function() {
@@ -512,8 +494,8 @@
                 $(`a[href="#tab_${tab}"]`).addClass('active');
                 $(`#tab_${tab}`).addClass('active');
             } else {
-                $(`a[href="#tab_activation"]`).addClass('active');
-                $(`#tab_activation`).addClass('active');
+                $(`a[href="#tab_manage"]`).addClass('active');
+                $(`#tab_manage`).addClass('active');
             }
         });
     </script>
@@ -692,6 +674,7 @@
             }
         });
     </script>
+
 </body>
 
 </html>
