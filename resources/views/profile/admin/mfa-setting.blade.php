@@ -456,15 +456,15 @@
                     </div>
                 </div>
             </section>
-            <footer class="main-footer">
-                <strong>Copyright &copy; 2023 <a href="https://petra.ac.id">Petra Christian
-                        University</a>.</strong>
-                All rights reserved.
-                <div class="float-right d-none d-sm-inline-block">
-                    Pusat Pengembangan Sistem Informasi <span>version: v1.0.18</span>
-                </div>
-            </footer>
         </div>
+        <footer class="main-footer">
+            <strong>Copyright &copy; 2023 <a href="https://petra.ac.id">Petra Christian
+                    University</a>.</strong>
+            All rights reserved.
+            <div class="float-right d-none d-sm-inline-block">
+                Pusat Pengembangan Sistem Informasi <span>version: v1.0.18</span>
+            </div>
+        </footer>
     </div>
 
     <!-- ./wrapper -->

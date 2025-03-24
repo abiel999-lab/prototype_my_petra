@@ -57,62 +57,64 @@ class UserDeviceController extends Controller
         $agent = new Agent();
         $userAgent = request()->header('User-Agent');
 
-        Log::info('User-Agent: ' . $userAgent);
-
-        // Set User-Agent for detection
         $agent->setUserAgent($userAgent);
 
-        // Detect and normalize OS
         $detectedOS = $agent->platform() ?? 'Unknown';
-        $os = $this->normalizeOS($detectedOS);
-        Log::info('Normalized OS: ' . $os);
-
+        $normalizedOS = $this->normalizeOS($detectedOS);
         $deviceType = $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
-
         $now = Carbon::now('Asia/Jakarta');
 
-        // Auto-delete devices not used for 30 days
+        Log::info("Tracking device for user {$userId}: OS={$normalizedOS}, IP={$currentIp}, DeviceType={$deviceType}");
+
+        // 🧹 Auto-delete stale devices (30+ days unused)
         TrustedDevice::where('user_id', $userId)
             ->where('updated_at', '<', $now->subDays(30))
             ->delete();
 
-        // Get the list of unique OS for the user
-        $osCount = TrustedDevice::where('user_id', $userId)
-            ->distinct('os')
-            ->count('os');
+        // 🔍 Check for existing device (same user, same OS, same IP and device type)
+        $existingDevice = TrustedDevice::where('user_id', $userId)
+            ->where('os', $normalizedOS)
+            ->where('ip_address', $currentIp)
+            ->where('device', $deviceType)
+            ->first();
 
-        // ✅ If user already has 3 OS and logs in with a 4th, BLOCK LOGIN
-        if ($osCount >= 3 && !TrustedDevice::where('user_id', $userId)->where('os', $os)->exists()) {
-            Log::info("User {$userId} tried to log in with a 4th OS ({$os}), login blocked.");
+        if ($existingDevice) {
+            $existingDevice->touch();
+            return;
+        }
 
-            // ✅ Simpan ID user ke session
+        // 🔐 Count distinct OSes (not just devices!)
+        $distinctOSCount = TrustedDevice::where('user_id', $userId)
+            ->select('os')
+            ->distinct()
+            ->count();
+
+        // ⛔️ If user already has 3 OS types, and this OS is new → block login
+        $osExists = TrustedDevice::where('user_id', $userId)
+            ->where('os', $normalizedOS)
+            ->exists();
+
+        if ($distinctOSCount >= 3 && !$osExists) {
+            Log::warning("User {$userId} blocked from login. New OS '{$normalizedOS}' exceeds limit.");
             session(['pending_user_id' => $userId]);
-
-            // ✅ Redirect ke warning (jangan logout dulu)
             return redirect()->route('device-limit-warning');
         }
 
+        // ✅ Save new device
+        TrustedDevice::create([
+            'user_id' => $userId,
+            'ip_address' => $currentIp,
+            'device' => $deviceType,
+            'os' => $normalizedOS,
+            'trusted' => false,
+            'action' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
 
-        // ✅ If user has space, add/update the OS entry
-        $existingDevice = TrustedDevice::where('user_id', $userId)
-            ->where('os', $os)
-            ->first();
-
-        if (!$existingDevice) {
-            TrustedDevice::create([
-                'user_id' => $userId,
-                'ip_address' => $currentIp,
-                'device' => $deviceType,
-                'os' => $os,
-                'trusted' => false,
-                'action' => null,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-        } else {
-            $existingDevice->touch();
-        }
+        Log::info("New device added for user {$userId}: {$normalizedOS} @ {$currentIp} ({$deviceType})");
     }
+
 
 
 
@@ -162,8 +164,12 @@ class UserDeviceController extends Controller
     }
     public function Admindelete($id)
     {
-        return $this->deleteDevice($id, Auth::id()) ? redirect()->back()->with('success', 'Device removed.') : redirect()->back()->with('error', 'Device not found.');
+        $device = TrustedDevice::findOrFail($id);
+        $device->delete();
+
+        return redirect()->back()->with('success', 'Device removed.');
     }
+
     public function Admintrust($id)
     {
         $device = TrustedDevice::findOrFail($id);
@@ -293,7 +299,6 @@ class UserDeviceController extends Controller
 
         return response()->json(['message' => 'Email sent']);
     }
-
 
 
 }

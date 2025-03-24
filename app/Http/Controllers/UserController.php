@@ -43,7 +43,6 @@ class UserController extends Controller
             $users->where('usertype', $userType);
         }
 
-        $users = $users->paginate(5);
 
         // Fetch OS details for each user's devices
         foreach ($users as $user) {
@@ -55,7 +54,7 @@ class UserController extends Controller
                 $device->os = $agent->platform(); // Extract OS from user agent
             }
         }
-
+        $users = User::with('devices')->paginate(5); // 💥 THIS is the fix
         return view('profile.admin.manage-user', compact('users', 'search'));
     }
 
@@ -142,5 +141,7 @@ class UserController extends Controller
             "message" => "User has been unbanned successfully."
         ]);
     }
+
+
 
 }

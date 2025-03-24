@@ -353,7 +353,7 @@
                                                             </td>
                                                             <td> <!-- 🔹 Operating System Column with Trust/Untrust Buttons in One Line -->
                                                                 @if (count($user->devices) > 0)
-                                                                    @foreach ($user->devices as $device)
+                                                                    @foreach ($user->devices->unique('os') as $device)
                                                                         <div class="d-flex align-items-center gap-2">
                                                                             <span
                                                                                 class="badge badge-primary">{{ $device->os }}</span>
@@ -389,6 +389,16 @@
                                                                                     Untrust
                                                                                 </button>
                                                                             </form>
+                                                                            <form
+                                                                                action="{{ route('profile.admin.mfa.delete', $device->id) }}"
+                                                                                method="POST" class="d-inline"
+                                                                                onsubmit="return confirm('Are you sure you want to delete this device?');">
+                                                                                @csrf
+                                                                                @method('DELETE')
+                                                                                <button type="submit"
+                                                                                    class="btn btn-danger btn-sm">Delete</button>
+                                                                            </form>
+
                                                                         </div>
                                                                     @endforeach
                                                                 @else
