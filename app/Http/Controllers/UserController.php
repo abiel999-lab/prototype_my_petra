@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\TrustedDevice;
 use Jenssegers\Agent\Agent;
+use App\Services\LoggingService;
+
 
 class UserController extends Controller
 {
@@ -74,6 +76,12 @@ class UserController extends Controller
             'password' => bcrypt($request->password),
             'usertype' => $request->usertype, // Ensure usertype is stored correctly
         ]);
+        LoggingService::logMfaEvent("Admin created a new user", [
+            'admin_id' => auth()->id(),
+            'created_email' => $request->email,
+            'usertype' => $request->usertype,
+        ]);
+
 
         return redirect()->route('profile.admin.manageuser')->with('success', 'User created successfully.');
     }
@@ -101,6 +109,14 @@ class UserController extends Controller
             'mfa_enabled' => $mfa_enabled,
             'mfa_method' => $request->mfa_method,
         ]);
+        LoggingService::logMfaEvent("Admin updated user [ID: {$user->id}]", [
+            'admin_id' => auth()->id(),
+            'email' => $user->email,
+            'mfa_enabled' => $user->mfa_enabled,
+            'mfa_method' => $user->mfa_method,
+            'usertype' => $user->usertype,
+        ]);
+
 
         return redirect()->route('profile.admin.manageuser')->with('success', 'User updated successfully.');
     }
@@ -109,6 +125,11 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         $user->delete();
+        LoggingService::logSecurityViolation("Admin deleted user [ID: {$user->id}]", [
+            'admin_id' => auth()->id(),
+            'email' => $user->email,
+        ]);
+
 
         return redirect()->route('profile.admin.manageuser')->with('success', 'User deleted successfully.');
     }
@@ -120,6 +141,11 @@ class UserController extends Controller
 
         $user->banned_status = 1; // Ban user
         $user->save();
+        LoggingService::logSecurityViolation("Admin banned user [ID: {$user->id}]", [
+            'admin_id' => auth()->id(),
+            'email' => $user->email,
+        ]);
+
 
         return response()->json([
             "success" => true,
@@ -135,6 +161,11 @@ class UserController extends Controller
 
         $user->banned_status = 0; // Unban user
         $user->save();
+        LoggingService::logMfaEvent("Admin unbanned user [ID: {$user->id}]", [
+            'admin_id' => auth()->id(),
+            'email' => $user->email,
+        ]);
+
 
         return response()->json([
             "success" => true,

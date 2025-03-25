@@ -15,6 +15,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ViolationMail;
 use App\Http\Controllers\UserDeviceController;
+use App\Services\LoggingService;
+
 
 class AuthenticatedSessionController extends Controller
 {
@@ -73,6 +75,9 @@ class AuthenticatedSessionController extends Controller
             // ✅ Attempt Login
             if (Auth::attempt(['email' => $email, 'password' => $request->password])) {
                 $request->session()->regenerate();
+                LoggingService::logMfaEvent("User [ID: {$user->id}] logged in via local email", [
+                    'login_method' => 'email',
+                ]);
 
                 // ✅ Check OS limit before proceeding
                 $userId = Auth::id();
@@ -93,12 +98,14 @@ class AuthenticatedSessionController extends Controller
 
             // ❌ Incorrect password, increase failed attempts
             $user->increment('failed_login_attempts');
+            LoggingService::logSecurityViolation("Failed login for email {$email}. Attempt {$user->failed_login_attempts}/15");
             $user->save(); // ✅ Ensure the new failed attempt is saved
 
             $remainingAttempts = 15 - $user->failed_login_attempts;
 
             // 🚨 Ban the account if failed attempts exceed 15
             if ($user->failed_login_attempts >= 15) {
+                LoggingService::logSecurityViolation("User [ID: {$user->id}] permanently banned after 15 failed login attempts");
                 $user->banned_status = true;
                 $user->save(); // ✅ Ensure the banned status is updated in DB
 
@@ -131,6 +138,9 @@ class AuthenticatedSessionController extends Controller
                 );
 
                 Auth::login($user);
+                LoggingService::logMfaEvent("LDAP login successful for {$email} (User ID: {$user->id})", [
+                    'login_method' => 'ldap',
+                ]);
 
                 // ✅ Check OS limit before proceeding
                 $userId = Auth::id();
@@ -149,6 +159,7 @@ class AuthenticatedSessionController extends Controller
                 return $this->redirectUser($user);
             }
         } catch (\Exception $e) {
+            LoggingService::logSecurityViolation("LDAP login failed for email {$email}. Reason: " . $e->getMessage());
             return back()->withErrors([
                 'email' => "Email or Password Not Found."
             ]);
@@ -183,6 +194,8 @@ class AuthenticatedSessionController extends Controller
     public function destroy(Request $request): RedirectResponse
     {
         $user = auth()->user();
+        LoggingService::logMfaEvent("User [ID: {$user->id}] logged out successfully");
+
 
         if ($user) {
             // ✅ Reset failed OTP attempts when logging out

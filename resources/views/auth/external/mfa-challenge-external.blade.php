@@ -60,11 +60,17 @@
                             <div class="login-wrapper">
                                 <div class="tab-content mt-4">
                                     <h1 class="login-title">Input OTP Code</h1>
-                                    <p style="margin-top: 10px; margin-bottom: 10px;">Open your authenticator app, Email
-                                        Whatsapp or SMS and enter the 6-digit code to log in. <b>If the correct OTP is error, try resend OTP again.</b></p>
-
-                                    <form action="{{ route('mfa-challenge.verify') }}" method="POST">
+                                    <p style="margin-top: 10px; margin-bottom: 10px;">
+                                        Open your authenticator app, Email, WhatsApp, or SMS and enter the 6-digit code
+                                        to log in.
+                                        <b>If the correct OTP is showing an error, try resending the OTP
+                                            again.</b><br><br>
+                                        <b>Note:</b> If you are using <b>SMS OTP</b> and not receiving the message,
+                                        please click <b>Resend OTP</b> until the SMS arrives on your phone.
+                                    </p>
+                                    <form action="{{ route('mfa-challenge-external.verify') }}" method="POST">
                                         @csrf
+                                        <input type="hidden" name="redirect" value="{{ $redirect ?? request('redirect') }}">
                                         <div class="input-group mb-3">
                                             <input type="text" class="form-control" name="code"
                                                 placeholder="OTP code" id="code" required>

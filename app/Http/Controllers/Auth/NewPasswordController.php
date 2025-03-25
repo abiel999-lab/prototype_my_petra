@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use App\Services\LoggingService;
+
 
 class NewPasswordController extends Controller
 {
@@ -47,8 +49,18 @@ class NewPasswordController extends Controller
                 ])->save();
 
                 event(new PasswordReset($user));
+                LoggingService::logMfaEvent("Password reset successfully for user [ID: {$user->id}]", [
+                    'email' => $user->email,
+                ]);
+
             }
         );
+        if ($status != Password::PASSWORD_RESET) {
+            LoggingService::logSecurityViolation("Password reset failed for email {$request->email}", [
+                'status' => $status
+            ]);
+        }
+
 
         // If the password was successfully reset, we will redirect the user back to
         // the application's home authenticated view. If there is an error we can

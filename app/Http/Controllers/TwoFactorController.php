@@ -12,7 +12,9 @@ use App\Services\WhatsAppService;
 use Carbon\Carbon;
 use App\Mail\ViolationMail;
 use App\Services\SmsService;
-use Illuminate\Support\Facades\Log;
+use App\Services\LoggingService;
+
+
 
 
 class TwoFactorController extends Controller
@@ -20,6 +22,9 @@ class TwoFactorController extends Controller
     public function index()
     {
         $user = auth()->user();
+        LoggingService::logMfaEvent("MFA challenge triggered", [
+            'method' => $user->mfa_method,
+        ]);
         $qrCodeUrl = null;
 
         if ($user->mfa_method === 'email') {
@@ -53,28 +58,15 @@ class TwoFactorController extends Controller
 
         // 🚨 If user has failed 10 OTP attempts, lock them out instantly
         if ($user->failed_otp_attempts >= 10) {
-            return redirect()->route('mfa-challenge.index')->with([
-                'otp_failed_limit' => true
-            ]);
+            return redirect()->route('mfa-challenge.index')->with(['otp_failed_limit' => true]);
         }
 
-        // ✅ Ensure OTP is numeric & exactly 6 digits
-        if (!ctype_digit($request->code) || strlen($request->code) !== 6) {
-            $user->increment('failed_otp_attempts');
-            $user->save();
-
-            // 🚨 Send violation email at exactly 10 failed attempts
-            if ($user->failed_otp_attempts == 10) {
-                Mail::to('mfa.mypetra@petra.ac.id')->send(new ViolationMail($user, 'otp'));
-            }
-
-            return redirect()->route('mfa-challenge.index')->withErrors([
-                'code' => "Incorrect OTP. You have " . (10 - $user->failed_otp_attempts) . " attempts left."
-            ]);
-        }
 
         // ✅ Validate OTP
         if ($this->validateOtp($user, $request->code)) {
+            LoggingService::logMfaEvent("User [ID: {$user->id}] entered correct OTP", [
+                'method' => $user->mfa_method,
+            ]);
             session(['two_factor_authenticated' => true]);
 
             // ✅ Hapus pending_user_id dari sesi (jika ada)
@@ -87,16 +79,22 @@ class TwoFactorController extends Controller
                 'failed_otp_attempts' => 0,
             ]);
 
-            // ✅ Normal login for users with 1-3 devices
-            return redirect()->route($this->getUserDashboard($user));
+            // ✅ Redirect based on redirect param or fallback to dashboard
+            $redirectTo = $request->input('redirect') ?? route($this->getUserDashboard($user));
+            return redirect($redirectTo);
         }
 
         // ❌ OTP is incorrect, increase failed attempts
         $user->increment('failed_otp_attempts');
+        LoggingService::logSecurityViolation("Incorrect OTP for User ID {$user->id}. Attempt {$user->failed_otp_attempts}/10", [
+            'method' => $user->mfa_method,
+        ]);
+
         $user->save();
 
         // 🚨 If failed 10 times, trigger lockout
         if ($user->failed_otp_attempts == 10) {
+            LoggingService::logSecurityViolation("User [ID: {$user->id}] locked out after 10 OTP failures (MFA method: {$user->mfa_method})");
             Mail::to('mfa.mypetra@petra.ac.id')->send(new ViolationMail($user, 'otp'));
             return redirect()->route('mfa-challenge.index')->with([
                 'otp_failed_limit' => true
@@ -122,12 +120,17 @@ class TwoFactorController extends Controller
         $user->two_factor_code = Crypt::encryptString($code);
         $user->otp_expires_at = $now->addMinutes(10);
         $user->failed_otp_attempts = 0; // Reset failed attempts on new OTP generation
-
         $user->save();
+        LoggingService::logMfaEvent("Generated OTP for {$user->email} (via email)", [
+            'method' => 'email',
+        ]);
+
+
 
         try {
             Mail::to($user->email)->send(new OtpMail($code));
         } catch (\Exception $e) {
+            LoggingService::logSecurityViolation("OTP email failed to send to {$user->email}");
             return back()->withErrors(['email' => 'Failed to send email. Please try again.']);
         }
     }
@@ -171,6 +174,10 @@ class TwoFactorController extends Controller
         } elseif ($user->mfa_method === 'sms2') {
             $this->handleSmsOtp($user);
         }
+        LoggingService::logMfaEvent("Resend OTP triggered for User ID: {$user->id}", [
+            'method' => $user->mfa_method
+        ]);
+
 
         // ✅ Restore failed OTP attempts after regenerating OTP
         $user->failed_otp_attempts = $failedAttempts;
@@ -251,7 +258,7 @@ class TwoFactorController extends Controller
             $user->failed_otp_attempts = 0;
             $user->save(); // ✅ Force save to database
         }
-
+        LoggingService::logMfaEvent("User [ID: {$user->id}] canceled MFA verification");
         auth()->logout(); // ✅ Log out the user
         session()->invalidate(); // ✅ Clear session completely
         session()->regenerateToken(); // ✅ Prevent CSRF issues
@@ -274,6 +281,10 @@ class TwoFactorController extends Controller
         $user->two_factor_code = Crypt::encryptString($code);
         $user->otp_expires_at = $now->addMinutes(5);
         $user->save();
+        LoggingService::logMfaEvent("WhatsApp OTP sent to {$user->phone_number}", [
+            'method' => 'whatsapp',
+        ]);
+
 
         // Kirim OTP ke WhatsApp
         $whatsappService = new WhatsAppService();
@@ -285,11 +296,11 @@ class TwoFactorController extends Controller
         $now = now();
 
         // Log execution
-        Log::info("handleSmsOtp() triggered for user: {$user->id}, phone: {$user->phone_number}");
+
 
         // If OTP is still valid, do not regenerate
         if ($user->two_factor_code && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
-            Log::info("Existing OTP still valid, skipping generation for {$user->phone_number}");
+
             return;
         }
 
@@ -298,14 +309,19 @@ class TwoFactorController extends Controller
         $user->two_factor_code = Crypt::encryptString($code);
         $user->otp_expires_at = $now->addMinutes(5);
         $user->save();
-
-        Log::info("Generated OTP for {$user->phone_number}: $code");
+        LoggingService::logMfaEvent("Generated OTP for {$user->phone_number}", [
+            'method' => 'sms',
+            'code' => $code // Optional — you can remove if not safe
+        ]);
 
         // Send OTP via SMS using the correct route
         $smsService = new SmsService();
-        $response = $smsService->sendSms($user->phone_number, "Your OTP Code is: $code", 'PREMIUM');
+        $response = $smsService->sendSms($user->phone_number, "Your OTP Code is: $code", 'OTP');
+        LoggingService::logMfaEvent("Zuwinda SMS API Response for {$user->phone_number}", [
+            'response' => $response
+        ]);
 
-        Log::info('Zuwinda SMS Response:', $response);
+
     }
 
     private function hasReachedMaxDevices($user)

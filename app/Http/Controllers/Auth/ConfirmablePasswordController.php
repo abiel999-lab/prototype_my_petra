@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use App\Services\LoggingService;
+
 
 class ConfirmablePasswordController extends Controller
 {
@@ -28,12 +30,16 @@ class ConfirmablePasswordController extends Controller
             'email' => $request->user()->email,
             'password' => $request->password,
         ])) {
+            LoggingService::logSecurityViolation("Failed password confirmation for User ID: {$request->user()->id}");
             throw ValidationException::withMessages([
                 'password' => __('auth.password'),
             ]);
         }
 
         $request->session()->put('auth.password_confirmed_at', time());
+        LoggingService::logMfaEvent("User [ID: {$request->user()->id}] confirmed password for sensitive action");
+
+
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

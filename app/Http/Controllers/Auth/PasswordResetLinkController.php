@@ -7,6 +7,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
+use App\Services\LoggingService;
+
 
 class PasswordResetLinkController extends Controller
 {
@@ -35,6 +37,15 @@ class PasswordResetLinkController extends Controller
         $status = Password::sendResetLink(
             $request->only('email')
         );
+        if ($status === Password::RESET_LINK_SENT) {
+            LoggingService::logMfaEvent("Password reset email sent to {$request->email}");
+        }else {
+            LoggingService::logSecurityViolation("Password reset request failed for {$request->email}", [
+                'status' => $status
+            ]);
+        }
+
+
 
         return $status == Password::RESET_LINK_SENT
                     ? back()->with('status', __($status))

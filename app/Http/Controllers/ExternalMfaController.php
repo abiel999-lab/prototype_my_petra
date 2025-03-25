@@ -1,0 +1,175 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Models\TrustedDevice;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OtpMail;
+use App\Services\WhatsAppService;
+use App\Services\SmsService;
+use PragmaRX\Google2FA\Google2FA;
+use App\Mail\ViolationMail;
+use App\Services\LoggingService;
+
+
+class ExternalMfaController extends Controller
+{
+    public function handle(Request $request)
+    {
+        $userId = session('pending_user_id');
+
+        if (!$userId) {
+            return redirect()->route('login')->withErrors(['message' => 'Unauthorized access.']);
+        }
+
+        $user = User::find($userId);
+        LoggingService::logMfaEvent("External MFA challenge triggered", [
+            'user_id' => $user->id,
+            'method' => $user->mfa_method,
+        ]);
+        if (!$user) {
+            return redirect()->route('login')->withErrors(['message' => 'User not found.']);
+        }
+
+        if ($user->mfa_enabled) {
+            $this->sendOtpIfNeeded($user);
+
+            return view('auth.external.mfa-challenge-external', [
+                'redirect' => $request->query('redirect'),
+            ]);
+        }
+
+        // No MFA enabled → show MFA setup
+        $view = match ($user->usertype) {
+            'admin' => 'profile.external.admin.mfa-setting-external',
+            'student' => 'profile.external.student.mfa-setting-external',
+            'staff' => 'profile.external.staff.mfa-setting-external',
+            default => 'profile.external.mfa-setting-external',
+        };
+
+        $devices = TrustedDevice::where('user_id', $user->id)->get();
+
+        return view($view, [
+            'redirect' => $request->query('redirect'),
+            'devices' => $devices
+        ]);
+    }
+
+    private function sendOtpIfNeeded($user)
+    {
+        $now = now();
+
+        if ($user->two_factor_code && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
+            return; // Skip if OTP is still valid
+        }
+
+        $code = rand(100000, 999999);
+        $user->two_factor_code = Crypt::encryptString($code);
+        $user->otp_expires_at = $now->addMinutes(5);
+        $user->failed_otp_attempts = 0;
+        $user->save();
+        LoggingService::logMfaEvent("Generated OTP for User [ID: {$user->id}]", [
+            'method' => $user->mfa_method,
+        ]);
+
+
+        try {
+            switch ($user->mfa_method) {
+                case 'email':
+                    Mail::to($user->email)->send(new OtpMail($code));
+                    LoggingService::logMfaEvent("OTP email sent to {$user->email}");
+                    break;
+
+                case 'sms':
+                    (new WhatsAppService())->sendOtp($user->phone_number, $code);
+                    LoggingService::logMfaEvent("WhatsApp OTP sent to {$user->phone_number}");
+                    break;
+
+                case 'sms2':
+                    (new SmsService())->sendSms($user->phone_number, "Your OTP Code is: $code", 'OTP');
+                    LoggingService::logMfaEvent("SMS OTP sent to {$user->phone_number}");
+                    break;
+
+                case 'google_auth':
+                    // No OTP sent via backend, handled on-device
+                    break;
+
+                default:
+                    LoggingService::logSecurityViolation("Unhandled MFA method: {$user->mfa_method} for user ID: {$user->id}");
+            }
+        } catch (\Exception $e) {
+            LoggingService::logSecurityViolation("OTP delivery failed for User [ID: {$user->id}]: " . $e->getMessage());
+        }
+    }
+
+    public function verify(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string',
+        ]);
+
+        $userId = session('pending_user_id');
+        if (!$userId) {
+            return redirect()->route('login')->withErrors(['message' => 'Unauthorized access.']);
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect()->route('login')->withErrors(['message' => 'User not found.']);
+        }
+
+        // 🚨 Lock out immediately if 10 or more failed attempts
+        if ($user->failed_otp_attempts >= 10) {
+            return redirect()->route('mfa-challenge-external')->with(['otp_failed_limit' => true]);
+        }
+
+
+        // ✅ Check OTP
+        if ($this->validateOtp($user, $request->code)) {
+            LoggingService::logMfaEvent("User [ID: {$user->id}] passed OTP validation", [
+                'method' => $user->mfa_method,
+            ]);
+            session(['two_factor_authenticated' => true]);
+            session()->forget('pending_user_id');
+
+            $user->update([
+                'two_factor_code' => null,
+                'otp_expires_at' => null,
+                'failed_otp_attempts' => 0,
+            ]);
+
+            return redirect()->to($request->input('redirect', route('dashboard')));
+        }
+
+        // ❌ OTP incorrect → increase attempts
+        $user->increment('failed_otp_attempts');
+        LoggingService::logSecurityViolation("Incorrect OTP for User [ID: {$user->id}]. Attempt {$user->failed_otp_attempts}/10", [
+            'method' => $user->mfa_method,
+        ]);
+        $user->save();
+
+        // 🚨 If exactly 10 failed attempts, trigger email alert
+        if ($user->failed_otp_attempts == 10) {
+            LoggingService::logSecurityViolation("User [ID: {$user->id}] locked out after 10 OTP failures (MFA method: {$user->mfa_method})");
+            Mail::to('mfa.mypetra@petra.ac.id')->send(new ViolationMail($user, 'otp'));
+            return redirect()->route('mfa-challenge-external')->with(['otp_failed_limit' => true]);
+        }
+
+        return redirect()->route('mfa-challenge-external')->withErrors([
+            'code' => "Incorrect OTP. You have " . (10 - $user->failed_otp_attempts) . " attempts left."
+        ]);
+    }
+
+    private function validateOtp($user, $code)
+    {
+        try {
+            $decrypted = Crypt::decryptString($user->two_factor_code);
+            return $code == $decrypted && now()->lt($user->otp_expires_at);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+}

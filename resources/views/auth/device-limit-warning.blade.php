@@ -96,10 +96,36 @@
     <script src="https://login.petra.ac.id/js/jquery.js"></script>
     <script src="https://login.petra.ac.id/js/popper.min.js"></script>
     <script src="https://login.petra.ac.id/js/jquery-ui.min.js"></script>
+    <script src="https://login.petra.ac.id/js/chosen.min.js"></script>
     <script src="https://login.petra.ac.id/js/bootstrap.min.js"></script>
+    <script src="https://login.petra.ac.id/js/jquery.fancybox.js"></script>
+    <script src="https://login.petra.ac.id/js/jquery.modal.min.js"></script>
+    <script src="https://login.petra.ac.id/js/mmenu.polyfills.js"></script>
+    <script src="https://login.petra.ac.id/js/mmenu.js"></script>
+    <script src="https://login.petra.ac.id/js/appear.js"></script>
+    <script src="https://login.petra.ac.id/js/ScrollMagic.min.js"></script>
+    <script src="https://login.petra.ac.id/js/rellax.min.js"></script>
+    <script src="https://login.petra.ac.id/js/owl.js"></script>
+    <script src="https://login.petra.ac.id/js/wow.js"></script>
+    <script src="https://login.petra.ac.id/js/script.js"></script>
+    <script src="https://login.petra.ac.id/js/lottie-player.js"></script>
     <script src="https://login.petra.ac.id/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
-    <script>
+
+    <script type="text/javascript">
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 5000
+        });
+    </script>
+
+    <script type="text/javascript">
         $(document).ready(function() {
+            $('form').submit(function() {
+                $('.loading-screen').show();
+            });
+
             $('#cant-login-btn').on('click', function(e) {
                 e.preventDefault();
 
@@ -115,21 +141,12 @@
                         confirmButton: 'btn btn-primary',
                         cancelButton: 'btn btn-danger me-2'
                     },
-                    buttonsStyling: false // Needed for Bootstrap classes to work
+                    buttonsStyling: false
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        Swal.fire({
-                            title: 'Email Sent!',
-                            text: 'We sent you an email with instructions to proceed.',
-                            icon: 'success',
-                            confirmButtonText: 'OK',
-                            customClass: {
-                                confirmButton: 'btn btn-success'
-                            },
-                            buttonsStyling: false
-                        });
+                        // Show loader while waiting for email to be sent
+                        $('.loading-screen').show();
 
-                        // Send request to backend
                         $.ajax({
                             url: '{{ route('send.mfa.link') }}',
                             type: 'POST',
@@ -138,9 +155,20 @@
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             success: function() {
-                                console.log('Email sent');
+                                $('.loading-screen').hide();
+                                Swal.fire({
+                                    title: 'Email Sent!',
+                                    text: 'We sent you an email with instructions to proceed.',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK',
+                                    customClass: {
+                                        confirmButton: 'btn btn-success'
+                                    },
+                                    buttonsStyling: false
+                                });
                             },
                             error: function() {
+                                $('.loading-screen').hide();
                                 Swal.fire('Error', 'Failed to send email.', 'error');
                             }
                         });

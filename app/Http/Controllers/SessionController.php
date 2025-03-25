@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Jenssegers\Agent\Agent;
+use App\Services\LoggingService;
+
 
 class SessionController extends Controller
 {
@@ -130,6 +132,10 @@ class SessionController extends Controller
         }
 
         DB::table('sessions')->where('id', $id)->delete();
+        LoggingService::logMfaEvent("User [ID: {$userId}] revoked a session", [
+            'session_id' => $id,
+        ]);
+
 
         return redirect()->route($route)->with('success', 'Sesi berhasil dicabut.');
     }
@@ -137,6 +143,8 @@ class SessionController extends Controller
     private function revokeAllSessions($route)
     {
         DB::table('sessions')->where('user_id', auth()->id())->delete();
+        LoggingService::logMfaEvent("User [ID: " . auth()->id() . "] revoked all active sessions");
+
         return redirect()->route($route)->with('success', 'Semua sesi Anda telah dicabut.');
     }
 

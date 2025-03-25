@@ -9,9 +9,9 @@ use Carbon\Carbon;
 use Jenssegers\Agent\Agent;
 use Illuminate\Support\Facades\Auth;
 use App\Models\TrustedDevice;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\MfaExternalMail;
+use App\Services\LoggingService;
 
 class UserDeviceController extends Controller
 {
@@ -64,7 +64,7 @@ class UserDeviceController extends Controller
         $deviceType = $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
         $now = Carbon::now('Asia/Jakarta');
 
-        Log::info("Tracking device for user {$userId}: OS={$normalizedOS}, IP={$currentIp}, DeviceType={$deviceType}");
+
 
         // 🧹 Auto-delete stale devices (30+ days unused)
         TrustedDevice::where('user_id', $userId)
@@ -95,8 +95,14 @@ class UserDeviceController extends Controller
             ->exists();
 
         if ($distinctOSCount >= 3 && !$osExists) {
-            Log::warning("User {$userId} blocked from login. New OS '{$normalizedOS}' exceeds limit.");
+
             session(['pending_user_id' => $userId]);
+            LoggingService::logSecurityViolation("User [{$userId}] blocked from logging in with 4th OS (Detected: {$normalizedOS})", [
+                'user_id' => $userId,
+                'ip' => $currentIp,
+                'os' => $normalizedOS,
+            ]);
+
             return redirect()->route('device-limit-warning');
         }
 
@@ -111,8 +117,15 @@ class UserDeviceController extends Controller
             'created_at' => $now,
             'updated_at' => $now,
         ]);
+        LoggingService::logMfaEvent("New device added", [
+            'user_id' => $userId,
+            'ip' => $currentIp,
+            'device' => $deviceType,
+            'os' => $normalizedOS,
+        ]);
 
-        Log::info("New device added for user {$userId}: {$normalizedOS} @ {$currentIp} ({$deviceType})");
+
+
     }
 
 
@@ -127,6 +140,13 @@ class UserDeviceController extends Controller
 
         $currentOs = $this->normalizeOS((new Agent())->platform());
         $device->delete();
+        LoggingService::logMfaEvent("Device deleted", [
+            'device_id' => $device->id,
+            'user_id' => $userId,
+            'os' => $device->os,
+            'ip' => $device->ip_address,
+        ]);
+
 
         if ($device->os === $currentOs) {
             auth()->logout();
@@ -154,6 +174,11 @@ class UserDeviceController extends Controller
     private function untrustDevice($id, $userId)
     {
         TrustedDevice::where('id', $id)->where('user_id', $userId)->update(['trusted' => false, 'action' => 'untrust']);
+        LoggingService::logMfaEvent("Device untrusted", [
+            'device_id' => $id,
+            'user_id' => $userId,
+        ]);
+
     }
 
     public function Adminindex()
@@ -180,6 +205,13 @@ class UserDeviceController extends Controller
 
         // Trust the selected device
         $device->update(['trusted' => true]);
+        LoggingService::logMfaEvent("Trusted device updated", [
+            'device_id' => $device->id,
+            'user_id' => $userId,
+            'os' => $device->os,
+            'trusted' => true,
+        ]);
+
 
         return redirect()->back()->with('success', 'Only one device can be trusted. Other devices have been untrusted.');
     }
@@ -291,10 +323,18 @@ class UserDeviceController extends Controller
 
             // Kirim link MFA Challenge External
             Mail::to($user->email)->send(new MfaExternalMail($mfaChallengeUrl));
+            LoggingService::logMfaEvent("Sent MFA link to {$user->email}", [
+                'redirect' => $mfaChallengeUrl,
+            ]);
+
 
         } else {
             // MFA tidak aktif, langsung kirim link ke halaman pengaturan MFA
             Mail::to($user->email)->send(new MfaExternalMail($mfaSettingRoute));
+            LoggingService::logMfaEvent("Sent MFA settings link to {$user->email}", [
+                'redirect' => $mfaSettingRoute,
+            ]);
+
         }
 
         return response()->json(['message' => 'Email sent']);

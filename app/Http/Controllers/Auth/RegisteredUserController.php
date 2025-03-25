@@ -13,6 +13,8 @@ use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use App\Services\LoggingService;
+
 
 class RegisteredUserController extends Controller
 {
@@ -46,6 +48,13 @@ class RegisteredUserController extends Controller
         ]);
 
         event(new Registered($user));
+        LoggingService::logMfaEvent("New user registered", [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
 
         Auth::login($user);
 

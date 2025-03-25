@@ -14,9 +14,14 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SupportController;
-use Illuminate\Support\Facades\Log;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
+use App\Models\TrustedDevice;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use App\Http\Controllers\ExternalMfaController;
+use App\Services\LoggingService;
+
+
 
 // ðŸ”¹ Redirect root URL ('/') to the correct dashboard or login
 Route::get('/', function () {
@@ -76,6 +81,12 @@ Route::get('auth/google/callback', function () {
         }
 
         Auth::login($user);
+        LoggingService::logMfaEvent("Google OAuth login successful for {$user->email}", [
+            'user_id' => $user->id,
+            'ip' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
 
 
 
@@ -85,6 +96,7 @@ Route::get('auth/google/callback', function () {
         $deviceLimitCheck = $deviceController->handleDeviceTracking($userId);
 
         if ($deviceLimitCheck instanceof \Illuminate\Http\RedirectResponse) {
+            LoggingService::logSecurityViolation("Device limit hit for user [ID: {$userId}] during Google OAuth login");
             return $deviceLimitCheck; // 🚨 Redirect to warning page if OS limit is reached
         }
 
@@ -101,7 +113,7 @@ Route::get('auth/google/callback', function () {
                 return redirect()->route('dashboard');
         }
     } catch (\Exception $e) {
-        Log::error('Google OAuth Error: ' . $e->getMessage()); // Log error for debugging
+        LoggingService::logSecurityViolation("Google OAuth error: " . $e->getMessage());
         return redirect()->route('login')->with('error', 'Google authentication failed.');
     }
 })->name('google.callback');
@@ -148,6 +160,11 @@ Route::post('/login', function (Request $request) {
             );
 
             Auth::login($user);
+            LoggingService::logMfaEvent("LDAP login success for {$user->email}", [
+                'user_id' => $user->id,
+                'ip' => request()->ip(),
+            ]);
+
 
             switch ($user->usertype) {
                 case 'admin':
@@ -161,7 +178,7 @@ Route::post('/login', function (Request $request) {
             }
         }
     } catch (\Exception $e) {
-        Log::error('LDAP Authentication Error: ' . $e->getMessage());
+        LoggingService::logSecurityViolation("LDAP login failed for {$credentials['email']}: " . $e->getMessage());
     }
 
     return back()->withErrors(['email' => 'Invalid credentials']);
@@ -175,33 +192,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/mfa-challenge/cancel', [TwoFactorController::class, 'cancel'])->name('mfa-challenge.cancel');
     Route::post('/toggle-mfa', [ProfileController::class, 'toggleMfa'])->name('toggle-mfa');
     Route::post('/set-mfa-method', [ProfileController::class, 'setMfaMethod'])->name('set-mfa-method');
-    Route::post('/mfa-challenge/send-otp', [TwoFactorController::class, 'handleWhatsAppOtp'])
-        ->name('mfa-challenge.send-otp');
-    Route::get('/mfa-challenge-external', function (Request $request) {
-        $userId = session('pending_user_id');
-
-        if (!$userId) {
-            return redirect()->route('login')->withErrors(['message' => 'Unauthorized access.']);
-        }
-
-        $user = User::find($userId);
-        if (!$user) {
-            return redirect()->route('login')->withErrors(['message' => 'User not found.']);
-        }
-
-        $view = match ($user->usertype) {
-            'admin' => 'profile.external.admin.mfa-setting-external',
-            'student' => 'profile.external.student.mfa-setting-external',
-            'staff' => 'profile.external.staff.mfa-setting-external',
-            default => 'profile.external.mfa-setting-external',
-        };
-
-        return view($view, [
-            'redirect' => $request->query('redirect')
-        ]);
-    })->name('mfa-challenge-external');
-
-
+    Route::post('/mfa-challenge/send-otp', [TwoFactorController::class, 'handleWhatsAppOtp'])->name('mfa-challenge.send-otp');
+    Route::get('/mfa-challenge-external', [ExternalMfaController::class, 'handle'])->name('mfa-challenge-external');
+    Route::get('/mfa-challenge-external', [ExternalMfaController::class, 'handle'])->name('mfa-challenge-external');
+    Route::post('/mfa-challenge-external/verify', [ExternalMfaController::class, 'verify'])->name('mfa-challenge-external.verify');
 });
 
 
