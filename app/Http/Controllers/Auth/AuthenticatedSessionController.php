@@ -194,14 +194,23 @@ class AuthenticatedSessionController extends Controller
     public function destroy(Request $request): RedirectResponse
     {
         $user = auth()->user();
+
+        // 🚫 Prevent logout if MFA is enabled and phone is required but missing (just in case)
+        if (
+            $user->mfa_enabled &&
+            in_array($user->mfa_method, ['whatsapp', 'sms']) &&
+            empty($user->phone_number)
+        ) {
+            return redirect()->back()->withErrors([
+                'logout' => 'Logout blocked: You must add your phone number before logging out when using WhatsApp or SMS MFA.'
+            ]);
+        }
+
         LoggingService::logMfaEvent("User [ID: {$user->id}] logged out successfully");
 
-
-        if ($user) {
-            // ✅ Reset failed OTP attempts when logging out
-            $user->failed_otp_attempts = 0;
-            $user->save(); // ✅ Force save to database
-        }
+        // ✅ Reset OTP attempt on logout
+        $user->failed_otp_attempts = 0;
+        $user->save();
 
         Auth::guard('web')->logout();
 
@@ -210,4 +219,5 @@ class AuthenticatedSessionController extends Controller
 
         return redirect('/');
     }
+
 }

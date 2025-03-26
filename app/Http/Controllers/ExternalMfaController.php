@@ -83,12 +83,12 @@ class ExternalMfaController extends Controller
                     LoggingService::logMfaEvent("OTP email sent to {$user->email}");
                     break;
 
-                case 'sms':
+                case 'whatsapp':
                     (new WhatsAppService())->sendOtp($user->phone_number, $code);
                     LoggingService::logMfaEvent("WhatsApp OTP sent to {$user->phone_number}");
                     break;
 
-                case 'sms2':
+                case 'sms':
                     (new SmsService())->sendSms($user->phone_number, "Your OTP Code is: $code", 'OTP');
                     LoggingService::logMfaEvent("SMS OTP sent to {$user->phone_number}");
                     break;

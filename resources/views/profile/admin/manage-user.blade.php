@@ -88,7 +88,7 @@
                     <div class="dropdown-menu dropdown-menu-right">
                         <a href="{{ route('profile.admin.setting') }}" class="dropdown-item">Setting</a>
                         <a href="{{ route('logout') }}" class="dropdown-item"
-                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+                            onclick="event.preventDefault(); confirmLogout(); ">Logout</a>
                         <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                             @csrf
                         </form>
@@ -343,11 +343,11 @@
                                                                         {{ $user->mfa_method == 'google_authenticator' ? 'selected' : '' }}>
                                                                         Google Authenticator
                                                                     </option>
+                                                                    <option value="whatapp"
+                                                                        {{ $user->mfa_method == 'whatsapp' ? 'selected' : '' }}>
+                                                                        WhatsApp</option>
                                                                     <option value="sms"
                                                                         {{ $user->mfa_method == 'sms' ? 'selected' : '' }}>
-                                                                        WhatsApp</option>
-                                                                    <option value="sms2"
-                                                                        {{ $user->mfa_method == 'sms2' ? 'selected' : '' }}>
                                                                         SMS</option>
                                                                 </select>
                                                             </td>
@@ -704,6 +704,36 @@
                 }).catch(error => console.log("Error:", error));
         }
     </script>
+    <script>
+        function confirmLogout() {
+            const mfaMethod = "{{ auth()->user()->mfa_method }}";
+            const mfaEnabled = "{{ auth()->user()->mfa_enabled }}";
+            const phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
+
+            if (mfaEnabled === "1" && (mfaMethod === "whatsapp" || mfaMethod === "sms") && phoneNumber.trim() === "") {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Logout Blocked",
+                    text: "You must add your phone number before logging out when using WhatsApp or SMS MFA.",
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "You will be logged out.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, log out",
+                cancelButtonText: "Cancel"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById("logout-form").submit();
+                }
+            });
+        }
+    </script>
+
 
 
 

@@ -99,7 +99,7 @@
                                     Account</a>
                                 <center style="margin-top: 8px">
                                     <a href="{{ route('logout') }}" class="btn btn-danger mb-2"
-                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                        onclick="event.preventDefault(); confirmLogout();">
                                         <b>Logout</b>
                                     </a>
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST"
@@ -322,6 +322,37 @@
         timer: 5000
     });
     </script>
+    <script>
+        function confirmLogout() {
+            const mfaMethod = "{{ auth()->user()->mfa_method }}";
+            const mfaEnabled = "{{ auth()->user()->mfa_enabled }}";
+            const phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
+
+            if (mfaEnabled === "1" && (mfaMethod === "whatsapp" || mfaMethod === "sms") && phoneNumber.trim() === "") {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Logout Blocked",
+                    text: "You must add your phone number before logging out when using WhatsApp or SMS MFA.",
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "You will be logged out.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, log out",
+                cancelButtonText: "Cancel"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById("logout-form").submit();
+                }
+            });
+        }
+    </script>
+
+
 </body>
 
 </html>

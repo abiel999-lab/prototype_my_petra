@@ -33,11 +33,11 @@ class TwoFactorController extends Controller
             }
         } elseif ($user->mfa_method === 'google_auth') {
             $qrCodeUrl = $this->generateGoogleQrCode($user);
-        } elseif ($user->mfa_method === 'sms') {
+        } elseif ($user->mfa_method === 'whatsapp') {
             if (!$user->two_factor_code) {
                 $this->handleWhatsAppOtp($user);
             }
-        } elseif ($user->mfa_method === 'sms2') {
+        } elseif ($user->mfa_method === 'sms') {
             if (!$user->two_factor_code) {
                 $this->handleSmsOtp($user);
             }
@@ -169,9 +169,9 @@ class TwoFactorController extends Controller
         // ✅ Generate and send new OTP
         if ($user->mfa_method === 'email') {
             $this->handleEmailOtp($user);
-        } elseif ($user->mfa_method === 'sms') {
+        } elseif ($user->mfa_method === 'whatsapp') {
             $this->handleWhatsAppOtp($user);
-        } elseif ($user->mfa_method === 'sms2') {
+        } elseif ($user->mfa_method === 'sms') {
             $this->handleSmsOtp($user);
         }
         LoggingService::logMfaEvent("Resend OTP triggered for User ID: {$user->id}", [
@@ -208,7 +208,7 @@ class TwoFactorController extends Controller
             $google2fa = new Google2FA();
             return $google2fa->verifyKey($user->google2fa_secret, $code);
         }
-        if ($user->mfa_method === 'sms') {
+        if ($user->mfa_method === 'whatsapp') {
             try {
                 $decryptedOtp = Crypt::decryptString($user->two_factor_code);
 
@@ -219,7 +219,7 @@ class TwoFactorController extends Controller
                 return false;
             }
         }
-        if ($user->mfa_method === 'sms2') {
+        if ($user->mfa_method === 'sms') {
             try {
                 $decryptedOtp = Crypt::decryptString($user->two_factor_code);
 

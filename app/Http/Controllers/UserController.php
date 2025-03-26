@@ -96,7 +96,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $user->id,
             'usertype' => 'required|string|in:general,admin,staff,student',
             'mfa_enabled' => 'nullable|boolean',
-            'mfa_method' => 'required|string|in:email,google_authenticator,sms,sms2',
+            'mfa_method' => 'required|string|in:email,google_auth,whatsapp,sms',
         ]);
 
         // Convert checkbox value to boolean (1 or 0)

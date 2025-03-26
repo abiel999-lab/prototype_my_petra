@@ -11,7 +11,7 @@ class SupportController extends Controller
 {
     public function index()
     {
-        return view('auth.customaer-support'); // Menampilkan halaman Customer Support
+        return view('auth.customer-support'); // Menampilkan halaman Customer Support
     }
 
     public function sendEmail(Request $request)

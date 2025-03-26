@@ -142,7 +142,7 @@
                     <div class="dropdown-menu dropdown-menu-right">
                         <a href="" class="dropdown-item">Setting</a>
                         <a href="{{ route('logout') }}" class="dropdown-item"
-                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+                            onclick="event.preventDefault();confirmLogout(); ">Logout</a>
                         <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                             @csrf
                         </form>
@@ -304,22 +304,15 @@
                                                     <option value="google_auth"
                                                         {{ auth()->user()->mfa_method === 'google_auth' ? 'selected' : '' }}>
                                                         Google Authenticator</option>
+                                                    <option value="whatsapp"
+                                                        {{ auth()->user()->mfa_method === 'whatsapp' ? 'selected' : '' }}>
+                                                        WhatsApp</option>
                                                     <option value="sms"
                                                         {{ auth()->user()->mfa_method === 'sms' ? 'selected' : '' }}>
-                                                        WhatsApp</option>
-                                                    <option value="sms2"
-                                                        {{ auth()->user()->mfa_method === 'sms2' ? 'selected' : '' }}>
                                                         SMS (not recommended)</option>
                                                 </select>
 
-                                                <div id="sms-warning">
-                                                    <p class="important">Important!!!!</p>
-                                                    <p><b>Warning:</b> You have selected **SMS / WhatsApp**, but
-                                                        your phone number is not set!</p>
-                                                    <p>Please update your phone number in the <a href=""
-                                                            style="color: blue; font-weight: bold;">Profile</a> page
-                                                        before proceeding.</p>
-                                                </div>
+
                                                 <button type="submit" class="btn btn-primary save-btn">Save</button>
                                                 <p style="margin-top: 1rem;">If you are using Google Auth app, click
                                                     save to look at your QRCode</p>
@@ -354,12 +347,14 @@
                                                     }
                                                 </style>
                                                 <p><b>Guide:</b></p>
-                                                <p>1. Install Google Authentication app on Playstore</p>
+                                                <p>1. Install Google/Microsoft Authenticator or any
+                                                    authenticator app on Playstore/Appstore</p>
                                                 <img src="{{ asset('images/google_auth.jpg') }}"
                                                     alt="Google Authenticator app"
                                                     style="width: 250px; height: auto;">
                                                 <p style="margin-top: 1rem;">2. Login using Google account</p>
-                                                <p>3. Scan this QR code with your Google Authenticator app:</p>
+                                                <p>3. Scan this QR code with your Google/Microsoft Authenticator or any
+                                                    authenticator app:</p>
                                                 <img id="qr-code-image" src="" alt="QR Code">
                                                 <p class="mt-2 text-sm text-gray-600">
                                                     After scanning the QR code, use the Google Authenticator app to
@@ -491,22 +486,6 @@
             showCloseButton: true,
             timer: 5000
         });
-
-
-
-
-
-        function showLoading() {
-            Swal.fire({
-                title: 'Loading ...',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                allowEnterKey: false,
-                didOpen: () => {
-                    Swal.showLoading()
-                },
-            });
-        }
     </script>
     <script type="text/javascript">
         $(function() {
@@ -520,70 +499,115 @@
                 $(`a[href="#tab_${tab}"]`).addClass('active');
                 $(`#tab_${tab}`).addClass('active');
             } else {
-                $(`a[href="#tab_manage"]`).addClass('active');
-                $(`#tab_manage`).addClass('active');
+                $(`a[href="#tab_activation"]`).addClass('active');
+                $(`#tab_activation`).addClass('active');
             }
         });
     </script>
     <script>
-        // Handle MFA method selection and display QR code
-        document.getElementById('mfa-method-form').addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent default form submission
+        document.addEventListener("DOMContentLoaded", function() {
+            const mfaForm = document.getElementById("mfa-method-form");
+            const mfaSelect = document.getElementById("mfa_method");
+            const smsWarning = document.getElementById("sms-warning");
+            const qrCodeContainer = document.getElementById("qr-code-container");
+            const qrCodeImage = document.getElementById("qr-code-image");
+            const mfaToggle = document.getElementById("mfa-toggle");
 
-            const formData = new FormData(this);
+            // 📌 Handle MFA form submission
+            mfaForm.addEventListener("submit", function(e) {
+                e.preventDefault();
+                const formData = new FormData(mfaForm);
 
-            fetch("{{ route('set-mfa-method') }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    },
-                    body: formData,
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        alert(data.message);
+                fetch("{{ route('set-mfa-method') }}", {
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        },
+                        body: formData,
+                    })
+                    .then((response) => {
+                        if (!response.ok) {
+                            return response.json().then((data) => {
+                                throw new Error(data.message || "Request failed");
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        alert(data.message || "MFA method updated successfully.");
 
-                        // Display QR code if Google Authenticator is selected
                         if (data.qrCodeUrl) {
-                            const qrCodeContainer = document.getElementById('qr-code-container');
-                            const qrCodeImage = document.getElementById('qr-code-image');
-
                             qrCodeImage.src =
                                 `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.qrCodeUrl)}&size=200x200`;
-                            qrCodeContainer.style.display = 'block';
+                            qrCodeContainer.style.display = "block";
                         } else {
-                            // Hide QR code if Email is selected
-                            document.getElementById('qr-code-container').style.display = 'none';
+                            qrCodeContainer.style.display = "none";
                         }
-                    } else {
-                        alert('Failed to update MFA method.');
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        });
+                    })
+                    .catch((error) => {
+                        alert(error.message || "Failed to update MFA method.");
+                        console.error(error);
+                    });
+            });
 
-        // Handle MFA toggle
-        document.getElementById('mfa-toggle').addEventListener('change', function() {
-            fetch("{{ route('toggle-mfa') }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({}),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        alert(`MFA is now ${data.mfa_enabled ? 'enabled' : 'disabled'}.`);
-                    } else {
-                        alert('Failed to toggle MFA.');
-                    }
-                })
-                .catch(error => console.error('Error:', error));
+            // 📌 Handle MFA toggle on/off
+            mfaToggle.addEventListener("change", function() {
+                fetch("{{ route('toggle-mfa') }}", {
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({}),
+                    })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.status === "success") {
+                            alert(`MFA is now ${data.mfa_enabled ? "enabled" : "disabled"}.`);
+                        } else {
+                            alert("Failed to toggle MFA.");
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Toggle MFA Error:", error);
+                        alert("Failed to toggle MFA.");
+                    });
+            });
+
+            // 📌 Show phone warning if WhatsApp or SMS selected and phone number is missing
+            mfaSelect.addEventListener("change", function() {
+                const phone = "{{ auth()->user()->phone_number ?? '' }}";
+                const method = mfaSelect.value;
+
+                if ((method === "sms" || method === "whatsapp") && !phone.trim()) {
+                    smsWarning.style.display = "block";
+                } else {
+                    smsWarning.style.display = "none";
+                }
+
+                // Optional: warn user when selecting SMS
+                if (method === "sms") {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Are you sure?",
+                        text: "SMS is slow and less secure. We recommend Email, Google Authenticator, or WhatsApp instead.",
+                        showCancelButton: true,
+                        confirmButtonText: "Yes, I want SMS",
+                        cancelButtonText: "No, choose another method",
+                    }).then((result) => {
+                        if (!result.isConfirmed) {
+                            mfaSelect.value = "email";
+                            smsWarning.style.display = "none";
+                        }
+                    });
+                }
+            });
+
+            // Trigger initial warning on load
+            mfaSelect.dispatchEvent(new Event("change"));
         });
     </script>
+
     <script>
         $(document).ready(function() {
             $('#deviceTable').DataTable({
@@ -592,14 +616,12 @@
                 "paging": true,
                 "responsive": true,
                 "columnDefs": [{
-                        "orderable": false,
-                        "targets": [7]
-                    } // Disable sorting for Actions column
-                ]
+                    "orderable": false,
+                    "targets": [7]
+                }]
             });
         });
 
-        // Confirmation alert for deleting a device
         function confirmDelete(deviceId) {
             Swal.fire({
                 title: "Are you sure?",
@@ -617,89 +639,35 @@
         }
     </script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const mfaSelect = document.getElementById("mfa_method");
-            const smsWarning = document.getElementById("sms-warning");
+        function confirmLogout() {
+            const mfaMethod = "{{ auth()->user()->mfa_method }}";
+            const mfaEnabled = "{{ auth()->user()->mfa_enabled }}";
+            const phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
 
-            mfaSelect.addEventListener("change", function() {
-                if (mfaSelect.value === "sms") {
-                    // Check if the user has a registered phone number
-                    let phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
-                    if (!phoneNumber) {
-                        smsWarning.style.display = "block";
-                    } else {
-                        smsWarning.style.display = "none";
-                    }
-                } else {
-                    smsWarning.style.display = "none";
-                }
-            });
-
-            // Trigger change event on page load to ensure correct state
-            mfaSelect.dispatchEvent(new Event("change"));
-        });
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const mfaSelect = document.getElementById("mfa_method");
-            const smsWarning = document.getElementById("sms-warning");
-
-            mfaSelect.addEventListener("change", function() {
-                let phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
-
-                if (mfaSelect.value === "sms2") {
-                    // Show warning if no phone number is registered for SMS2
-                    smsWarning.style.display = phoneNumber.trim() ? "none" : "block";
-                } else {
-                    smsWarning.style.display = "none";
-                }
-            });
-
-            document.getElementById('mfa-method-form').addEventListener('submit', function(e) {
-                e.preventDefault(); // Prevent default form submission
-
-                let selectedMethod = mfaSelect.value;
-                let url = selectedMethod === 'sms2' ?
-                    "" :
-                    "{{ route('mfa-challenge.send-otp') }}";
-
-                fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({}),
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message || 'OTP sent successfully.');
-                    })
-                    .catch(error => console.error('Error:', error));
-            });
-
-            // Ensure correct warning displays on page load
-            mfaSelect.dispatchEvent(new Event("change"));
-        });
-    </script>
-    <script>
-        document.getElementById("mfa_method").addEventListener("change", function() {
-            if (this.value === "sms2") {
+            if (mfaEnabled === "1" && (mfaMethod === "whatsapp" || mfaMethod === "sms") && phoneNumber.trim() === "") {
                 Swal.fire({
                     icon: "warning",
-                    title: "Are you sure?",
-                    text: "SMS is slow and less secure. We recommend Email, Google Authenticator, or WhatsApp instead.",
-                    showCancelButton: true,
-                    confirmButtonText: "Yes, I want SMS",
-                    cancelButtonText: "No, choose another method",
-                }).then((result) => {
-                    if (!result.isConfirmed) {
-                        this.value = "email"; // Default back to email if they cancel
-                    }
+                    title: "Logout Blocked",
+                    text: "You must add your phone number before logging out when using WhatsApp or SMS MFA.",
                 });
+                return;
             }
-        });
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "You will be logged out.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, log out",
+                cancelButtonText: "Cancel"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById("logout-form").submit();
+                }
+            });
+        }
     </script>
+
 
 </body>
 

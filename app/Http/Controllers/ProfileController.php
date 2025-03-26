@@ -211,7 +211,7 @@ class ProfileController extends Controller
     public function setMfaMethod(Request $request)
     {
         $request->validate([
-            'mfa_method' => 'required|in:email,google_auth,sms,sms2',
+            'mfa_method' => 'required|in:email,google_auth,whatsapp,sms',
         ]);
 
         $user = auth()->user();
@@ -234,7 +234,7 @@ class ProfileController extends Controller
         }
 
         // Simpan nomor HP jika memilih SMS
-        if ($user->mfa_method === 'sms') {
+        if ($user->mfa_method === 'whatsapp' || $user->mfa_method === 'sms') {
             if (!$user->phone_number) {
                 return response()->json([
                     'status' => 'error',
@@ -242,6 +242,7 @@ class ProfileController extends Controller
                 ], 400);
             }
         }
+
 
         $user->save();
 
