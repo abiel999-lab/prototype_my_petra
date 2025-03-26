@@ -64,38 +64,30 @@ class UserDeviceController extends Controller
         $deviceType = $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
         $now = Carbon::now('Asia/Jakarta');
 
-
-
         // 🧹 Auto-delete stale devices (30+ days unused)
         TrustedDevice::where('user_id', $userId)
             ->where('updated_at', '<', $now->subDays(30))
             ->delete();
 
-        // 🔍 Check for existing device (same user, same OS, same IP and device type)
+        // 🔍 Check if OS already exists (regardless of IP/device)
         $existingDevice = TrustedDevice::where('user_id', $userId)
             ->where('os', $normalizedOS)
-            ->where('ip_address', $currentIp)
-            ->where('device', $deviceType)
             ->first();
 
         if ($existingDevice) {
+            // 🟢 OS already tracked → update timestamp
             $existingDevice->touch();
             return;
         }
 
-        // 🔐 Count distinct OSes (not just devices!)
+        // 🔐 Count distinct OSes
         $distinctOSCount = TrustedDevice::where('user_id', $userId)
             ->select('os')
             ->distinct()
             ->count();
 
-        // ⛔️ If user already has 3 OS types, and this OS is new → block login
-        $osExists = TrustedDevice::where('user_id', $userId)
-            ->where('os', $normalizedOS)
-            ->exists();
-
-        if ($distinctOSCount >= 3 && !$osExists) {
-
+        // ⛔️ Block login if trying to use 4th OS
+        if ($distinctOSCount >= 3) {
             session(['pending_user_id' => $userId]);
             LoggingService::logSecurityViolation("User [{$userId}] blocked from logging in with 4th OS (Detected: {$normalizedOS})", [
                 'user_id' => $userId,
@@ -106,7 +98,7 @@ class UserDeviceController extends Controller
             return redirect()->route('device-limit-warning');
         }
 
-        // ✅ Save new device
+        // ✅ Save new OS (as new device)
         TrustedDevice::create([
             'user_id' => $userId,
             'ip_address' => $currentIp,
@@ -117,20 +109,14 @@ class UserDeviceController extends Controller
             'created_at' => $now,
             'updated_at' => $now,
         ]);
-        LoggingService::logMfaEvent("New device added", [
+
+        LoggingService::logMfaEvent("New OS added", [
             'user_id' => $userId,
             'ip' => $currentIp,
             'device' => $deviceType,
             'os' => $normalizedOS,
         ]);
-
-
-
     }
-
-
-
-
 
     private function deleteDevice($id, $userId)
     {
