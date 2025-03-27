@@ -289,6 +289,11 @@
                                             class="text-reset"><strong>here</strong></a>.
 
                                         <br />
+                                        <!-- Register -->
+                                        Doesn't have account? Register on
+                                        <a href="{{ route('register') }}"
+                                            class="text-reset"><strong>here</strong></a>.
+                                        <br />
                                         <!-- Student or staff login -->
                                         You are not a student or staff, click
                                         <a href="{{ route('login.public') }}"

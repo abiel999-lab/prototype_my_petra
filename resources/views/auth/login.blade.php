@@ -135,6 +135,10 @@
                                     <a href="{{ route('password.request') }}"
                                         class="text-reset"><strong>here</strong></a>.
                                     <br />
+                                    <!-- Register -->
+                                    Doesn't have account? Register on
+                                    <a href="{{ route('register') }}" class="text-reset"><strong>here</strong></a>.
+                                    <br />
                                     You are not a student or staff? Click
                                     <a href="{{ route('login.public') }}" class="text-reset"><strong>here</strong></a>.
                                     <br />
