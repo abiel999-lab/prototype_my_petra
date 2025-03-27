@@ -68,7 +68,7 @@ class AuthenticatedSessionController extends Controller
                 $banEnd = Carbon::parse($user->login_ban_until)->setTimezone('Asia/Jakarta')->format('H:i:s');
                 Auth::logout();
                 return back()->withErrors([
-                    'email' => "Too many failed attempts. Your account is locked until {$banEnd} Jakarta Time."
+                    'email' => "Too many failed attempts. Your account is locked."
                 ]);
             }
 
@@ -118,7 +118,7 @@ class AuthenticatedSessionController extends Controller
             }
 
             return back()->withErrors([
-                'email' => "Incorrect credentials. {$remainingAttempts} attempts left before a ban."
+                'email' => "Incorrect credentials."
             ]);
         }
 
@@ -127,15 +127,28 @@ class AuthenticatedSessionController extends Controller
             $ldapUser = LdapUser::where('mail', $email)->first();
 
             if ($ldapUser) {
-                // ✅ Sync LDAP user into Laravel database
-                $user = User::updateOrCreate(
-                    ['email' => $ldapUser->mail[0]],
-                    [
+                $user = User::where('email', $ldapUser->mail[0])->first();
+                $firstLogin = !$user;
+
+                if ($firstLogin) {
+                    $email = $ldapUser->mail[0];
+                    $usertype = 'general';
+
+                    if (str_ends_with($email, '@john.petra.ac.id')) {
+                        $usertype = 'student';
+                    } elseif (str_ends_with($email, '@peter.petra.ac.id')) {
+                        $usertype = 'staff';
+                    } elseif (str_ends_with($email, '@petra.ac.id')) {
+                        $usertype = 'staff';
+                    }
+
+                    $user = User::create([
+                        'email' => $email,
                         'name' => $ldapUser->cn[0] ?? 'Unknown',
-                        'password' => Hash::make($request->password), // Hash LDAP password for local login
-                        'usertype' => 'general', // Default user type
-                    ]
-                );
+                        'password' => Hash::make($request->password),
+                        'usertype' => $usertype,
+                    ]);
+                }
 
                 Auth::login($user);
                 LoggingService::logMfaEvent("LDAP login successful for {$email} (User ID: {$user->id})", [

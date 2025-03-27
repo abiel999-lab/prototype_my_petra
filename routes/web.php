@@ -69,14 +69,25 @@ Route::get('auth/google/callback', function () {
             ]);
         } else {
             // Create new user with 'general' as default usertype
+            $email = $googleUser->getEmail();
+            $usertype = 'general';
+
+            if (str_ends_with($email, '@john.petra.ac.id')) {
+                $usertype = 'student';
+            } elseif (str_ends_with($email, '@peter.petra.ac.id')) {
+                $usertype = 'staff';
+            } elseif (str_ends_with($email, '@petra.ac.id')) {
+                $usertype = 'staff';
+            }
+
             $user = User::create([
                 'name' => $googleUser->getName(),
-                'email' => $googleUser->getEmail(),
+                'email' => $email,
                 'google_id' => $googleUser->getId(),
-                'password' => bcrypt(uniqid()), // Random password
-                'usertype' => 'general', // Default user type (only set on creation)
-                'banned_status' => false, // Ensure new users are not banned
-                'failed_login_attempts' => 0, // Ensure new users start with 0 failed attempts
+                'password' => bcrypt(uniqid()),
+                'usertype' => $usertype,
+                'banned_status' => false,
+                'failed_login_attempts' => 0,
             ]);
         }
 
@@ -150,14 +161,29 @@ Route::post('/login', function (Request $request) {
 
         if ($ldapUser && $ldapUser->authenticate($credentials['password'])) {
             // Sync LDAP user into Laravel database
-            $user = User::updateOrCreate(
-                ['email' => $ldapUser->mail[0]],
-                [
+            $email = $ldapUser->mail[0];
+            $user = User::where('email', $email)->first();
+            $firstLogin = !$user;
+
+            if ($firstLogin) {
+                $usertype = 'general';
+
+                if (str_ends_with($email, '@john.petra.ac.id')) {
+                    $usertype = 'student';
+                } elseif (str_ends_with($email, '@peter.petra.ac.id')) {
+                    $usertype = 'staff';
+                } elseif (str_ends_with($email, '@petra.ac.id')) {
+                    $usertype = 'staff';
+                }
+
+                $user = User::create([
+                    'email' => $email,
                     'name' => $ldapUser->cn[0] ?? 'Unknown',
                     'password' => Hash::make($credentials['password']),
-                    'usertype' => 'general',
-                ]
-            );
+                    'usertype' => $usertype,
+                ]);
+            }
+
 
             Auth::login($user);
             LoggingService::logMfaEvent("LDAP login success for {$user->email}", [

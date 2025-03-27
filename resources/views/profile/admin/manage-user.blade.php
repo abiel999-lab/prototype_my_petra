@@ -343,7 +343,7 @@
                                                                         {{ $user->mfa_method == 'google_authenticator' ? 'selected' : '' }}>
                                                                         Google Authenticator
                                                                     </option>
-                                                                    <option value="whatapp"
+                                                                    <option value="whatsapp"
                                                                         {{ $user->mfa_method == 'whatsapp' ? 'selected' : '' }}>
                                                                         WhatsApp</option>
                                                                     <option value="sms"
@@ -507,25 +507,20 @@
     </div>
     <!-- ./wrapper -->
 
-    <!-- jQuery -->
+    <!-- jQuery + Dependencies -->
     <script src="https://my.petra.ac.id/adminlte/plugins/jquery/jquery.min.js"></script>
-    <!-- jQuery UI 1.11.4 -->
     <script src="https://my.petra.ac.id/adminlte/plugins/jquery-ui/jquery-ui.min.js"></script>
-    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
     <script>
-        $.widget.bridge('uibutton', $.ui.button)
+        $.widget.bridge('uibutton', $.ui.button);
     </script>
-    <!-- Bootstrap 4 -->
     <script src="https://my.petra.ac.id/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <!-- overlayScrollbars -->
     <script src="https://my.petra.ac.id/adminlte/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
-    <!-- AdminLTE App -->
     <script src="https://my.petra.ac.id/adminlte/dist/js/adminlte.js"></script>
     <script src="https://my.petra.ac.id/adminlte/plugins/sweetalert2/sweetalert2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-
-    <script type="text/javascript">
+    <!-- Toast & Loader -->
+    <script>
         const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -540,89 +535,63 @@
                 allowOutsideClick: false,
                 allowEscapeKey: false,
                 allowEnterKey: false,
-                didOpen: () => {
-                    Swal.showLoading()
-                },
+                didOpen: () => Swal.showLoading()
             });
         }
     </script>
-    <script type="text/javascript">
+
+    <!-- Tooltip Init -->
+    <script>
         $(function() {
-            $('[data-toggle="tooltip"]').tooltip()
-        })
+            $('[data-toggle="tooltip"]').tooltip();
+        });
     </script>
+
     <!-- DataTables -->
     <script src="https://my.petra.ac.id/adminlte/plugins/datatables/jquery.dataTables.min.js"></script>
     <script src="https://my.petra.ac.id/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
     <script src="https://my.petra.ac.id/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
     <script src="https://my.petra.ac.id/adminlte/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
-    <script type="text/javascript">
+    <script>
         $(function() {
             $(".datatable").DataTable({
-                "responsive": true,
-                "autoWidth": false,
-                "order": [],
+                responsive: true,
+                autoWidth: false,
+                order: [],
             });
         });
     </script>
 
+    <!-- SweetAlert Delete -->
     <script>
-        function confirmDeletion() {
-            return confirm('Are you sure you want to delete this user? This action cannot be undone.');
-        }
-
-        document.getElementById("search-input").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault(); // Prevent form submission
-                searchUsers(); // Trigger search
-            }
+        document.querySelectorAll('.delete-user-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Delete User?',
+                    text: 'This action cannot be undone.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e3342f',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, delete',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                });
+            });
         });
+    </script>
 
-        function searchUsers() {
-            let searchQuery = document.getElementById("search-input").value;
-
-            fetch("{{ route('profile.admin.manageuser') }}?search=" + encodeURIComponent(searchQuery))
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById("user-list").innerHTML = new DOMParser()
-                        .parseFromString(html, "text/html")
-                        .getElementById("user-list").innerHTML;
-                })
-                .catch(error => console.error("Error:", error));
-        }
-
-
-        function toggleEdit(userId) {
-            const nameField = document.getElementById(`name-${userId}`);
-            const emailField = document.getElementById(`email-${userId}`);
-            const usertypeField = document.getElementById(`usertype-${userId}`);
-            const mfaEnabledField = document.getElementById(`mfa_enabled-${userId}`);
-            const mfaMethodField = document.getElementById(`mfa_method-${userId}`);
-            const editBtn = document.getElementById(`edit-btn-${userId}`);
-            const saveBtn = document.getElementById(`save-btn-${userId}`);
-
-            if (nameField.disabled) {
-                nameField.disabled = false;
-                emailField.disabled = false;
-                usertypeField.disabled = false;
-                mfaEnabledField.disabled = false;
-                mfaMethodField.disabled = false;
-                editBtn.textContent = 'Cancel';
-                saveBtn.classList.remove('d-none');
-            } else {
-                nameField.disabled = true;
-                emailField.disabled = true;
-                usertypeField.disabled = true;
-                mfaEnabledField.disabled = true;
-                mfaMethodField.disabled = true;
-                editBtn.textContent = 'Edit';
-                saveBtn.classList.add('d-none');
-            }
-        }
-
+    <!-- Edit Save Confirmation -->
+    <script>
         document.querySelectorAll('form[id^="edit-form-"]').forEach(form => {
             form.addEventListener('submit', function(event) {
+                event.preventDefault();
                 const userId = this.id.split('-')[2];
+
                 document.getElementById(`hidden-name-${userId}`).value = document.getElementById(
                     `name-${userId}`).value;
                 document.getElementById(`hidden-email-${userId}`).value = document.getElementById(
@@ -633,49 +602,47 @@
                     `mfa_enabled-${userId}`).checked ? 1 : 0;
                 document.getElementById(`hidden-mfa_method-${userId}`).value = document.getElementById(
                     `mfa_method-${userId}`).value;
+
+                Swal.fire({
+                    title: 'Save Changes?',
+                    text: "Are you sure you want to update this user?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, save it!',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
             });
         });
     </script>
 
+    <!-- Toggle Edit Button Logic -->
     <script>
-        function searchUsers() {
-            let inputQuery = document.getElementById("search-input").value;
-            let params = {
-                search: "",
-                mfa_enabled: "",
-                mfa_method: "",
-                usertype: ""
-            };
+        function toggleEdit(userId) {
+            const fields = ['name', 'email', 'usertype', 'mfa_enabled', 'mfa_method'];
+            fields.forEach(field => {
+                const el = document.getElementById(`${field}-${userId}`);
+                el.disabled = !el.disabled;
+            });
 
-            // Extract filters using regex
-            const matches = inputQuery.match(/(\w+):(\w+)/g);
-            if (matches) {
-                matches.forEach(match => {
-                    let [key, value] = match.split(":");
-                    if (params.hasOwnProperty(key)) {
-                        params[key] = value.toLowerCase();
-                    }
-                });
+            const editBtn = document.getElementById(`edit-btn-${userId}`);
+            const saveBtn = document.getElementById(`save-btn-${userId}`);
+            if (editBtn.textContent === 'Edit') {
+                editBtn.textContent = 'Cancel';
+                saveBtn.classList.remove('d-none');
+            } else {
+                editBtn.textContent = 'Edit';
+                saveBtn.classList.add('d-none');
             }
-
-            // Remove filters from the search query
-            params.search = inputQuery.replace(/(\w+):(\w+)/g, "").trim();
-
-            let queryString = Object.keys(params)
-                .filter(key => params[key] !== "")
-                .map(key => `${key}=${encodeURIComponent(params[key])}`)
-                .join("&");
-
-            fetch("{{ route('profile.admin.manageuser') }}?" + queryString)
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById("user-list").innerHTML = new DOMParser()
-                        .parseFromString(html, "text/html")
-                        .getElementById("user-list").innerHTML;
-                })
-                .catch(error => console.error("Error:", error));
         }
     </script>
+
+    <!-- Ban/Unban with Toast -->
     <script>
         function updateBanStatus(userId, isBan) {
             let actionUrl = isBan ?
@@ -697,13 +664,14 @@
                         timer: 2000
                     });
 
-                    // Reload page to reflect changes
                     setTimeout(() => {
                         location.reload();
                     }, 2000);
                 }).catch(error => console.log("Error:", error));
         }
     </script>
+
+    <!-- Logout SweetAlert -->
     <script>
         function confirmLogout() {
             const mfaMethod = "{{ auth()->user()->mfa_method }}";
@@ -733,6 +701,53 @@
             });
         }
     </script>
+
+    <!-- Enhanced Smart Search -->
+    <script>
+        document.getElementById("search-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                searchUsers();
+            }
+        });
+
+        function searchUsers() {
+            let inputQuery = document.getElementById("search-input").value;
+            let params = {
+                search: "",
+                mfa_enabled: "",
+                mfa_method: "",
+                usertype: ""
+            };
+
+            const matches = inputQuery.match(/(\w+):(\w+)/g);
+            if (matches) {
+                matches.forEach(match => {
+                    let [key, value] = match.split(":");
+                    if (params.hasOwnProperty(key)) {
+                        params[key] = value.toLowerCase();
+                    }
+                });
+            }
+
+            params.search = inputQuery.replace(/(\w+):(\w+)/g, "").trim();
+
+            let queryString = Object.keys(params)
+                .filter(key => params[key] !== "")
+                .map(key => `${key}=${encodeURIComponent(params[key])}`)
+                .join("&");
+
+            fetch("{{ route('profile.admin.manageuser') }}?" + queryString)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById("user-list").innerHTML = new DOMParser()
+                        .parseFromString(html, "text/html")
+                        .getElementById("user-list").innerHTML;
+                })
+                .catch(error => console.error("Error:", error));
+        }
+    </script>
+
 
 
 

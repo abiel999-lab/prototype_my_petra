@@ -123,6 +123,13 @@
     </div>
     <script src="https://login.petra.ac.id/js/jquery.js"></script>
     <script src="https://login.petra.ac.id/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('form').submit(function(e) {
+                $('.loading-screen').show();
+            });
+        });
+    </script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const form = document.querySelector("form");

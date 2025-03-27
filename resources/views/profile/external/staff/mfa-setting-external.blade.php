@@ -523,7 +523,12 @@
                         return response.json();
                     })
                     .then((data) => {
-                        alert(data.message || "MFA method updated successfully.");
+                        Swal.fire({
+                            icon: "success",
+                            title: "Success",
+                            text: data.message || "MFA method updated successfully.",
+                            confirmButtonText: "OK",
+                        });
 
                         if (data.qrCodeUrl) {
                             qrCodeImage.src =
@@ -534,7 +539,12 @@
                         }
                     })
                     .catch((error) => {
-                        alert(error.message || "Failed to update MFA method.");
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: error.message || "Failed to update MFA method.",
+                            confirmButtonText: "OK",
+                        });
                         console.error(error);
                     });
             });
@@ -552,15 +562,31 @@
                     .then((response) => response.json())
                     .then((data) => {
                         if (data.status === "success") {
-                            alert(`MFA is now ${data.mfa_enabled ? "enabled" : "disabled"}.`);
+                            Swal.fire({
+                                icon: "success",
+                                title: "MFA Status",
+                                text: `MFA is now ${data.mfa_enabled ? "enabled" : "disabled"}.`,
+                                confirmButtonText: "OK",
+                            });
                         } else {
-                            alert("Failed to toggle MFA.");
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                text: "Failed to toggle MFA.",
+                                confirmButtonText: "OK",
+                            });
                         }
                     })
                     .catch((error) => {
                         console.error("Toggle MFA Error:", error);
-                        alert("Failed to toggle MFA.");
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: "Failed to toggle MFA.",
+                            confirmButtonText: "OK",
+                        });
                     });
+
             });
 
             // 📌 Show phone warning if WhatsApp or SMS selected and phone number is missing

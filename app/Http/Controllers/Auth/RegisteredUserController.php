@@ -35,19 +35,34 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // ✅ Determine usertype based on email domain
+        $email = $request->email;
+        $usertype = 'general';
+
+        if (str_ends_with($email, '@john.petra.ac.id')) {
+            $usertype = 'student';
+        } elseif (str_ends_with($email, '@peter.petra.ac.id')) {
+            $usertype = 'staff';
+        } elseif (str_ends_with($email, '@petra.ac.id')) {
+            $usertype = 'staff';
+        }
+
+        // ✅ Create user with role
         $user = User::create([
             'name' => $request->name,
-            'email' => $request->email,
+            'email' => $email,
             'password' => Hash::make($request->password),
-            'email_verified_at' => Carbon::now(), // Automatically assign the current timestamp
-        'remember_token' => Str::random(60),  // Generate a random token
+            'usertype' => $usertype,
+            'email_verified_at' => Carbon::now(),
+            'remember_token' => Str::random(60),
         ]);
 
         event(new Registered($user));
+
         LoggingService::logMfaEvent("New user registered", [
             'user_id' => $user->id,
             'email' => $user->email,
@@ -55,9 +70,16 @@ class RegisteredUserController extends Controller
             'user_agent' => $request->userAgent(),
         ]);
 
-
         Auth::login($user);
+        // ✅ Redirect based on usertype
+        if ($user->usertype === 'student') {
+            return redirect()->route('student.dashboard');
+        } elseif ($user->usertype === 'staff') {
+            return redirect()->route('staff.dashboard');
+        }
+
 
         return redirect(route('dashboard', absolute: false));
     }
+
 }

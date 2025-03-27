@@ -102,7 +102,7 @@ class TwoFactorController extends Controller
         }
 
         return redirect()->route('mfa-challenge.index')->withErrors([
-            'code' => "Incorrect OTP. You have " . (10 - $user->failed_otp_attempts) . " attempts left."
+            'code' => "Incorrect OTP. Please try again."
         ]);
     }
 
