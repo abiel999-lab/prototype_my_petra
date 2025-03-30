@@ -431,6 +431,16 @@
                                                                         id="hidden-mfa_method-{{ $user->id }}">
                                                                 </form>
 
+                                                                <!-- Preserve search query -->
+                                                                <input type="hidden" name="search"
+                                                                    value="{{ request('search') }}">
+                                                                <input type="hidden" name="mfa_enabled_filter"
+                                                                    value="{{ request('mfa_enabled') }}">
+                                                                <input type="hidden" name="mfa_method_filter"
+                                                                    value="{{ request('mfa_method') }}">
+                                                                <input type="hidden" name="usertype_filter"
+                                                                    value="{{ request('usertype') }}">
+
                                                                 @if ($user->usertype !== 'admin')
                                                                     <!-- Ban/Unban Form -->
                                                                     <form method="POST"

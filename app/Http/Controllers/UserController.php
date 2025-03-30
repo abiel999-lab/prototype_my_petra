@@ -116,9 +116,13 @@ class UserController extends Controller
             'mfa_method' => $user->mfa_method,
             'usertype' => $user->usertype,
         ]);
-
-
-        return redirect()->route('profile.admin.manageuser')->with('success', 'User updated successfully.');
+        // 🔁 Redirect back with the search parameters preserved
+        return redirect()->route('profile.admin.manageuser', [
+            'search' => $request->input('search'),
+            'mfa_enabled' => $request->input('mfa_enabled'),
+            'mfa_method' => $request->input('mfa_method'),
+            'usertype' => $request->input('usertype'),
+        ])->with('success', 'User updated successfully.');
     }
 
     public function destroy($id)
