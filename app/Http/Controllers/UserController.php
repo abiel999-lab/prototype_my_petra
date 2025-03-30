@@ -56,7 +56,7 @@ class UserController extends Controller
                 $device->os = $agent->platform(); // Extract OS from user agent
             }
         }
-        $users = User::with('devices')->paginate(5); // 💥 THIS is the fix
+        $users = $users->with('devices')->paginate(5); // ✅ Gunakan query yang sudah difilter
         return view('profile.admin.manage-user', compact('users', 'search'));
     }
 
@@ -124,6 +124,10 @@ class UserController extends Controller
     public function destroy($id)
     {
         $user = User::findOrFail($id);
+        if ($user->usertype === 'admin') {
+            return redirect()->route('profile.admin.manageuser')
+                ->with('error', 'Cannot delete an admin user.');
+        }
         $user->delete();
         LoggingService::logSecurityViolation("Admin deleted user [ID: {$user->id}]", [
             'admin_id' => auth()->id(),
@@ -135,6 +139,9 @@ class UserController extends Controller
     }
     public function ban(User $user)
     {
+        if ($user->usertype === 'admin') {
+            return response()->json(["success" => false, "message" => "Cannot ban an admin user."]);
+        }
         if ($user->banned_status) {
             return response()->json(["success" => false, "message" => "User is already banned."]);
         }

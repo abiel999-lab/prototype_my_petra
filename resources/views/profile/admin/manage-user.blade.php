@@ -431,32 +431,36 @@
                                                                         id="hidden-mfa_method-{{ $user->id }}">
                                                                 </form>
 
-                                                                <!-- 🔹 Ban/Unban User -->
-                                                                <form method="POST"
-                                                                    id="ban-form-{{ $user->id }}"
-                                                                    class="d-inline">
-                                                                    @csrf
-                                                                    @if ($user->banned_status)
-                                                                        <button type="button"
-                                                                            class="btn btn-success btn-sm rounded"
-                                                                            onclick="updateBanStatus({{ $user->id }}, false)">Unban</button>
-                                                                    @else
-                                                                        <button type="button"
-                                                                            class="btn btn-danger btn-sm rounded"
-                                                                            onclick="updateBanStatus({{ $user->id }}, true)">Ban</button>
-                                                                    @endif
-                                                                </form>
+                                                                @if ($user->usertype !== 'admin')
+                                                                    <!-- Ban/Unban Form -->
+                                                                    <form method="POST"
+                                                                        id="ban-form-{{ $user->id }}"
+                                                                        class="d-inline">
+                                                                        @csrf
+                                                                        @if ($user->banned_status)
+                                                                            <button type="button"
+                                                                                class="btn btn-success btn-sm rounded"
+                                                                                onclick="updateBanStatus({{ $user->id }}, false)">Unban</button>
+                                                                        @else
+                                                                            <button type="button"
+                                                                                class="btn btn-danger btn-sm rounded"
+                                                                                onclick="updateBanStatus({{ $user->id }}, true)">Ban</button>
+                                                                        @endif
+                                                                    </form>
 
-                                                                <!-- 🔹 Delete User -->
-                                                                <form method="POST"
-                                                                    action="{{ route('profile.admin.manageuser.delete', $user->id) }}"
-                                                                    class="d-inline"
-                                                                    onsubmit="return confirm('Are you sure you want to delete this user?');">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="submit"
-                                                                        class="btn btn-danger btn-sm rounded">Delete</button>
-                                                                </form>
+                                                                    <!-- Delete Form -->
+                                                                    <form method="POST"
+                                                                        action="{{ route('profile.admin.manageuser.delete', $user->id) }}"
+                                                                        class="d-inline"
+                                                                        onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button type="submit"
+                                                                            class="btn btn-danger btn-sm rounded">Delete</button>
+                                                                    </form>
+                                                                @else
+                                                                    <span class="text-muted">Protected</span>
+                                                                @endif
                                                             </td>
                                                         </tr>
                                                     @endforeach
