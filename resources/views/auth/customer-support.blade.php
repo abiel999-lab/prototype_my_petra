@@ -8,7 +8,8 @@
     <link href="https://login.petra.ac.id/css/bootstrap.css" rel="stylesheet">
     <link href="https://login.petra.ac.id/css/style.css" rel="stylesheet">
     <link href="https://login.petra.ac.id/css/mmenu.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://login.petra.ac.id/adminlte/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+    <link rel="stylesheet"
+        href="https://login.petra.ac.id/adminlte/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
     <link rel="shortcut icon" href="https://login.petra.ac.id/images/favicon.png" type="image/x-icon">
     <link rel="icon" href="https://login.petra.ac.id/images/favicon.png" type="image/x-icon">
     <link rel="stylesheet" href="https://login.petra.ac.id/css/loading.css">
@@ -59,18 +60,19 @@
                             <div class="login-wrapper">
                                 <div class="tab-content mt-4">
                                     <h1 class="login-title">Need Help?</h1>
-                                    <p style="margin-top: 10px; margin-bottom: 10px;">Fill in the form below and we will contact you as soon as possible.</p>
+                                    <p style="margin-top: 10px; margin-bottom: 10px;">Fill in the form below and we will
+                                        contact you as soon as possible.</p>
 
                                     <!-- Alert Success -->
-                                    @if(session('success'))
+                                    @if (session('success'))
                                         <div class="alert alert-success">{{ session('success') }}</div>
                                     @endif
 
                                     <!-- Alert Errors -->
-                                    @if($errors->any())
+                                    @if ($errors->any())
                                         <div class="alert alert-danger">
                                             <ul>
-                                                @foreach($errors->all() as $error)
+                                                @foreach ($errors->all() as $error)
                                                     <li>{{ $error }}</li>
                                                 @endforeach
                                             </ul>
@@ -81,12 +83,14 @@
                                         @csrf
                                         <div class="mb-3">
                                             <label for="name" class="form-label">Your Name</label>
-                                            <input type="text" class="form-control" id="name" name="name" required>
+                                            <input type="text" class="form-control" id="name" name="name"
+                                                required>
                                         </div>
 
                                         <div class="mb-3">
                                             <label for="email" class="form-label">Your Email</label>
-                                            <input type="email" class="form-control" id="email" name="email" required>
+                                            <input type="email" class="form-control" id="email" name="email"
+                                                required>
                                         </div>
 
                                         <div class="mb-3">
@@ -98,13 +102,6 @@
                                             <button type="submit" class="btn btn-lg login-btn">Send Message</button>
                                         </div>
                                     </form>
-
-                                    <div>
-                                        <p class="login-wrapper-footer-text" style="margin-top: 20px; margin-bottom: 10px; display: block;">
-                                            Go to the previous page
-                                            <a href="{{ url()->previous() }}" class="text-reset"><strong>here</strong></a>
-                                        </p>
-                                    </div>
                                 </div>
                             </div>
                         </div>

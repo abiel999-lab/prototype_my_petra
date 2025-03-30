@@ -258,7 +258,7 @@
 
                                                     <a href="{{ route('logout') }}" class="btn btn-primary"
                                                         style="margin-top: 15px;"
-                                                        onclick="event.preventDefault(); confirmLogout();document.getElementById('logout-form').submit();">Log
+                                                        onclick="event.preventDefault(); confirmLogout();">Log
                                                         out untuk ganti Password</a>
                                                     <form id="logout-form" action="{{ route('logout') }}"
                                                         method="POST" style="display: none;">
