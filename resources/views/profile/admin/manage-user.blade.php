@@ -236,7 +236,7 @@
                                         <form id="search-form" class="d-flex" onsubmit="return false;">
                                             <input type="text" id="search-input" name="search"
                                                 class="form-control me-2"
-                                                placeholder="Search users... (e.g. mfa_enabled:on mfa_method:google_authenticator usertype:admin)">
+                                                placeholder="Search users... (e.g. mfa_enabled:on mfa_method:google_auth usertype:admin)">
                                             <button type="button" class="btn btn-primary"
                                                 onclick="searchUsers()">Search</button>
                                         </form>
@@ -287,7 +287,7 @@
                                             <table class="table table-bordered">
                                                 <thead class="thead-light">
                                                     <tr>
-                                                        <th>ID</th>
+                                                        <th>No</th>
                                                         <th>Name</th>
                                                         <th>Email</th>
                                                         <th>User Type</th>
@@ -300,7 +300,7 @@
                                                 <tbody id="user-list">
                                                     @foreach ($users as $user)
                                                         <tr>
-                                                            <td>{{ $user->id }}</td>
+                                                            <td>{{ $users->firstItem() + $loop->index }}</td>
                                                             <td>
                                                                 <input type="text" id="name-{{ $user->id }}"
                                                                     value="{{ $user->name }}"
@@ -339,8 +339,8 @@
                                                                     <option value="email"
                                                                         {{ $user->mfa_method == 'email' ? 'selected' : '' }}>
                                                                         Email</option>
-                                                                    <option value="google_authenticator"
-                                                                        {{ $user->mfa_method == 'google_authenticator' ? 'selected' : '' }}>
+                                                                    <option value="google_auth"
+                                                                        {{ $user->mfa_method == 'google_auth' ? 'selected' : '' }}>
                                                                         Google Authenticator
                                                                     </option>
                                                                     <option value="whatsapp"
@@ -351,7 +351,7 @@
                                                                         SMS</option>
                                                                 </select>
                                                             </td>
-                                                            <td> <!-- 🔹 Operating System Column with Trust/Untrust Buttons in One Line -->
+                                                            <td> <!-- ðŸ”¹ Operating System Column with Trust/Untrust Buttons in One Line -->
                                                                 @if (count($user->devices) > 0)
                                                                     @foreach ($user->devices->unique('os') as $device)
                                                                         <div class="d-flex align-items-center gap-2">
@@ -406,7 +406,7 @@
                                                                 @endif
                                                             </td>
                                                             <td>
-                                                                <!-- 🔹 User Edit Form (Ensures every user has an Edit button) -->
+                                                                <!-- ðŸ”¹ User Edit Form (Ensures every user has an Edit button) -->
                                                                 <form id="edit-form-{{ $user->id }}"
                                                                     method="POST"
                                                                     action="{{ route('profile.admin.manageuser.update', $user->id) }}">
@@ -431,15 +431,7 @@
                                                                         id="hidden-mfa_method-{{ $user->id }}">
                                                                 </form>
 
-                                                                <!-- Preserve search query -->
-                                                                <input type="hidden" name="search"
-                                                                    value="{{ request('search') }}">
-                                                                <input type="hidden" name="mfa_enabled_filter"
-                                                                    value="{{ request('mfa_enabled') }}">
-                                                                <input type="hidden" name="mfa_method_filter"
-                                                                    value="{{ request('mfa_method') }}">
-                                                                <input type="hidden" name="usertype_filter"
-                                                                    value="{{ request('usertype') }}">
+
 
                                                                 @if ($user->usertype !== 'admin')
                                                                     <!-- Ban/Unban Form -->
@@ -726,41 +718,77 @@
         });
 
         function searchUsers() {
-            let inputQuery = document.getElementById("search-input").value;
-            let params = {
-                search: "",
-                mfa_enabled: "",
-                mfa_method: "",
-                usertype: ""
-            };
+        let inputQuery = document.getElementById("search-input").value;
+        let params = {
+            search: "",
+            mfa_enabled: "",
+            mfa_method: "",
+            usertype: ""
+        };
 
-            const matches = inputQuery.match(/(\w+):(\w+)/g);
-            if (matches) {
-                matches.forEach(match => {
-                    let [key, value] = match.split(":");
-                    if (params.hasOwnProperty(key)) {
-                        params[key] = value.toLowerCase();
+        const matches = inputQuery.match(/(\w+):(\w+)/g);
+        if (matches) {
+            matches.forEach(match => {
+                let [key, value] = match.split(":");
+                if (params.hasOwnProperty(key)) {
+                    params[key] = value.toLowerCase();
+                }
+            });
+        }
+
+        params.search = inputQuery.replace(/(\w+):(\w+)/g, "").trim();
+
+        let queryString = Object.keys(params)
+            .filter(key => params[key] !== "")
+            .map(key => `${key}=${encodeURIComponent(params[key])}`)
+            .join("&");
+
+        fetch("{{ route('profile.admin.manageuser') }}?" + queryString)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const newDoc = parser.parseFromString(html, "text/html");
+                const newContent = newDoc.getElementById("user-list").innerHTML;
+
+                document.getElementById("user-list").innerHTML = newContent;
+
+                // ✅ Re-bind form logic after content is replaced
+                bindEditForms();
+            })
+            .catch(error => console.error("Error:", error));
+    }
+    </script>
+    <script>
+    function bindEditForms() {
+        document.querySelectorAll('form[id^="edit-form-"]').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const userId = this.id.split('-')[2];
+
+                document.getElementById(`hidden-name-${userId}`).value = document.getElementById(`name-${userId}`).value;
+                document.getElementById(`hidden-email-${userId}`).value = document.getElementById(`email-${userId}`).value;
+                document.getElementById(`hidden-usertype-${userId}`).value = document.getElementById(`usertype-${userId}`).value;
+                document.getElementById(`hidden-mfa_enabled-${userId}`).value = document.getElementById(`mfa_enabled-${userId}`).checked ? 1 : 0;
+                document.getElementById(`hidden-mfa_method-${userId}`).value = document.getElementById(`mfa_method-${userId}`).value;
+
+                Swal.fire({
+                    title: 'Save Changes?',
+                    text: "Are you sure you want to update this user?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, save it!',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
                     }
                 });
-            }
-
-            params.search = inputQuery.replace(/(\w+):(\w+)/g, "").trim();
-
-            let queryString = Object.keys(params)
-                .filter(key => params[key] !== "")
-                .map(key => `${key}=${encodeURIComponent(params[key])}`)
-                .join("&");
-
-            fetch("{{ route('profile.admin.manageuser') }}?" + queryString)
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById("user-list").innerHTML = new DOMParser()
-                        .parseFromString(html, "text/html")
-                        .getElementById("user-list").innerHTML;
-                })
-                .catch(error => console.error("Error:", error));
-        }
-    </script>
+            });
+        });
+    }
+</script>
 
 
 

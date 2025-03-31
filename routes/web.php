@@ -24,7 +24,7 @@ use App\Services\LoggingService;
 
 
 // ðŸ”¹ Redirect root URL ('/') to the correct dashboard or login
-Route::get('/', function () {
+Route::middleware(['ip.limiter'])->get('/', function () {
     if (Auth::check()) {
         switch (Auth::user()->usertype) {
             case 'admin':
@@ -65,7 +65,7 @@ Route::get('auth/google/callback', function () {
             // ✅ Update Google ID and Reset Failed Login Attempts
             $user->update([
                 'google_id' => $googleUser->getId(),
-                'failed_login_attempts' => 0, // Reset failed login attempts
+
             ]);
         } else {
             // Create new user with 'general' as default usertype
@@ -212,15 +212,14 @@ Route::post('/login', function (Request $request) {
 
 // ðŸ”¹ Authentication Middleware
 Route::middleware('auth')->group(function () {
-    Route::get('/mfa-challenge', [TwoFactorController::class, 'index'])->name('mfa-challenge.index');
+    Route::middleware(['ip.limiter'])->get('/mfa-challenge', [TwoFactorController::class, 'index'])->name('mfa-challenge.index');
     Route::post('/mfa-challenge/verify', [TwoFactorController::class, 'verify'])->name('mfa-challenge.verify');
     Route::post('/mfa-challenge/resend', [TwoFactorController::class, 'resendEmailOtp'])->name('mfa-challenge.resend');
     Route::post('/mfa-challenge/cancel', [TwoFactorController::class, 'cancel'])->name('mfa-challenge.cancel');
     Route::post('/toggle-mfa', [ProfileController::class, 'toggleMfa'])->name('toggle-mfa');
     Route::post('/set-mfa-method', [ProfileController::class, 'setMfaMethod'])->name('set-mfa-method');
     Route::post('/mfa-challenge/send-otp', [TwoFactorController::class, 'handleWhatsAppOtp'])->name('mfa-challenge.send-otp');
-    Route::get('/mfa-challenge-external', [ExternalMfaController::class, 'handle'])->name('mfa-challenge-external');
-    Route::get('/mfa-challenge-external', [ExternalMfaController::class, 'handle'])->name('mfa-challenge-external');
+    Route::middleware(['ip.limiter'])->get('/mfa-challenge-external', [ExternalMfaController::class, 'handle'])->name('mfa-challenge-external');
     Route::post('/mfa-challenge-external/verify', [ExternalMfaController::class, 'verify'])->name('mfa-challenge-external.verify');
 });
 
@@ -331,8 +330,8 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
 require __DIR__ . '/auth.php';
 
 // ðŸ”¹ Public Login Pages
-Route::get('/login/public', [AuthenticatedSessionController::class, 'createPublic'])->name('login.public');
-Route::get('/login/admin', [AuthenticatedSessionController::class, 'createAdmin'])->name('login.admin');
+Route::middleware(['ip.limiter'])->get('/login/public', [AuthenticatedSessionController::class, 'createPublic'])->name('login.public');
+Route::middleware(['ip.limiter'])->get('/login/admin', [AuthenticatedSessionController::class, 'createAdmin'])->name('login.admin');
 
 // 🔹 Device Limit Warning Route (Must be Public)
 Route::get('/device-limit-warning', function () {
@@ -343,6 +342,6 @@ Route::post('/send-mfa-link', [UserDeviceController::class, 'sendExternalEmailLi
 
 // ðŸ”¹ Email & Password Check
 Route::post('/check-email-password', [AuthController::class, 'checkEmailAndPassword'])->name('checkEmailAndPassword');
-Route::get('/customer-support', [SupportController::class, 'index'])->name('customer-support');
+Route::middleware(['ip.limiter'])->get('/customer-support', [SupportController::class, 'index'])->name('customer-support');
 Route::post('/customer-support/send', [SupportController::class, 'sendEmail'])->name('customer-support.send');
 Route::put('/profile/update-phone', [ProfileController::class, 'updatePhone'])->name('profile.update.phone');

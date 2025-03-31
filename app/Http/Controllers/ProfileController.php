@@ -257,7 +257,7 @@ class ProfileController extends Controller
     public function updatePhone(Request $request)
     {
         $request->validate([
-            'phone_number' => 'required|string|max:15',
+            'phone_number' => ['required', 'regex:/^[0-9]{10,15}$/'],
         ]);
 
         auth()->user()->update([
