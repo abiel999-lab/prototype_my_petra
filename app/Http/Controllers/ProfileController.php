@@ -215,43 +215,89 @@ class ProfileController extends Controller
         ]);
 
         $user = auth()->user();
-        $user->mfa_method = $request->mfa_method;
-
-        // Jika memilih Google Authenticator, buat QR Code
+        $method = $request->input('mfa_method');
+        $otp = $request->input('otp');
         $qrCodeUrl = null;
-        if ($user->mfa_method === 'google_auth') {
+
+        // Handle Google Authenticator
+        if ($method === 'google_auth') {
             $google2fa = new \PragmaRX\Google2FA\Google2FA();
 
             if (!$user->google2fa_secret) {
                 $user->google2fa_secret = $google2fa->generateSecretKey();
+                $user->save();
+
+                $qrCodeUrl = $google2fa->getQRCodeUrl(
+                    config('app.name'),
+                    $user->email,
+                    $user->google2fa_secret
+                );
+
+
+
+                return response()->json([
+                    'status' => 'pending',
+                    'message' => 'Scan QR code and enter OTP to activate Google Authenticator.',
+                    'qrCodeUrl' => $qrCodeUrl,
+                ]);
             }
 
+            if ($otp) {
+                $isValid = $google2fa->verifyKey($user->google2fa_secret, $otp);
+                if ($isValid) {
+                    $user->mfa_method = 'google_auth';
+                    $user->save();
+
+                    return response()->json([
+                        'status' => 'success',
+                        'message' => 'Google Authenticator activated successfully.',
+                    ]);
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Invalid OTP. Please try again.',
+                    ], 422);
+                }
+            }
+
+            // ✅ FIXED: return QR again when OTP belum dikirim tapi secret sudah ada
             $qrCodeUrl = $google2fa->getQRCodeUrl(
                 config('app.name'),
                 $user->email,
                 $user->google2fa_secret
             );
+
+
+
+            return response()->json([
+                'status' => 'pending',
+                'message' => 'Enter the OTP to verify Google Authenticator.',
+                'qrCodeUrl' => $qrCodeUrl,
+            ]);
         }
 
-        // Simpan nomor HP jika memilih SMS
-        if ($user->mfa_method === 'whatsapp' || $user->mfa_method === 'sms') {
-            if (!$user->phone_number) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Nomor HP belum diatur. Silakan update nomor HP di profil.',
-                ], 400);
-            }
+        // Handle WhatsApp & SMS validation
+        if (in_array($method, ['whatsapp', 'sms']) && empty($user->phone_number)) {
+            $message = $method === 'sms'
+                ? 'Phone number is not set. Please update it in your profile. SMS is slow and less secure. We recommend using Email, Google Authenticator, or WhatsApp.'
+                : 'Phone number is not set. Please update the mobile number in your profile.';
+
+            return response()->json([
+                'status' => 'error',
+                'message' => $message,
+            ], 400);
         }
 
-
+        // Set method for email / sms / whatsapp
+        $user->mfa_method = $method;
         $user->save();
 
         return response()->json([
             'status' => 'success',
-            'message' => 'MFA method updated successfully.',
-            'qrCodeUrl' => $qrCodeUrl,
+            'message' => 'MFA method has been updated successfully.',
         ]);
     }
+
 
 
     public function updatePhone(Request $request)

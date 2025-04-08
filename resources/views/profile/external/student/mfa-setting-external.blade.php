@@ -293,7 +293,7 @@
                                                         Email</option>
                                                     <option value="google_auth"
                                                         {{ auth()->user()->mfa_method === 'google_auth' ? 'selected' : '' }}>
-                                                        Google Authenticator</option>
+                                                        Mobile Authenticator</option>
                                                     <option value="sms"
                                                         {{ auth()->user()->mfa_method === 'sms' ? 'selected' : '' }}>
                                                         WhatsApp</option>
@@ -310,47 +310,55 @@
 
                                             {{-- QR Code Display --}}
                                             <div id="qr-code-container"
-                                                class="mt-4 p-4 border border-gray-300 rounded bg-gray-50"
-                                                style="display: none;">
-                                                <p class="important">Important!!!!</p>
-                                                <style>
-                                                    .important {
-                                                        font-size: 24px;
-                                                        font-weight: bold;
-                                                        color: red;
-                                                        text-transform: uppercase;
-                                                        background-color: yellow;
-                                                        padding: 10px;
-                                                        border: 2px solid red;
-                                                        display: inline-block;
-                                                        animation: blink 1s infinite alternate;
+                                            class="mt-4 p-4 border border-gray-300 rounded bg-gray-50"
+                                            style="display: none;">
+                                            <p class="important">IMPORTANT!!!!</p>
+                                            <style>
+                                                .important {
+                                                    font-size: 24px;
+                                                    font-weight: bold;
+                                                    color: red;
+                                                    text-transform: uppercase;
+                                                    background-color: yellow;
+                                                    padding: 10px;
+                                                    border: 2px solid red;
+                                                    display: inline-block;
+                                                    animation: blink 1s infinite alternate;
+                                                }
+
+                                                @keyframes blink {
+                                                    0% {
+                                                        opacity: 1;
                                                     }
 
-                                                    @keyframes blink {
-                                                        0% {
-                                                            opacity: 1;
-                                                        }
-
-                                                        100% {
-                                                            opacity: 0.5;
-                                                        }
+                                                    100% {
+                                                        opacity: 0.5;
                                                     }
-                                                </style>
-                                                <p><b>Guide:</b></p>
-                                                <p>1. Install Google/Microsoft Authenticator or any
-                                                    authenticator app on Playstore/Appstore</p>
-                                                <img src="{{ asset('images/google_auth.jpg') }}"
-                                                    alt="Google Authenticator app"
-                                                    style="width: 250px; height: auto;">
-                                                <p style="margin-top: 1rem;">2. Login using Google account</p>
-                                                <p>3. Scan this QR code with your Google/Microsoft Authenticator or any
-                                                    authenticator app:</p>
-                                                <img id="qr-code-image" src="" alt="QR Code">
-                                                <p class="mt-2 text-sm text-gray-600">
-                                                    After scanning the QR code, use the Google Authenticator app to
-                                                    generate codes for login.
-                                                </p>
-                                            </div>
+                                                }
+                                            </style>
+
+                                            <p><b>Guide:</b></p>
+                                            <p>1. Install Google/Microsoft Authenticator from Playstore/Appstore</p>
+                                            <img src="https://studioimpactid.com/wp-content/uploads/2025/04/google_auth.jpg"
+                                                alt="Google Authenticator app"
+                                                style="width: 250px; height: auto;">
+                                            <p>2. Login using Google account</p>
+                                            <p>3. Scan the QR code below with your Authenticator app:</p>
+
+                                            <img id="qr-code-image" src="" alt="QR Code"
+                                                style="display: none;" />
+
+                                            <p class="mt-2 text-sm text-gray-600">
+                                                After scanning the QR code, enter the 6-digit OTP code here:
+                                            </p>
+
+                                            <input type="text" name="otp" id="otp"
+                                                placeholder="Enter OTP" class="form-control mt-2"
+                                                style="display: none;" />
+                                            <button type="button" id="verify-google-auth"
+                                                class="btn btn-success mt-2"
+                                                style="display: none;">Verify</button>
+                                        </div>
 
                                         </div>
 
@@ -495,131 +503,164 @@
         });
     </script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             const mfaForm = document.getElementById("mfa-method-form");
             const mfaSelect = document.getElementById("mfa_method");
-            const smsWarning = document.getElementById("sms-warning");
             const qrCodeContainer = document.getElementById("qr-code-container");
             const qrCodeImage = document.getElementById("qr-code-image");
+            const otpInput = document.getElementById("otp");
+            const verifyButton = document.getElementById("verify-google-auth");
             const mfaToggle = document.getElementById("mfa-toggle");
+            const smsWarning = document.getElementById("sms-warning");
 
-            // 📌 Handle MFA form submission
-            mfaForm.addEventListener("submit", function(e) {
+            // 🔄 Submit method MFA
+            mfaForm.addEventListener("submit", function (e) {
                 e.preventDefault();
                 const formData = new FormData(mfaForm);
+                const selectedMethod = mfaSelect.value;
 
                 fetch("{{ route('set-mfa-method') }}", {
-                        method: "POST",
-                        headers: {
-                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                        },
-                        body: formData,
-                    })
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    },
+                    body: formData,
+                })
                     .then((response) => {
-                        if (!response.ok) {
-                            return response.json().then((data) => {
-                                throw new Error(data.message || "Request failed");
-                            });
-                        }
-                        return response.json();
+                        return response.json().then((data) => {
+                            if (!response.ok) throw new Error(data.message || "Request failed");
+                            return data;
+                        });
                     })
                     .then((data) => {
-                        Swal.fire({
-                            icon: "success",
-                            title: "Success",
-                            text: data.message || "MFA method updated successfully.",
-                            confirmButtonText: "OK",
-                        });
+                        if (selectedMethod === "google_auth") {
+                            if (data.status === "pending") {
+                                Swal.fire("Scan QR Code", data.message, "info");
 
-                        if (data.qrCodeUrl) {
-                            qrCodeImage.src =
-                                `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.qrCodeUrl)}&size=200x200`;
-                            qrCodeContainer.style.display = "block";
+                                if (data.qrCodeUrl) {
+                                    const qrApi = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.qrCodeUrl)}&size=200x200`;
+                                    qrCodeImage.src = qrApi;
+                                    qrCodeImage.style.display = "block";
+                                }
+
+                                qrCodeContainer.style.display = "block";
+                                otpInput.style.display = "block";
+                                otpInput.required = true;
+                                verifyButton.style.display = "inline-block"; // ✅ tampilkan tombol verify
+                            } else if (data.status === "success") {
+                                Swal.fire("Success", data.message, "success");
+                                hideQrSection();
+                            } else {
+                                Swal.fire("Error", data.message, "error");
+                            }
                         } else {
-                            qrCodeContainer.style.display = "none";
+                            Swal.fire("Success", data.message, "success");
+                            hideQrSection();
                         }
                     })
                     .catch((error) => {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Error",
-                            text: error.message || "Failed to update MFA method.",
-                            confirmButtonText: "OK",
-                        });
-                        console.error(error);
+                        console.error("MFA Error:", error);
+                        Swal.fire("Error", error.message || "Failed to update MFA.", "error");
                     });
             });
 
-            // 📌 Handle MFA toggle on/off
-            mfaToggle.addEventListener("change", function() {
-                fetch("{{ route('toggle-mfa') }}", {
-                        method: "POST",
-                        headers: {
-                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({}),
-                    })
+            // 🔐 Tombol VERIFIKASI OTP Google Authenticator
+            verifyButton.addEventListener("click", function () {
+                const formData = new FormData();
+                formData.append("mfa_method", "google_auth");
+                formData.append("otp", otpInput.value);
+
+                fetch("{{ route('set-mfa-method') }}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    },
+                    body: formData,
+                })
                     .then((response) => response.json())
                     .then((data) => {
                         if (data.status === "success") {
-                            Swal.fire({
-                                icon: "success",
-                                title: "MFA Status",
-                                text: `MFA is now ${data.mfa_enabled ? "enabled" : "disabled"}.`,
-                                confirmButtonText: "OK",
-                            });
+                            Swal.fire("Verified!", data.message, "success");
+                            hideQrSection();
                         } else {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Error",
-                                text: "Failed to toggle MFA.",
-                                confirmButtonText: "OK",
-                            });
+                            Swal.fire("Error", data.message, "error");
                         }
                     })
                     .catch((error) => {
-                        console.error("Toggle MFA Error:", error);
-                        Swal.fire({
-                            icon: "error",
-                            title: "Error",
-                            text: "Failed to toggle MFA.",
-                            confirmButtonText: "OK",
-                        });
+                        console.error("Verification Error:", error);
+                        Swal.fire("Error", "Failed to verify Google Authenticator.", "error");
                     });
-
             });
 
-            // 📌 Show phone warning if WhatsApp or SMS selected and phone number is missing
-            mfaSelect.addEventListener("change", function() {
+            // 📌 Toggle MFA enable/disable
+            mfaToggle.addEventListener("change", function () {
+                fetch("{{ route('toggle-mfa') }}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({}),
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        Swal.fire({
+                            icon: data.status === "success" ? "success" : "error",
+                            title: "MFA Status",
+                            text: data.status === "success"
+                                ? `MFA is now ${data.mfa_enabled ? "enabled" : "disabled"}.`
+                                : "Failed to toggle MFA.",
+                        });
+                    })
+                    .catch((error) => {
+                        console.error("Toggle MFA Error:", error);
+                        Swal.fire("Error", "Failed to toggle MFA.", "error");
+                    });
+            });
+
+            // 🚨 Warning jika phone number kosong untuk SMS/WhatsApp
+            mfaSelect.addEventListener("change", function () {
                 const phone = "{{ auth()->user()->phone_number ?? '' }}";
                 const method = mfaSelect.value;
 
                 if ((method === "sms" || method === "whatsapp") && !phone.trim()) {
-                    smsWarning.style.display = "block";
+                    if (smsWarning) smsWarning.style.display = "block";
                 } else {
-                    smsWarning.style.display = "none";
+                    if (smsWarning) smsWarning.style.display = "none";
                 }
 
-                // Optional: warn user when selecting SMS
+                if (method !== "google_auth") {
+                    hideQrSection();
+                }
+
                 if (method === "sms") {
                     Swal.fire({
                         icon: "warning",
                         title: "Are you sure?",
-                        text: "SMS is slow and less secure. We recommend Email, Google Authenticator, or WhatsApp instead.",
+                        text: "SMS is slow and less secure. Use Email/Google Auth/WhatsApp if possible.",
                         showCancelButton: true,
-                        confirmButtonText: "Yes, I want SMS",
-                        cancelButtonText: "No, choose another method",
+                        confirmButtonText: "Yes, use SMS",
+                        cancelButtonText: "No, pick another",
                     }).then((result) => {
                         if (!result.isConfirmed) {
                             mfaSelect.value = "email";
-                            smsWarning.style.display = "none";
+                            if (smsWarning) smsWarning.style.display = "none";
                         }
                     });
                 }
             });
 
-            // Trigger initial warning on load
+            // 📌 Utility: Sembunyikan bagian QR dan input OTP
+            function hideQrSection() {
+                qrCodeContainer.style.display = "none";
+                qrCodeImage.style.display = "none";
+                otpInput.style.display = "none";
+                verifyButton.style.display = "none";
+                otpInput.required = false;
+                otpInput.value = "";
+            }
+
+            // Initial state
             mfaSelect.dispatchEvent(new Event("change"));
         });
     </script>
