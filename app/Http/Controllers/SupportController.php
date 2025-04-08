@@ -42,12 +42,6 @@ class SupportController extends Controller
 
             return back()->with('success', 'Your message has been sent. We will contact you soon.');
         } catch (\Exception $e) {
-            LoggingService::logSecurityViolation("Failed to send support email", [
-                'name' => $request->name,
-                'email' => $request->email,
-                'ip' => $request->ip(),
-                'error' => $e->getMessage(),
-            ]);
             return back()->withErrors(['email' => 'Failed to send email. Please try again.']);
         }
     }

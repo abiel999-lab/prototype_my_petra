@@ -274,6 +274,10 @@
                                     </div>
                                 </form>
 
+                                <a href="{{ route('passwordless.request') }}" class="btn btn-lg login-btn">
+                                    Login Without Password
+                                </a>
+
 
                                 <div>
                                     <a href="{{ route('google.login') }}" class="btn btn-lg login-btn"
@@ -284,6 +288,10 @@
                                     </a>
                                     <p class="login-wrapper-footer-text"
                                         style="margin-top: 20px; margin-bottom: 10px; display: block;">
+                                        Try Passwordless Login?
+                                        <a href="{{ route('passwordless.request') }}"
+                                            class="text-reset"><strong>here</strong></a>.
+                                        <br />
                                         Forgot your password? Reset your password
                                         <a href="{{ route('password.request') }}"
                                             class="text-reset"><strong>here</strong></a>.

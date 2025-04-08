@@ -84,8 +84,8 @@ class UserController extends Controller
 
 
         return redirect()
-    ->route('profile.admin.manageuser')
-    ->with('success', 'User created successfully.');
+            ->route('profile.admin.manageuser')
+            ->with('success', 'User created successfully.');
 
     }
 
@@ -104,6 +104,13 @@ class UserController extends Controller
 
         // Convert checkbox value to boolean (1 or 0)
         $mfa_enabled = $request->input('mfa_enabled', 0); // Default to 0 if not present
+        $newMethod = $request->input('mfa_method');
+        $oldMethod = $user->mfa_method;
+
+        // ❌ Block switching to Google Auth if user has no secret
+        if ($newMethod === 'google_auth' && empty($user->google2fa_secret)) {
+            return redirect()->back()->with('error', 'User has not activated Mobile Authenticator.');
+        }
 
         $user->update([
             'name' => $request->name,
@@ -120,7 +127,7 @@ class UserController extends Controller
             'usertype' => $user->usertype,
         ]);
 
-return redirect()->route('profile.admin.manageuser')->with('success', 'User updated successfully.');
+        return redirect()->route('profile.admin.manageuser')->with('success', 'User updated successfully.');
 
     }
 
@@ -171,10 +178,7 @@ return redirect()->route('profile.admin.manageuser')->with('success', 'User upda
 
         $user->banned_status = 0; // Unban user
         $user->save();
-        LoggingService::logMfaEvent("Admin unbanned user [ID: {$user->id}]", [
-            'admin_id' => auth()->id(),
-            'email' => $user->email,
-        ]);
+
 
 
         return response()->json([

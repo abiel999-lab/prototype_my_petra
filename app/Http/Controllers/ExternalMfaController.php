@@ -26,10 +26,7 @@ class ExternalMfaController extends Controller
         }
 
         $user = User::find($userId);
-        LoggingService::logMfaEvent("External MFA challenge triggered", [
-            'user_id' => $user->id,
-            'method' => $user->mfa_method,
-        ]);
+
         if (!$user) {
             return redirect()->route('login')->withErrors(['message' => 'User not found.']);
         }
@@ -129,9 +126,7 @@ class ExternalMfaController extends Controller
 
         // ✅ Check OTP
         if ($this->validateOtp($user, $request->code)) {
-            LoggingService::logMfaEvent("User [ID: {$user->id}] passed OTP validation", [
-                'method' => $user->mfa_method,
-            ]);
+
             session(['two_factor_authenticated' => true]);
             session()->forget('pending_user_id');
 
@@ -146,9 +141,7 @@ class ExternalMfaController extends Controller
 
         // ❌ OTP incorrect → increase attempts
         $user->increment('failed_otp_attempts');
-        LoggingService::logSecurityViolation("Incorrect OTP for User [ID: {$user->id}]. Attempt {$user->failed_otp_attempts}/10", [
-            'method' => $user->mfa_method,
-        ]);
+
         $user->save();
 
         // 🚨 If exactly 10 failed attempts, trigger email alert

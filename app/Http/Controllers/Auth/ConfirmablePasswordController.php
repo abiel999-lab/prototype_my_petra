@@ -30,7 +30,7 @@ class ConfirmablePasswordController extends Controller
             'email' => $request->user()->email,
             'password' => $request->password,
         ])) {
-            LoggingService::logSecurityViolation("Failed password confirmation for User ID: {$request->user()->id}");
+
             throw ValidationException::withMessages([
                 'password' => __('auth.password'),
             ]);

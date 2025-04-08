@@ -35,7 +35,7 @@ class SmsService
         $message .= "IMPORTANT!!!!\n";
         $message .= "This is an inactive number. Please kindly delete the number after using the OTP code.";
 
-        Log::info("Sending SMS to: $phoneNumber | Route: $route | Message: $message");
+
 
         $payload = [
             'route' => $route,

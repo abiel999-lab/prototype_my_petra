@@ -339,9 +339,10 @@
                                                                     <option value="email"
                                                                         {{ $user->mfa_method == 'email' ? 'selected' : '' }}>
                                                                         Email</option>
-                                                                    <option value="google_auth"
-                                                                        {{ $user->mfa_method == 'google_auth' ? 'selected' : '' }}>
-                                                                        Google Authenticator
+                                                                        <option value="google_auth"
+                                                                        {{ $user->mfa_method == 'google_auth' ? 'selected' : '' }}
+                                                                        {{ is_null($user->google2fa_secret) ? 'disabled' : '' }}>
+                                                                        Mobile Authenticator
                                                                     </option>
                                                                     <option value="whatsapp"
                                                                         {{ $user->mfa_method == 'whatsapp' ? 'selected' : '' }}>

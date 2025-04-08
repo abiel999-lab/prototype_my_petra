@@ -13,7 +13,7 @@ class LoggingService
         $context['user_agent'] = request()->userAgent();
         $context['user_id'] = auth()->id();
 
-        Log::info("🔐 $message", $context);
+
     }
 
     public static function logSecurityViolation(string $message, array $context = []): void
@@ -22,6 +22,6 @@ class LoggingService
         $context['ip'] = request()->ip();
         $context['user_id'] = auth()->id();
 
-        Log::warning("🚨 $message", $context);
+
     }
 }

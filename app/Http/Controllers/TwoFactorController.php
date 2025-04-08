@@ -13,18 +13,13 @@ use Carbon\Carbon;
 use App\Mail\ViolationMail;
 use App\Services\SmsService;
 use App\Services\LoggingService;
-
-
-
+use Illuminate\Support\Str;
 
 class TwoFactorController extends Controller
 {
     public function index()
     {
         $user = auth()->user();
-        LoggingService::logMfaEvent("MFA challenge triggered", [
-            'method' => $user->mfa_method,
-        ]);
         $qrCodeUrl = null;
 
         if ($user->mfa_method === 'email') {
@@ -64,9 +59,6 @@ class TwoFactorController extends Controller
 
         // ✅ Validate OTP
         if ($this->validateOtp($user, $request->code)) {
-            LoggingService::logMfaEvent("User [ID: {$user->id}] entered correct OTP", [
-                'method' => $user->mfa_method,
-            ]);
             session(['two_factor_authenticated' => true]);
 
             // ✅ Hapus pending_user_id dari sesi (jika ada)
@@ -86,9 +78,6 @@ class TwoFactorController extends Controller
 
         // ❌ OTP is incorrect, increase failed attempts
         $user->increment('failed_otp_attempts');
-        LoggingService::logSecurityViolation("Incorrect OTP for User ID {$user->id}. Attempt {$user->failed_otp_attempts}/10", [
-            'method' => $user->mfa_method,
-        ]);
 
         $user->save();
 
@@ -116,14 +105,12 @@ class TwoFactorController extends Controller
         }
 
         // Generate new OTP
-        $code = rand(100000, 999999);
+        $code = $this->generateOtpWithNumber(); // 🔁 ganti jadi yang wajib angka
         $user->two_factor_code = Crypt::encryptString($code);
         $user->otp_expires_at = $now->addMinutes(10);
         $user->failed_otp_attempts = 0; // Reset failed attempts on new OTP generation
         $user->save();
-        LoggingService::logMfaEvent("Generated OTP for {$user->email} (via email)", [
-            'method' => 'email',
-        ]);
+
 
 
 
@@ -174,9 +161,7 @@ class TwoFactorController extends Controller
         } elseif ($user->mfa_method === 'sms') {
             $this->handleSmsOtp($user);
         }
-        LoggingService::logMfaEvent("Resend OTP triggered for User ID: {$user->id}", [
-            'method' => $user->mfa_method
-        ]);
+
 
 
         // ✅ Restore failed OTP attempts after regenerating OTP
@@ -258,7 +243,7 @@ class TwoFactorController extends Controller
             $user->failed_otp_attempts = 0;
             $user->save(); // ✅ Force save to database
         }
-        LoggingService::logMfaEvent("User [ID: {$user->id}] canceled MFA verification");
+
         auth()->logout(); // ✅ Log out the user
         session()->invalidate(); // ✅ Clear session completely
         session()->regenerateToken(); // ✅ Prevent CSRF issues
@@ -277,7 +262,7 @@ class TwoFactorController extends Controller
         }
 
         // Generate OTP baru
-        $code = rand(100000, 999999);
+        $code = $this->generateOtpWithNumber(); // 🔁 ganti jadi yang wajib angka
         $user->two_factor_code = Crypt::encryptString($code);
         $user->otp_expires_at = $now->addMinutes(5);
         $user->save();
@@ -305,7 +290,7 @@ class TwoFactorController extends Controller
         }
 
         // Generate new OTP
-        $code = rand(100000, 999999);
+        $code = $this->generateOtpWithNumber(); // 🔁 ganti jadi yang wajib angka
         $user->two_factor_code = Crypt::encryptString($code);
         $user->otp_expires_at = $now->addMinutes(5);
         $user->save();
@@ -317,9 +302,7 @@ class TwoFactorController extends Controller
         // Send OTP via SMS using the correct route
         $smsService = new SmsService();
         $response = $smsService->sendSms($user->phone_number, "Your OTP Code is: $code", 'OTP');
-        LoggingService::logMfaEvent("Zuwinda SMS API Response for {$user->phone_number}", [
-            'response' => $response
-        ]);
+
 
 
     }
@@ -329,7 +312,16 @@ class TwoFactorController extends Controller
         return TrustedDevice::where('user_id', $user->id)->count() >= 4;
     }
 
+    private function generateOtpWithNumber($length = 6)
+    {
+        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
-
-
+        do {
+            $otp = '';
+            for ($i = 0; $i < $length; $i++) {
+                $otp .= $characters[random_int(0, strlen($characters) - 1)];
+            }
+        } while (!preg_match('/[A-Z]/', $otp) || !preg_match('/[a-z]/', $otp) || !preg_match('/\d/', $otp));
+        return $otp;
+    }
 }

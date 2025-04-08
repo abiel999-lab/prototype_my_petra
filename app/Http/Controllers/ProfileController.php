@@ -237,7 +237,7 @@ class ProfileController extends Controller
 
                 return response()->json([
                     'status' => 'pending',
-                    'message' => 'Scan QR code and enter OTP to activate Google Authenticator.',
+                    'message' => 'Scan QR code and enter OTP to activate Mobile Authenticator.',
                     'qrCodeUrl' => $qrCodeUrl,
                 ]);
             }
@@ -250,7 +250,7 @@ class ProfileController extends Controller
 
                     return response()->json([
                         'status' => 'success',
-                        'message' => 'Google Authenticator activated successfully.',
+                        'message' => 'Mobile Authenticator activated successfully.',
                     ]);
                 } else {
                     return response()->json([
@@ -271,7 +271,7 @@ class ProfileController extends Controller
 
             return response()->json([
                 'status' => 'pending',
-                'message' => 'Enter the OTP to verify Google Authenticator.',
+                'message' => 'Enter the OTP to verify Mobile Authenticator.',
                 'qrCodeUrl' => $qrCodeUrl,
             ]);
         }
@@ -312,5 +312,71 @@ class ProfileController extends Controller
 
         return back()->with('success', 'Nomor HP berhasil diperbarui!');
     }
+
+    public function studentTogglePasswordless(Request $request)
+    {
+        $user = auth()->user();
+        if ($user->usertype !== 'student') {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
+        $user->passwordless_enabled = !$user->passwordless_enabled;
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'passwordless_enabled' => $user->passwordless_enabled,
+        ]);
+    }
+
+    public function staffTogglePasswordless(Request $request)
+    {
+        $user = auth()->user();
+        if ($user->usertype !== 'staff') {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
+        $user->passwordless_enabled = !$user->passwordless_enabled;
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'passwordless_enabled' => $user->passwordless_enabled,
+        ]);
+    }
+
+    public function adminTogglePasswordless(Request $request)
+    {
+        $user = auth()->user();
+        if ($user->usertype !== 'admin') {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
+        $user->passwordless_enabled = !$user->passwordless_enabled;
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'passwordless_enabled' => $user->passwordless_enabled,
+        ]);
+    }
+
+    public function generalTogglePasswordless(Request $request)
+    {
+        $user = auth()->user();
+        if ($user->usertype !== 'general') {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
+        $user->passwordless_enabled = !$user->passwordless_enabled;
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'passwordless_enabled' => $user->passwordless_enabled,
+        ]);
+    }
+
+
 
 }

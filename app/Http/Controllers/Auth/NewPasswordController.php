@@ -55,11 +55,7 @@ class NewPasswordController extends Controller
 
             }
         );
-        if ($status != Password::PASSWORD_RESET) {
-            LoggingService::logSecurityViolation("Password reset failed for email {$request->email}", [
-                'status' => $status
-            ]);
-        }
+
 
 
         // If the password was successfully reset, we will redirect the user back to

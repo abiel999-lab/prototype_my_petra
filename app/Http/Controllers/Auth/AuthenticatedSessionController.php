@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\ViolationMail;
 use App\Http\Controllers\UserDeviceController;
 use App\Services\LoggingService;
+use Illuminate\Support\Str;
+use App\Mail\MagicLinkMail;
+
 
 
 class AuthenticatedSessionController extends Controller
@@ -98,7 +101,7 @@ class AuthenticatedSessionController extends Controller
 
             // ❌ Incorrect password, increase failed attempts
             $user->increment('failed_login_attempts');
-            LoggingService::logSecurityViolation("Failed login for email {$email}. Attempt {$user->failed_login_attempts}/15");
+
             $user->save(); // ✅ Ensure the new failed attempt is saved
 
             $remainingAttempts = 15 - $user->failed_login_attempts;
@@ -232,5 +235,59 @@ class AuthenticatedSessionController extends Controller
 
         return redirect('/');
     }
+
+    public function showPasswordlessForm(): View
+    {
+        return view('auth.passwordless-request');
+    }
+
+    public function sendMagicLink(Request $request): RedirectResponse
+    {
+        $request->validate(['email' => 'required|email']);
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !$user->passwordless_enabled) {
+            return back()->withErrors(['email' => 'Passwordless login not allowed for this account.']);
+        }
+
+        $token = Str::random(64);
+        $user->passwordless_token = hash('sha256', $token);
+        $user->passwordless_expires_at = now()->addMinutes(15);
+        $user->save();
+
+        $link = route('passwordless.verify', ['token' => $token]);
+        Mail::to($user)->send(new MagicLinkMail($link));
+
+        return back()->with('status', 'Magic login link sent to your email.');
+    }
+
+    public function verifyMagicLink($token): RedirectResponse
+    {
+        $hashed = hash('sha256', $token);
+        $user = User::where('passwordless_token', $hashed)
+            ->where('passwordless_expires_at', '>', now())
+            ->first();
+
+        if (!$user) {
+            abort(403, 'Invalid or expired token.');
+        }
+
+        Auth::login($user);
+        $user->update([
+            'passwordless_token' => null,
+            'passwordless_expires_at' => null
+        ]);
+
+        LoggingService::logMfaEvent("User [ID: {$user->id}] logged in via magic link", [
+            'login_method' => 'magic_link',
+        ]);
+
+        return $user->mfa_enabled
+            ? redirect()->route('mfa-challenge.index') // Sesuai metode MFA yang digunakan
+            : $this->redirectUser($user);
+    }
+
+
+
 
 }

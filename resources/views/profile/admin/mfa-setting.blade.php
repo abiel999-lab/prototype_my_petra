@@ -369,9 +369,14 @@
                                                     class="btn btn-success mt-2"
                                                     style="display: none;">Verify</button>
                                             </div>
-
-
-
+                                            <br>
+                                            <label for="passwordless_enabled" style="margin-right: 20px;">Enable
+                                                Passwordless Login</label>
+                                            <label class="switch">
+                                                <input type="checkbox" id="passwordless_enabled"
+                                                    {{ auth()->user()->passwordless_enabled ? 'checked' : '' }}>
+                                                <span class="slider"></span>
+                                            </label>
                                         </div>
 
                                         <div class="tab-pane" id="tab_manage">
@@ -515,7 +520,7 @@
         });
     </script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             const mfaForm = document.getElementById("mfa-method-form");
             const mfaSelect = document.getElementById("mfa_method");
             const qrCodeContainer = document.getElementById("qr-code-container");
@@ -526,18 +531,18 @@
             const smsWarning = document.getElementById("sms-warning");
 
             // 🔄 Submit method MFA
-            mfaForm.addEventListener("submit", function (e) {
+            mfaForm.addEventListener("submit", function(e) {
                 e.preventDefault();
                 const formData = new FormData(mfaForm);
                 const selectedMethod = mfaSelect.value;
 
                 fetch("{{ route('set-mfa-method') }}", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                    },
-                    body: formData,
-                })
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        },
+                        body: formData,
+                    })
                     .then((response) => {
                         return response.json().then((data) => {
                             if (!response.ok) throw new Error(data.message || "Request failed");
@@ -550,7 +555,8 @@
                                 Swal.fire("Scan QR Code", data.message, "info");
 
                                 if (data.qrCodeUrl) {
-                                    const qrApi = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.qrCodeUrl)}&size=200x200`;
+                                    const qrApi =
+                                        `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(data.qrCodeUrl)}&size=200x200`;
                                     qrCodeImage.src = qrApi;
                                     qrCodeImage.style.display = "block";
                                 }
@@ -558,7 +564,8 @@
                                 qrCodeContainer.style.display = "block";
                                 otpInput.style.display = "block";
                                 otpInput.required = true;
-                                verifyButton.style.display = "inline-block"; // ✅ tampilkan tombol verify
+                                verifyButton.style.display =
+                                "inline-block"; // ✅ tampilkan tombol verify
                             } else if (data.status === "success") {
                                 Swal.fire("Success", data.message, "success");
                                 hideQrSection();
@@ -577,18 +584,18 @@
             });
 
             // 🔐 Tombol VERIFIKASI OTP Google Authenticator
-            verifyButton.addEventListener("click", function () {
+            verifyButton.addEventListener("click", function() {
                 const formData = new FormData();
                 formData.append("mfa_method", "google_auth");
                 formData.append("otp", otpInput.value);
 
                 fetch("{{ route('set-mfa-method') }}", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                    },
-                    body: formData,
-                })
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        },
+                        body: formData,
+                    })
                     .then((response) => response.json())
                     .then((data) => {
                         if (data.status === "success") {
@@ -605,23 +612,23 @@
             });
 
             // 📌 Toggle MFA enable/disable
-            mfaToggle.addEventListener("change", function () {
+            mfaToggle.addEventListener("change", function() {
                 fetch("{{ route('toggle-mfa') }}", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({}),
-                })
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({}),
+                    })
                     .then((response) => response.json())
                     .then((data) => {
                         Swal.fire({
                             icon: data.status === "success" ? "success" : "error",
                             title: "MFA Status",
-                            text: data.status === "success"
-                                ? `MFA is now ${data.mfa_enabled ? "enabled" : "disabled"}.`
-                                : "Failed to toggle MFA.",
+                            text: data.status === "success" ?
+                                `MFA is now ${data.mfa_enabled ? "enabled" : "disabled"}.` :
+                                "Failed to toggle MFA.",
                         });
                     })
                     .catch((error) => {
@@ -631,7 +638,7 @@
             });
 
             // 🚨 Warning jika phone number kosong untuk SMS/WhatsApp
-            mfaSelect.addEventListener("change", function () {
+            mfaSelect.addEventListener("change", function() {
                 const phone = "{{ auth()->user()->phone_number ?? '' }}";
                 const method = mfaSelect.value;
 
@@ -739,6 +746,30 @@
                 }
             });
         }
+    </script>
+    <script>
+        document.getElementById('passwordless_enabled').addEventListener('change', function() {
+            fetch('{{ route('profile.admin.toggle-passwordless') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({})
+                }).then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Passwordless Login',
+                            text: data.passwordless_enabled ? 'Passwordless login enabled.' :
+                                'Passwordless login disabled.',
+                        });
+                    } else {
+                        Swal.fire('Error', 'Failed to toggle passwordless.', 'error');
+                    }
+                });
+        });
     </script>
 
 

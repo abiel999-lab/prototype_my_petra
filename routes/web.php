@@ -254,6 +254,9 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
 
         // Admin External MFA Route
         Route::get('/admin/external/setting/mfa', [ProfileController::class, 'adminmfasettingexternal'])->name('profile.admin.mfa.external');
+
+        Route::post('/profile/admin/toggle-passwordless', [ProfileController::class, 'adminTogglePasswordless'])->name('profile.admin.toggle-passwordless');
+
     });
 
     // ðŸ”¹ Student Routes
@@ -274,6 +277,9 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
 
         // Student External MFA Route
         Route::get('/student/external/setting/mfa', [ProfileController::class, 'studentmfasettingexternal'])->name('profile.student.mfa.external');
+
+        Route::post('/profile/student/toggle-passwordless', [ProfileController::class, 'studentTogglePasswordless'])->name('profile.student.toggle-passwordless');
+
 
     });
 
@@ -296,7 +302,7 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         // Staff External MFA Route
         Route::get('/staff/external/setting/mfa', [ProfileController::class, 'staffmfasettingexternal'])->name('profile.staff.mfa.external');
 
-
+        Route::post('/profile/staff/toggle-passwordless', [ProfileController::class, 'staffTogglePasswordless'])->name('profile.staff.toggle-passwordless');
     });
 
     // ðŸ”¹ General User Routes
@@ -320,7 +326,7 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         // General External MFA Route
         Route::get('/external/setting/mfa', [ProfileController::class, 'mfasettingexternal'])->name('profile.mfa.external');
 
-
+        Route::post('/profile/toggle-passwordless', [ProfileController::class, 'generalTogglePasswordless'])->name('profile.toggle-passwordless');
     });
 
 });
@@ -345,3 +351,9 @@ Route::post('/check-email-password', [AuthController::class, 'checkEmailAndPassw
 Route::get('/customer-support', [SupportController::class, 'index'])->name('customer-support');
 Route::post('/customer-support/send', [SupportController::class, 'sendEmail'])->name('customer-support.send');
 Route::put('/profile/update-phone', [ProfileController::class, 'updatePhone'])->name('profile.update.phone');
+
+// Passwordless Login
+Route::get('/passwordless/request', [AuthenticatedSessionController::class, 'showPasswordlessForm'])->name('passwordless.request');
+Route::post('/passwordless/request', [AuthenticatedSessionController::class, 'sendMagicLink'])->name('passwordless.send');
+Route::get('/passwordless/verify/{token}', [AuthenticatedSessionController::class, 'verifyMagicLink'])->name('passwordless.verify');
+
