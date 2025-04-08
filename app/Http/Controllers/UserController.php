@@ -84,8 +84,8 @@ class UserController extends Controller
 
 
         return redirect()
-            ->route('profile.admin.manageuser')
-            ->with('success', 'User created successfully.');
+    ->route('profile.admin.manageuser')
+    ->with('success', 'User created successfully.');
 
     }
 
@@ -120,7 +120,7 @@ class UserController extends Controller
             'usertype' => $user->usertype,
         ]);
 
-        return redirect()->route('profile.admin.manageuser')->with('success', 'User updated successfully.');
+return redirect()->route('profile.admin.manageuser')->with('success', 'User updated successfully.');
 
     }
 
