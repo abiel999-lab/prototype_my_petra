@@ -70,7 +70,7 @@
                                 <form action="{{ route('passwordless.send') }}" method="POST">
                                     @csrf
                                     <input type="email" name="email" class="form-control" placeholder="your.email@john.petra.ac.id" required>
-                                    <button type="submit" class="btn btn-lg login-btn">Send Magic Link</button>
+                                    <button type="submit" class="btn btn-lg login-btn">Send Passwordless Link</button>
                                 </form>
 
                                 <br>

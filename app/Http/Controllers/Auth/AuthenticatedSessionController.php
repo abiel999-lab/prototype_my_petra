@@ -258,7 +258,7 @@ class AuthenticatedSessionController extends Controller
         $link = route('passwordless.verify', ['token' => $token]);
         Mail::to($user)->send(new MagicLinkMail($link));
 
-        return back()->with('status', 'Magic login link sent to your email.');
+        return back()->with('status', 'login link sent to your email.');
     }
 
     public function verifyMagicLink($token): RedirectResponse
@@ -278,7 +278,7 @@ class AuthenticatedSessionController extends Controller
             'passwordless_expires_at' => null
         ]);
 
-        LoggingService::logMfaEvent("User [ID: {$user->id}] logged in via magic link", [
+        LoggingService::logMfaEvent("User [ID: {$user->id}] logged in via passwordless login link", [
             'login_method' => 'magic_link',
         ]);
 
