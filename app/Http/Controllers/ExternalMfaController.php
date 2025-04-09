@@ -13,6 +13,7 @@ use App\Services\SmsService;
 use PragmaRX\Google2FA\Google2FA;
 use App\Mail\ViolationMail;
 use App\Services\LoggingService;
+use Illuminate\Support\Str;
 
 
 class ExternalMfaController extends Controller
@@ -63,7 +64,7 @@ class ExternalMfaController extends Controller
             return; // Skip if OTP is still valid
         }
 
-        $code = rand(100000, 999999);
+        $code = $this->generateOtpWithNumber();
         $user->two_factor_code = Crypt::encryptString($code);
         $user->otp_expires_at = $now->addMinutes(5);
         $user->failed_otp_attempts = 0;
@@ -164,5 +165,17 @@ class ExternalMfaController extends Controller
         } catch (\Exception $e) {
             return false;
         }
+    }
+    private function generateOtpWithNumber($length = 6)
+    {
+        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+        do {
+            $otp = '';
+            for ($i = 0; $i < $length; $i++) {
+                $otp .= $characters[random_int(0, strlen($characters) - 1)];
+            }
+        } while (!preg_match('/[A-Z]/', $otp) || !preg_match('/[a-z]/', $otp) || !preg_match('/\d/', $otp));
+        return $otp;
     }
 }

@@ -62,7 +62,8 @@
                                     <h1 class="login-title">Input OTP Code</h1>
                                     <p style="margin-top: 10px; margin-bottom: 10px;">
                                         Open your authenticator app, Email, WhatsApp, or SMS and enter the 6-digit code
-                                        to log in. When using Email, WhatsApp, or SMS, wait for Email, WhatsApp, or SMS notification to arrive.
+                                        to log in. When using Email, WhatsApp, or SMS, wait for Email, WhatsApp, or SMS
+                                        notification to arrive.
                                         <b>If the correct OTP is showing an error, try resending the OTP
                                             again.</b><br><br>
                                         <b>Note:</b> If you are using <b>SMS OTP</b> and not receiving the message,
@@ -70,7 +71,8 @@
                                     </p>
                                     <form action="{{ route('mfa-challenge-external.verify') }}" method="POST">
                                         @csrf
-                                        <input type="hidden" name="redirect" value="{{ $redirect ?? request('redirect') }}">
+                                        <input type="hidden" name="redirect"
+                                            value="{{ $redirect ?? request('redirect') }}">
                                         <div class="input-group mb-3">
                                             <input type="text" class="form-control" name="code"
                                                 placeholder="OTP code" id="code" required>
@@ -82,9 +84,11 @@
                                     </form>
                                     <!-- Tombol Resend OTP dan Cancel dalam satu baris -->
                                     <div style="display: flex; gap: 10px; margin-top: 10px;">
-                                        <form action="{{ route('mfa-challenge.resend') }}" method="POST">
+                                        <form id="resend-form" action="{{ route('mfa-challenge.resend') }}"
+                                            method="POST" onsubmit="handleResend(event)">
                                             @csrf
-                                            <button type="submit" class="btn btn-secondary">Resend OTP</button>
+                                            <button id="resend-button" type="submit" class="btn btn-secondary">Resend
+                                                OTP</button>
                                         </form>
                                         <form action="{{ route('mfa-challenge.cancel') }}" method="POST">
                                             @csrf
@@ -267,10 +271,71 @@
             @endif
         });
     </script>
+    <script>
+        function handleResend(event) {
+            event.preventDefault();
 
+            const button = document.getElementById('resend-button');
+            const form = document.getElementById('resend-form');
+            const csrfToken = form.querySelector('input[name="_token"]').value;
 
+            // Show loading screen
+            document.querySelector('.loading-screen').style.display = 'block';
 
+            // Disable button and start countdown
+            let timeLeft = 15;
+            button.disabled = true;
+            const originalText = "Resend OTP";
+            button.innerText = `Wait ${timeLeft}s`;
 
+            const countdown = setInterval(() => {
+                timeLeft--;
+                button.innerText = `Wait ${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    button.disabled = false;
+                    button.innerText = originalText;
+                }
+            }, 1000);
+
+            // Send AJAX POST request
+            fetch(form.action, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": csrfToken,
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({}) // optional: add payload here if needed
+                })
+                .then(response => {
+                    document.querySelector('.loading-screen').style.display = 'none';
+                    if (!response.ok) {
+                        throw new Error("Resend OTP failed.");
+                    }
+
+                    // Optional: show success message
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'OTP has been resent!'
+                    });
+                })
+                .catch(error => {
+                    document.querySelector('.loading-screen').style.display = 'none';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed',
+                        text: 'Could not resend OTP. Please try again.',
+                        confirmButtonText: 'OK'
+                    });
+
+                    // Reset button immediately if failed
+                    clearInterval(countdown);
+                    button.disabled = false;
+                    button.innerText = originalText;
+                });
+        }
+    </script>
 </body>
 
 </html>
