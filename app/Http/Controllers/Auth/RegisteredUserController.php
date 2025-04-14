@@ -14,6 +14,7 @@ use Illuminate\View\View;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Services\LoggingService;
+use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 
 
 class RegisteredUserController extends Controller
@@ -69,6 +70,27 @@ class RegisteredUserController extends Controller
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);
+
+        // 🔐 Sinkronisasi ke Active Directory (LDAP)
+        try {
+            $uid = explode('@', $email)[0];
+
+            $ldap = new LdapUser;
+            $ldap->cn = $request->name;
+            $ldap->sAMAccountName = $uid;
+            $ldap->userPrincipalName = $email;
+            $ldap->mail = $email;
+
+            $quotedPwd = iconv('UTF-8', 'UTF-16LE', '"' . $request->password . '"');
+            $ldap->unicodePwd = $quotedPwd;
+
+            $ldap->setDn("cn={$request->name},ou=staff,dc=petra,dc=ac,dc=id"); // OU bisa disesuaikan
+            $ldap->save();
+
+            LoggingService::logMfaEvent("User {$email} registered and synced to LDAP", []);
+        } catch (\Exception $e) {
+            LoggingService::logSecurityViolation("LDAP sync failed for new registered user {$email}: " . $e->getMessage(), []);
+        }
 
         Auth::login($user);
         // ✅ Redirect based on usertype

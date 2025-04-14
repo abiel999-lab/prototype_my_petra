@@ -244,45 +244,10 @@
 
 
 
-                                    <!-- Add User Form -->
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <h4 class="mb-3">Add User</h4>
-                                            <form method="POST"
-                                                action="{{ route('profile.admin.manageuser.store') }}">
-                                                @csrf
-                                                <div class="form-group mb-3">
-                                                    <label for="name">Name</label>
-                                                    <input type="text" id="name" name="name"
-                                                        class="form-control" required>
-                                                </div>
-                                                <div class="form-group mb-3">
-                                                    <label for="email">Email</label>
-                                                    <input type="email" id="email" name="email"
-                                                        class="form-control" required>
-                                                </div>
-                                                <div class="form-group mb-3">
-                                                    <label for="password">Password</label>
-                                                    <input type="password" id="password" name="password"
-                                                        class="form-control" required>
-                                                </div>
-                                                <div class="form-group mb-3">
-                                                    <label for="usertype">User Type</label>
-                                                    <select id="usertype" name="usertype" class="form-control"
-                                                        required>
-                                                        <option value="general">General</option>
-                                                        <option value="student">Student</option>
-                                                        <option value="staff">Staff</option>
-                                                        <option value="admin">Admin</option>
-                                                    </select>
-                                                </div>
-                                                <button type="submit" class="btn btn-primary rounded">Add
-                                                    User</button>
-                                            </form>
-                                        </div>
 
+                                    <div class="row">
                                         <!-- User List -->
-                                        <div class="col-md-9">
+                                        <div>
                                             <h4 class="mb-3">User List</h4>
                                             <table class="table table-bordered">
                                                 <thead class="thead-light">
@@ -294,6 +259,7 @@
                                                         <th>MFA Enabled</th>
                                                         <th>MFA Method</th>
                                                         <th>Operating Systems</th> <!-- OS Column -->
+                                                        <th>Active Session</th>
                                                         <th>Actions</th>
                                                     </tr>
                                                 </thead>
@@ -339,7 +305,7 @@
                                                                     <option value="email"
                                                                         {{ $user->mfa_method == 'email' ? 'selected' : '' }}>
                                                                         Email</option>
-                                                                        <option value="google_auth"
+                                                                    <option value="google_auth"
                                                                         {{ $user->mfa_method == 'google_auth' ? 'selected' : '' }}
                                                                         {{ is_null($user->google2fa_secret) ? 'disabled' : '' }}>
                                                                         Mobile Authenticator
@@ -406,6 +372,42 @@
                                                                     No Devices
                                                                 @endif
                                                             </td>
+                                                            <!-- user session-->
+                                                            <td>
+                                                                @php
+                                                                    $sessions = $user->active_sessions ?? collect();
+                                                                @endphp
+
+                                                                @if (!empty($sessions))
+                                                                    @foreach ($sessions as $index => $session)
+                                                                        <div class="mb-2">
+                                                                            <strong>Session
+                                                                                {{ $index + 1 }}</strong><br>
+                                                                            IP: {{ $session['ip'] }}<br>
+                                                                            Device:
+                                                                            {{ $session['device'] ?? 'N/A' }}<br>
+                                                                            OS: {{ $session['os'] ?? 'N/A' }}<br>
+                                                                            Browser:
+                                                                            {{ $session['browser'] ?? 'N/A' }}<br>
+                                                                            Login:
+                                                                            {{ \Carbon\Carbon::parse($session['login_at'])->format('d M Y H:i') }}<br>
+                                                                            Expiry:
+                                                                            {{ \Carbon\Carbon::parse($session['expires_at'])->format('d M Y H:i') }}
+                                                                            <form method="POST"
+                                                                                action="{{ route('profile.admin.manageuser.session.revoke', $session['id']) }}"
+                                                                                onsubmit="return confirm('Are you sure you want to revoke this session?');">
+                                                                                @csrf
+                                                                                @method('DELETE')
+                                                                                <button type="submit"
+                                                                                    class="btn btn-danger btn-sm mt-1">Revoke</button>
+                                                                            </form>
+                                                                        </div>
+                                                                    @endforeach
+                                                                @else
+                                                                    <span class="text-muted">Offline</span>
+                                                                @endif
+                                                            </td>
+
                                                             <td>
                                                                 <!-- ðŸ”¹ User Edit Form (Ensures every user has an Edit button) -->
                                                                 <form id="edit-form-{{ $user->id }}"
@@ -474,6 +476,43 @@
                                             <div class="d-flex justify-content-center mt-3" id="pagination-links">
                                                 {{ $users->links('pagination::bootstrap-5') }}
                                             </div>
+                                        </div>
+                                    </div>
+                                    <!-- Add User Form -->
+                                    <div class="row">
+                                        <div class="col-md-5">
+                                            <h4 class="mb-3">Add User</h4>
+                                            <form method="POST"
+                                                action="{{ route('profile.admin.manageuser.store') }}">
+                                                @csrf
+                                                <div class="form-group mb-3">
+                                                    <label for="name">Name</label>
+                                                    <input type="text" id="name" name="name"
+                                                        class="form-control" required>
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="email">Email</label>
+                                                    <input type="email" id="email" name="email"
+                                                        class="form-control" required>
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="password">Password</label>
+                                                    <input type="password" id="password" name="password"
+                                                        class="form-control" required>
+                                                </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="usertype">User Type</label>
+                                                    <select id="usertype" name="usertype" class="form-control"
+                                                        required>
+                                                        <option value="general">General</option>
+                                                        <option value="student">Student</option>
+                                                        <option value="staff">Staff</option>
+                                                        <option value="admin">Admin</option>
+                                                    </select>
+                                                </div>
+                                                <button type="submit" class="btn btn-primary rounded">Add
+                                                    User</button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -719,77 +758,82 @@
         });
 
         function searchUsers() {
-        let inputQuery = document.getElementById("search-input").value;
-        let params = {
-            search: "",
-            mfa_enabled: "",
-            mfa_method: "",
-            usertype: ""
-        };
+            let inputQuery = document.getElementById("search-input").value;
+            let params = {
+                search: "",
+                mfa_enabled: "",
+                mfa_method: "",
+                usertype: ""
+            };
 
-        const matches = inputQuery.match(/(\w+):(\w+)/g);
-        if (matches) {
-            matches.forEach(match => {
-                let [key, value] = match.split(":");
-                if (params.hasOwnProperty(key)) {
-                    params[key] = value.toLowerCase();
-                }
-            });
-        }
-
-        params.search = inputQuery.replace(/(\w+):(\w+)/g, "").trim();
-
-        let queryString = Object.keys(params)
-            .filter(key => params[key] !== "")
-            .map(key => `${key}=${encodeURIComponent(params[key])}`)
-            .join("&");
-
-        fetch("{{ route('profile.admin.manageuser') }}?" + queryString)
-            .then(response => response.text())
-            .then(html => {
-                const parser = new DOMParser();
-                const newDoc = parser.parseFromString(html, "text/html");
-                const newContent = newDoc.getElementById("user-list").innerHTML;
-
-                document.getElementById("user-list").innerHTML = newContent;
-
-                // ✅ Re-bind form logic after content is replaced
-                bindEditForms();
-            })
-            .catch(error => console.error("Error:", error));
-    }
-    </script>
-    <script>
-    function bindEditForms() {
-        document.querySelectorAll('form[id^="edit-form-"]').forEach(form => {
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();
-                const userId = this.id.split('-')[2];
-
-                document.getElementById(`hidden-name-${userId}`).value = document.getElementById(`name-${userId}`).value;
-                document.getElementById(`hidden-email-${userId}`).value = document.getElementById(`email-${userId}`).value;
-                document.getElementById(`hidden-usertype-${userId}`).value = document.getElementById(`usertype-${userId}`).value;
-                document.getElementById(`hidden-mfa_enabled-${userId}`).value = document.getElementById(`mfa_enabled-${userId}`).checked ? 1 : 0;
-                document.getElementById(`hidden-mfa_method-${userId}`).value = document.getElementById(`mfa_method-${userId}`).value;
-
-                Swal.fire({
-                    title: 'Save Changes?',
-                    text: "Are you sure you want to update this user?",
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, save it!',
-                    reverseButtons: true
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit();
+            const matches = inputQuery.match(/(\w+):(\w+)/g);
+            if (matches) {
+                matches.forEach(match => {
+                    let [key, value] = match.split(":");
+                    if (params.hasOwnProperty(key)) {
+                        params[key] = value.toLowerCase();
                     }
                 });
+            }
+
+            params.search = inputQuery.replace(/(\w+):(\w+)/g, "").trim();
+
+            let queryString = Object.keys(params)
+                .filter(key => params[key] !== "")
+                .map(key => `${key}=${encodeURIComponent(params[key])}`)
+                .join("&");
+
+            fetch("{{ route('profile.admin.manageuser') }}?" + queryString)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const newDoc = parser.parseFromString(html, "text/html");
+                    const newContent = newDoc.getElementById("user-list").innerHTML;
+
+                    document.getElementById("user-list").innerHTML = newContent;
+
+                    // ✅ Re-bind form logic after content is replaced
+                    bindEditForms();
+                })
+                .catch(error => console.error("Error:", error));
+        }
+    </script>
+    <script>
+        function bindEditForms() {
+            document.querySelectorAll('form[id^="edit-form-"]').forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    const userId = this.id.split('-')[2];
+
+                    document.getElementById(`hidden-name-${userId}`).value = document.getElementById(
+                        `name-${userId}`).value;
+                    document.getElementById(`hidden-email-${userId}`).value = document.getElementById(
+                        `email-${userId}`).value;
+                    document.getElementById(`hidden-usertype-${userId}`).value = document.getElementById(
+                        `usertype-${userId}`).value;
+                    document.getElementById(`hidden-mfa_enabled-${userId}`).value = document.getElementById(
+                        `mfa_enabled-${userId}`).checked ? 1 : 0;
+                    document.getElementById(`hidden-mfa_method-${userId}`).value = document.getElementById(
+                        `mfa_method-${userId}`).value;
+
+                    Swal.fire({
+                        title: 'Save Changes?',
+                        text: "Are you sure you want to update this user?",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, save it!',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
             });
-        });
-    }
-</script>
+        }
+    </script>
 
 
 

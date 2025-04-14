@@ -147,8 +147,29 @@ class SessionController extends Controller
 
         return redirect()->route($route)->with('success', 'Semua sesi Anda telah dicabut.');
     }
+    public function AdminRevokeFromManageUser($id)
+    {
+        // Hanya admin boleh akses
+        if (auth()->user()->usertype !== 'admin') {
+            abort(403, 'Unauthorized');
+        }
 
+        $session = DB::table('sessions')->where('id', $id)->first();
 
+        if (!$session) {
+            return back()->with('error', 'Session not found.');
+        }
+
+        DB::table('sessions')->where('id', $id)->delete();
+
+        LoggingService::logMfaEvent("Admin revoked session ID: $id", [
+            'admin_id' => auth()->id(),
+            'user_id' => $session->user_id,
+            'ip' => $session->ip_address,
+        ]);
+
+        return back()->with('success', 'Session revoked successfully.');
+    }
 
 
 

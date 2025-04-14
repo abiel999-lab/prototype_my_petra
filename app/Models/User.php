@@ -56,6 +56,10 @@ class User extends Authenticatable implements LdapAuthenticatable
             'otp_expires_at' => 'datetime',
         ];
     }
+    public function sessions()
+    {
+        return $this->hasMany(\App\Models\Session::class);
+    }
     public function devices()
     {
         return $this->hasMany(\App\Models\TrustedDevice::class, 'user_id');

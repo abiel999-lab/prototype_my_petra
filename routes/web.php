@@ -245,8 +245,7 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::get('/admin/setting/session', [SessionController::class, 'Adminshow'])->name('profile.admin.session.show');
         Route::delete('/admin/setting/session/{id}', [SessionController::class, 'Adminrevoke'])->name('profile.admin.session.revoke');
         Route::post('/admin/setting/session/revoke-all', [SessionController::class, 'AdminrevokeAll'])->name('profile.admin.session.revokeAll');
-
-
+        Route::delete('/admin/setting/manage-user/session/{id}', [SessionController::class, 'AdminRevokeFromManageUser'])->name('profile.admin.manageuser.session.revoke');
         Route::get('/admin/setting/mfa', [UserDeviceController::class, 'Adminindex'])->name('profile.admin.mfa');
         Route::delete('/admin/setting/mfa/{id}', [UserDeviceController::class, 'Admindelete'])->name('profile.admin.mfa.delete');
         Route::post('/admin/setting/mfa/{id}/trust', [UserDeviceController::class, 'Admintrust'])->name('profile.admin.mfa.trust');

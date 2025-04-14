@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use App\Models\TrustedDevice;
 use Jenssegers\Agent\Agent;
 use App\Services\LoggingService;
+use LdapRecord\Models\ActiveDirectory\User as LdapUser;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 
 class UserController extends Controller
@@ -18,47 +21,79 @@ class UserController extends Controller
         $mfaMethod = $request->input('mfa_method');
         $userType = $request->input('usertype');
 
-        $users = User::query();
+        $usersQuery = User::query();
 
-        // Regular Search (by name or email)
         if ($search) {
-            $users->where(function ($query) use ($search) {
+            $usersQuery->where(function ($query) use ($search) {
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
-        // MFA Enabled Filter (yes/no or on/off)
         if ($mfaEnabled === "on" || $mfaEnabled === "yes" || $mfaEnabled === "1") {
-            $users->where('mfa_enabled', 1);
+            $usersQuery->where('mfa_enabled', 1);
         } elseif ($mfaEnabled === "off" || $mfaEnabled === "no" || $mfaEnabled === "0") {
-            $users->where('mfa_enabled', 0);
+            $usersQuery->where('mfa_enabled', 0);
         }
 
-        // MFA Method Filter (email or google_authenticator)
         if ($mfaMethod) {
-            $users->where('mfa_method', $mfaMethod);
+            $usersQuery->where('mfa_method', $mfaMethod);
         }
 
-        // User Type Filter (admin, student, staff, general)
         if ($userType) {
-            $users->where('usertype', $userType);
+            $usersQuery->where('usertype', $userType);
         }
 
+        $users = $usersQuery->with('devices')->paginate(5);
 
-        // Fetch OS details for each user's devices
         foreach ($users as $user) {
-            $user->devices = TrustedDevice::where('user_id', $user->id)->get();
-
+            // Trusted Device OS info
             foreach ($user->devices as $device) {
                 $agent = new Agent();
-                $agent->setUserAgent($device->user_agent);
-                $device->os = $agent->platform(); // Extract OS from user agent
+                $agent->setUserAgent($device->user_agent ?? '');
+                $device->os = $agent->platform() ?: 'Unknown';
             }
+
+            // Ambil sesi dari DB
+            $rawSessions = DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->orderBy('last_activity', 'desc')
+                ->get();
+
+            $activeSessions = [];
+
+            foreach ($rawSessions as $session) {
+                // Ambil user_agent dari payload session
+                $userAgent = $session->user_agent ?? 'Unknown';
+
+
+                $agent = new Agent();
+                $agent->setUserAgent($userAgent);
+
+                $device = $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
+
+                $lastActivity = Carbon::createFromTimestamp($session->last_activity);
+                $expiresAt = $lastActivity->copy()->addMinutes((int) config('session.lifetime'));
+
+                $activeSessions[] = [
+                    'id' => $session->id, // ⬅️ Tambahkan ini!
+                    'ip' => $session->ip_address ?? 'Unknown',
+                    'device' => $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown'),
+                    'os' => $agent->platform() ?: 'Unknown',
+                    'browser' => $agent->browser() ?: 'Unknown',
+                    'login_at' => $lastActivity->format('d M Y H:i'),
+                    'expires_at' => $expiresAt->format('d M Y H:i'),
+                ];
+
+            }
+
+            $user->active_sessions = $activeSessions;
         }
-        $users = $users->with('devices')->paginate(5); // ✅ Gunakan query yang sudah difilter
+
         return view('profile.admin.manage-user', compact('users', 'search'));
     }
+
+
 
 
     public function store(Request $request)
@@ -81,6 +116,29 @@ class UserController extends Controller
             'created_email' => $request->email,
             'usertype' => $request->usertype,
         ]);
+        // 🔐 Sinkronisasi ke Active Directory
+        try {
+            $uid = explode('@', $request->email)[0];
+
+            $ldap = new LdapUser;
+            $ldap->cn = $request->name;
+            $ldap->sAMAccountName = $uid; // ID login di AD
+            $ldap->userPrincipalName = $request->email;
+            $ldap->mail = $request->email;
+
+            // Format password untuk AD (UTF-16LE dan dalam tanda kutip)
+            $quotedPwd = iconv('UTF-8', 'UTF-16LE', '"' . $request->password . '"');
+            $ldap->unicodePwd = $quotedPwd;
+
+            // DN penempatan
+            $ldap->setDn("cn={$request->name},ou=staff,dc=petra,dc=ac,dc=id");
+
+            $ldap->save();
+
+            LoggingService::logMfaEvent("Synced new user to LDAP (AD): {$request->email}", []);
+        } catch (\Exception $e) {
+            LoggingService::logSecurityViolation("LDAP sync failed (AD) for user {$request->email}: " . $e->getMessage(), []);
+        }
 
 
         return redirect()
@@ -185,6 +243,33 @@ class UserController extends Controller
             "success" => true,
             "message" => "User has been unbanned successfully."
         ]);
+    }
+    private function getSessionData($userId)
+    {
+        return DB::table('sessions')
+            ->where('user_id', $userId)
+            ->orderBy('last_activity', 'desc')
+            ->get()
+            ->map(function ($session) {
+                $agent = new Agent();
+                $agent->setUserAgent($session->user_agent ?? '');
+
+                $device = $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
+
+                $loginTime = Carbon::parse($session->last_activity)->setTimezone('Asia/Jakarta');
+                $expiresAt = $loginTime->copy()->addMinutes(config('session.lifetime'));
+
+                return (object) [
+                    'id' => $session->id,
+                    'ip_address' => $session->ip_address ?? 'N/A',
+                    'user_agent' => $session->user_agent ?? 'N/A',
+                    'os' => $agent->platform() ?? 'N/A',
+                    'browser' => $agent->browser() ?? 'N/A',
+                    'device' => $device,
+                    'login_time' => $loginTime->format('d M Y H:i'),
+                    'expires_at' => $expiresAt->format('d M Y H:i'),
+                ];
+            });
     }
 
 
