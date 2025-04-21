@@ -21,8 +21,6 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\ExternalMfaController;
 use App\Services\LoggingService;
 
-
-
 // ðŸ”¹ Redirect root URL ('/') to the correct dashboard or login
 Route::middleware(['ip.limiter'])->get('/', function () {
     if (Auth::check()) {

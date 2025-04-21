@@ -30,7 +30,7 @@ return [
 
         'default' => [
             'hosts' => [env('LDAP_HOST', 'ldap.petra.ac.id')],
-            'port' => env('LDAP_PORT', 389),
+            'port' => env('LDAP_PORT', 636),
             'base_dn' => env('LDAP_BASE_DN', 'dc=petra,dc=ac,dc=id'),
             'username' => env('LDAP_USERNAME', 'uid=jaringan,ou=staff,dc=petra,dc=ac,dc=id'),
             'password' => env('LDAP_PASSWORD', 'petra123'),
