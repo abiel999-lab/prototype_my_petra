@@ -210,6 +210,10 @@ class AuthenticatedSessionController extends Controller
     public function destroy(Request $request): RedirectResponse
     {
         $user = auth()->user();
+        if ($user && $user->usertype === 'admin') {
+            $user->temporary_role = null;
+            $user->save();
+        }
 
         // 🚫 Prevent logout if MFA is enabled and phone is required but missing (just in case)
         if (

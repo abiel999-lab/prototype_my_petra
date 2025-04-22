@@ -20,6 +20,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ExternalMfaController;
 use App\Services\LoggingService;
+use App\Http\Controllers\LogViewerController;
+use App\Http\Controllers\AdminRoleSwitchController;
 
 // ðŸ”¹ Redirect root URL ('/') to the correct dashboard or login
 Route::middleware(['ip.limiter'])->get('/', function () {
@@ -225,8 +227,18 @@ Route::middleware('auth')->group(function () {
 // ðŸ”¹ Authenticated Routes (Protected by MFA & Session Middleware)
 Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(function () {
 
+    // 🧭 Route impersonasi dashboard untuk admin
+    Route::get('/admin/role-switch', [AdminRoleSwitchController::class, 'showForm'])->name('admin.role-switch');
+    Route::post('/admin/role-switch', [AdminRoleSwitchController::class, 'switch'])->name('admin.role-switch.update');
+    Route::middleware(['role:student'])->get('/student/dashboard', fn() => view('student.dashboard'))->name('student.dashboard');
+    Route::middleware(['role:staff'])->get('/staff/dashboard', fn() => view('staff.dashboard'))->name('staff.dashboard');
+    Route::middleware(['role:general'])->get('/dashboard', fn() => view('general.dashboard'))->name('general.dashboard');
+
+
     // ðŸ”¹ Admin Routes
     Route::middleware(['role:admin'])->group(function () {
+
+
         Route::get('/admin/dashboard', [HomeController::class, 'indexAdmin'])->name('admin.dashboard');
         Route::get('/admin/setting', [ProfileController::class, 'adminprofile'])->name('profile.admin.setting');
         Route::get('/admin/setting/profile', [ProfileController::class, 'admineditprofile'])->name('profile.admin.profile');
@@ -237,9 +249,6 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::delete('/admin/setting/manage-user/delete/{user}', [UserController::class, 'destroy'])->name('profile.admin.manageuser.delete');
         Route::post('/admin/setting/manageuser/ban/{user}', [UserController::class, 'ban'])->name('profile.admin.manageuser.ban');
         Route::post('/admin/setting/manageuser/unban/{user}', [UserController::class, 'unban'])->name('profile.admin.manageuser.unban');
-
-
-
         Route::get('/admin/setting/session', [SessionController::class, 'Adminshow'])->name('profile.admin.session.show');
         Route::delete('/admin/setting/session/{id}', [SessionController::class, 'Adminrevoke'])->name('profile.admin.session.revoke');
         Route::post('/admin/setting/session/revoke-all', [SessionController::class, 'AdminrevokeAll'])->name('profile.admin.session.revokeAll');
@@ -248,12 +257,9 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::delete('/admin/setting/mfa/{id}', [UserDeviceController::class, 'Admindelete'])->name('profile.admin.mfa.delete');
         Route::post('/admin/setting/mfa/{id}/trust', [UserDeviceController::class, 'Admintrust'])->name('profile.admin.mfa.trust');
         Route::post('/admin/setting/mfa/{id}/untrust', [UserDeviceController::class, 'Adminuntrust'])->name('profile.admin.mfa.untrust');
-
-        // Admin External MFA Route
         Route::get('/admin/external/setting/mfa', [ProfileController::class, 'adminmfasettingexternal'])->name('profile.admin.mfa.external');
-
         Route::post('/profile/admin/toggle-passwordless', [ProfileController::class, 'adminTogglePasswordless'])->name('profile.admin.toggle-passwordless');
-
+        Route::get('/admin/logs', [LogViewerController::class, 'index'])->name('admin.logs');
     });
 
     // ðŸ”¹ Student Routes
@@ -325,7 +331,6 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
 
         Route::post('/profile/toggle-passwordless', [ProfileController::class, 'generalTogglePasswordless'])->name('profile.toggle-passwordless');
     });
-
 });
 
 

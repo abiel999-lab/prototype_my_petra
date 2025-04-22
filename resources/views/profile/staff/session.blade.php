@@ -104,6 +104,43 @@
 
             <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto">
+                {{-- 🔁 Switch Role Dropdown (Hanya untuk Admin) --}}
+                @php
+                    $user = auth()->user();
+                    $activeRole = $user->temporary_role ?? $user->usertype;
+                @endphp
+
+                @if ($user->usertype === 'admin')
+                    <li class="nav-item dropdown" style="margin-right: 10px">
+                        <a class="nav-link btn btn-outline-secondary" data-toggle="dropdown" href="#">
+                            <i class="fas fa-random"></i> {{ strtoupper($activeRole) }}
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                            <form action="{{ route('admin.role-switch.update') }}" method="POST">
+                                @csrf
+                                <input type="hidden" id="current-url-input" name="current_url" value="">
+
+                                <button type="submit" name="temporary_role" value="student"
+                                    class="dropdown-item {{ $activeRole === 'student' ? 'active' : '' }}">
+                                    <i class="fas fa-user-graduate"></i> Student View
+                                </button>
+                                <button type="submit" name="temporary_role" value="staff"
+                                    class="dropdown-item {{ $activeRole === 'staff' ? 'active' : '' }}">
+                                    <i class="fas fa-user-tie"></i> Staff View
+                                </button>
+                                <button type="submit" name="temporary_role" value="general"
+                                    class="dropdown-item {{ $activeRole === 'general' ? 'active' : '' }}">
+                                    <i class="fas fa-users"></i> General View
+                                </button>
+                                <div class="dropdown-divider"></div>
+                                <button type="submit" name="temporary_role" value=""
+                                    class="dropdown-item text-danger">
+                                    <i class="fas fa-user-shield"></i> Return to Admin
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                @endif
                 <li class="nav-item dropdown">
                     <a class="nav-link" data-toggle="dropdown" href="#">
                         <i class="fas fa-user"></i> {{ strtoupper(auth()->user()->name) }}
@@ -253,7 +290,7 @@
                                 <div class="card-body">
                                     <div class="table-responsive">
                                         <table id="sessionTable" class="table table-bordered table-hover text-center">
-                                            <thead  class="thead-light">
+                                            <thead class="thead-light">
                                                 <tr>
                                                     <th>#</th>
                                                     <th>IP</th>
@@ -276,10 +313,14 @@
                                                         <td>{{ $session->login_time }}</td>
                                                         <td>{{ $session->expires_at }}</td>
                                                         <td>
-                                                            <form id="deleteForm-{{ $session->id }}" action="{{ route('profile.staff.session.revoke', $session->id) }}" method="POST">
+                                                            <form id="deleteForm-{{ $session->id }}"
+                                                                action="{{ route('profile.staff.session.revoke', $session->id) }}"
+                                                                method="POST">
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button type="button" onclick="confirmDelete('{{ $session->id }}')" class="btn btn-danger">Delete</button>
+                                                                <button type="button"
+                                                                    onclick="confirmDelete('{{ $session->id }}')"
+                                                                    class="btn btn-danger">Delete</button>
                                                             </form>
                                                         </td>
                                                     </tr>
@@ -384,8 +425,6 @@
                 }
             });
         }
-
-
     </script>
     <!-- Include SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -463,6 +502,15 @@
             });
         }
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const input = document.getElementById('current-url-input');
+            if (input) {
+                input.value = window.location.href;
+            }
+        });
+    </script>
+
 
 </body>
 

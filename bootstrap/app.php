@@ -1,35 +1,37 @@
 <?php
 
 use Illuminate\Foundation\Application;
-use App\Http\Middleware\Verify2FAMiddleware;
-use App\Http\Middleware\RoleMiddleware;
-use App\Http\Middleware\LdapAuthenticate; // Import LDAP Middleware
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\CheckBannedStatus; // ✅ Import the banned status middleware
+
+use App\Http\Middleware\Verify2FAMiddleware;
+use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\LdapAuthenticate;
+use App\Http\Middleware\CheckBannedStatus;
 use App\Http\Middleware\RestrictToMFA;
-use App\Http\Middleware\IpRateLimiter; // ✅ Import the IpRateLimiter middleware
+use App\Http\Middleware\IpRateLimiter;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
-        commands: __DIR__.'/../routes/console.php',
-        health: '/up' // ✅ Removed the trailing comma here
+        web: __DIR__ . '/../routes/web.php',
+        commands: __DIR__ . '/../routes/console.php',
+        health: '/up' // ✅ No trailing comma
     )
+
     ->withMiddleware(function (Middleware $middleware) {
-        // Register MFA Middleware
+        // 🔐 Middleware Groups
         $middleware->appendToGroup('mfachallenge', [Verify2FAMiddleware::class]);
-
-        // Register Role Middleware
-        $middleware->alias([
-            'role' => RoleMiddleware::class,
-            'ldap.auth' => LdapAuthenticate::class, // Register LDAP Authentication Middleware
-            'check.banned' => CheckBannedStatus::class, // ✅ Register banned user middleware
-
-        ]);
         $middleware->appendToGroup('restrict_to_mfa', [RestrictToMFA::class]);
         $middleware->appendToGroup('ip.limiter', [IpRateLimiter::class]);
+
+        // 🧩 Middleware Aliases
+        $middleware->alias([
+            'role' => RoleMiddleware::class,
+            'ldap.auth' => LdapAuthenticate::class,
+            'check.banned' => CheckBannedStatus::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
-    })->create();
+        // Custom exception handling here if needed
+    })
+    ->create();

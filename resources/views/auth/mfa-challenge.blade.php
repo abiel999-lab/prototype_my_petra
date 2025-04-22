@@ -66,8 +66,8 @@
                                         notification to arrive.
                                         <b>If the correct OTP is showing an error, try resending the OTP
                                             again.</b><br><br>
-                                        <b>Note:</b> If you are using <b>SMS OTP</b> and not receiving the message,
-                                        please click <b>Resend OTP</b> until the SMS arrives on your phone.
+                                        <b>Note:</b> If you are not receiving the message,
+                                        please click <b>Resend OTP</b> until the OTP arrives on your Email/Whatsapp/SMS.
                                     </p>
                                     <form action="{{ route('mfa-challenge.verify') }}" method="POST">
                                         @csrf

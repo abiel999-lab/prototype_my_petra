@@ -30,6 +30,7 @@ class User extends Authenticatable implements LdapAuthenticatable
         'mfa_enabled',
         'mfa_method',
         'usertype',
+        'temporary_role',
     ];
 
     /**

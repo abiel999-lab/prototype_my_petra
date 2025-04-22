@@ -169,13 +169,12 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('profile.admin.manageuser') }}" class="nav-link active">
-                                <i class="nav-icon far fa-address-card"></i>
-                                <p>
-                                    Manage Users
-                                </p>
+                            <a href="{{ route('profile.admin.manageuser') }}" class="nav-link">
+                                <i class="nav-icon fas fa-address-card"></i>
+                                <p>Manage Users</p>
                             </a>
                         </li>
+
                         <li class="nav-item">
                             <a href="{{ route('customer-support') }}" class="nav-link ">
                                 <i class="nav-icon fa fa-question-circle"></i>

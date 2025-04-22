@@ -316,7 +316,9 @@ class ProfileController extends Controller
     public function studentTogglePasswordless(Request $request)
     {
         $user = auth()->user();
-        if ($user->usertype !== 'student') {
+        $role = $user->temporary_role ?? $user->usertype;
+
+        if ($role !== 'student') {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
         }
 
@@ -328,11 +330,14 @@ class ProfileController extends Controller
             'passwordless_enabled' => $user->passwordless_enabled,
         ]);
     }
+
 
     public function staffTogglePasswordless(Request $request)
     {
         $user = auth()->user();
-        if ($user->usertype !== 'staff') {
+        $role = $user->temporary_role ?? $user->usertype;
+
+        if ($role !== 'staff') {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
         }
 
@@ -344,6 +349,7 @@ class ProfileController extends Controller
             'passwordless_enabled' => $user->passwordless_enabled,
         ]);
     }
+
 
     public function adminTogglePasswordless(Request $request)
     {
@@ -364,7 +370,9 @@ class ProfileController extends Controller
     public function generalTogglePasswordless(Request $request)
     {
         $user = auth()->user();
-        if ($user->usertype !== 'general') {
+        $role = $user->temporary_role ?? $user->usertype;
+
+        if ($role !== 'general') {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
         }
 
@@ -376,6 +384,7 @@ class ProfileController extends Controller
             'passwordless_enabled' => $user->passwordless_enabled,
         ]);
     }
+
 
 
 

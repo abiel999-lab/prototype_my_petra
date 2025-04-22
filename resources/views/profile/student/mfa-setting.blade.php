@@ -134,6 +134,43 @@
 
             <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto">
+                {{-- 🔁 Switch Role Dropdown (Hanya untuk Admin) --}}
+                @php
+                    $user = auth()->user();
+                    $activeRole = $user->temporary_role ?? $user->usertype;
+                @endphp
+
+                @if ($user->usertype === 'admin')
+                    <li class="nav-item dropdown" style="margin-right: 10px">
+                        <a class="nav-link btn btn-outline-secondary" data-toggle="dropdown" href="#">
+                            <i class="fas fa-random"></i> {{ strtoupper($activeRole) }}
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                            <form action="{{ route('admin.role-switch.update') }}" method="POST">
+                                @csrf
+                                <input type="hidden" id="current-url-input" name="current_url" value="">
+
+                                <button type="submit" name="temporary_role" value="student"
+                                    class="dropdown-item {{ $activeRole === 'student' ? 'active' : '' }}">
+                                    <i class="fas fa-user-graduate"></i> Student View
+                                </button>
+                                <button type="submit" name="temporary_role" value="staff"
+                                    class="dropdown-item {{ $activeRole === 'staff' ? 'active' : '' }}">
+                                    <i class="fas fa-user-tie"></i> Staff View
+                                </button>
+                                <button type="submit" name="temporary_role" value="general"
+                                    class="dropdown-item {{ $activeRole === 'general' ? 'active' : '' }}">
+                                    <i class="fas fa-users"></i> General View
+                                </button>
+                                <div class="dropdown-divider"></div>
+                                <button type="submit" name="temporary_role" value=""
+                                    class="dropdown-item text-danger">
+                                    <i class="fas fa-user-shield"></i> Return to Admin
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                @endif
                 <li class="nav-item dropdown">
                     <a class="nav-link" data-toggle="dropdown" href="#">
                         <i class="fas fa-user"></i> {{ strtoupper(auth()->user()->name) }}
@@ -737,33 +774,37 @@
         }
     </script>
     <script>
-        document.getElementById('passwordless_enabled').addEventListener('change', function () {
+        document.getElementById('passwordless_enabled').addEventListener('change', function() {
             fetch('{{ route('profile.student.toggle-passwordless') }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({})
-            }).then(response => response.json())
-              .then(data => {
-                  if (data.status === 'success') {
-                      Swal.fire({
-                          icon: 'success',
-                          title: 'Passwordless Login',
-                          text: data.passwordless_enabled ? 'Passwordless login enabled.' : 'Passwordless login disabled.',
-                      });
-                  } else {
-                      Swal.fire('Error', 'Failed to toggle passwordless.', 'error');
-                  }
-              });
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({})
+                }).then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Passwordless Login',
+                            text: data.passwordless_enabled ? 'Passwordless login enabled.' :
+                                'Passwordless login disabled.',
+                        });
+                    } else {
+                        Swal.fire('Error', 'Failed to toggle passwordless.', 'error');
+                    }
+                });
         });
     </script>
-
-
-
-
-
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const input = document.getElementById('current-url-input');
+            if (input) {
+                input.value = window.location.href;
+            }
+        });
+    </script>
 </body>
 
 </html>

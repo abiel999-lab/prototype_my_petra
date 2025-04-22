@@ -51,7 +51,7 @@ class SessionController extends Controller
 
     public function show()
     {
-        $sessions = $this->getSessionData(auth()->id());
+
 
         return view('profile.session', compact('sessions')); // Corrected view path
     }
@@ -88,6 +88,7 @@ class SessionController extends Controller
     // ---------------- STUDENT SESSION MANAGEMENT ----------------
     public function Studentshow()
     {
+
         $sessions = $this->getSessionData(auth()->id());
         return view('profile.student.session', compact('sessions'));
     }
@@ -105,6 +106,7 @@ class SessionController extends Controller
     // ---------------- STAFF SESSION MANAGEMENT ----------------
     public function Staffshow()
     {
+
         $sessions = $this->getSessionData(auth()->id());
         return view('profile.staff.session', compact('sessions'));
     }

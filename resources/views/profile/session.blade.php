@@ -54,7 +54,8 @@
     }
 
     .revoke-all-container button {
-        background-color: #dc2626; /* Red color */
+        background-color: #dc2626;
+        /* Red color */
         color: white;
         padding: 10px 15px;
         border-radius: 5px;
@@ -64,19 +65,22 @@
     }
 
     .revoke-all-container button:hover {
-        background-color: #b91c1c; /* Darker red */
+        background-color: #b91c1c;
+        /* Darker red */
     }
+
     .dataTables_wrapper .dataTables_length select {
-            border: 1px solid #aaa;
-            border-radius: 3px;
-            padding: 5px;
-            background-color: transparent;
-            color: inherit;
-            padding: 4px;
-            font-size: 15px;
-            padding-right: 20px;
-        }
+        border: 1px solid #aaa;
+        border-radius: 3px;
+        padding: 5px;
+        background-color: transparent;
+        color: inherit;
+        padding: 4px;
+        font-size: 15px;
+        padding-right: 20px;
+    }
 </style>
+
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
 
@@ -100,6 +104,43 @@
 
             <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto">
+                {{-- 🔁 Switch Role Dropdown (Hanya untuk Admin) --}}
+                @php
+                    $user = auth()->user();
+                    $activeRole = $user->temporary_role ?? $user->usertype;
+                @endphp
+
+                @if ($user->usertype === 'admin')
+                    <li class="nav-item dropdown" style="margin-right: 10px">
+                        <a class="nav-link btn btn-outline-secondary" data-toggle="dropdown" href="#">
+                            <i class="fas fa-random"></i> {{ strtoupper($activeRole) }}
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                            <form action="{{ route('admin.role-switch.update') }}" method="POST">
+                                @csrf
+                                <input type="hidden" id="current-url-input" name="current_url" value="">
+
+                                <button type="submit" name="temporary_role" value="student"
+                                    class="dropdown-item {{ $activeRole === 'student' ? 'active' : '' }}">
+                                    <i class="fas fa-user-graduate"></i> Student View
+                                </button>
+                                <button type="submit" name="temporary_role" value="staff"
+                                    class="dropdown-item {{ $activeRole === 'staff' ? 'active' : '' }}">
+                                    <i class="fas fa-user-tie"></i> Staff View
+                                </button>
+                                <button type="submit" name="temporary_role" value="general"
+                                    class="dropdown-item {{ $activeRole === 'general' ? 'active' : '' }}">
+                                    <i class="fas fa-users"></i> General View
+                                </button>
+                                <div class="dropdown-divider"></div>
+                                <button type="submit" name="temporary_role" value=""
+                                    class="dropdown-item text-danger">
+                                    <i class="fas fa-user-shield"></i> Return to Admin
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                @endif
                 <li class="nav-item dropdown">
                     <a class="nav-link" data-toggle="dropdown" href="#">
                         <i class="fas fa-user"></i> {{ strtoupper(auth()->user()->name) }}
@@ -233,8 +274,8 @@
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <h3 class="card-title">List of Active Sessions</h3>
                                     <div class="ml-auto">
-                                        <form id="revokeAllForm"
-                                            action="{{ route('profile.session.revokeAll') }}" method="POST">
+                                        <form id="revokeAllForm" action="{{ route('profile.session.revokeAll') }}"
+                                            method="POST">
                                             @csrf
                                             <button type="button" class="btn btn-danger btn-sm px-3"
                                                 onclick="confirmRevokeAll()">
@@ -249,7 +290,7 @@
                                 <div class="card-body">
                                     <div class="table-responsive">
                                         <table id="sessionTable" class="table table-bordered table-hover text-center">
-                                            <thead  class="thead-light">
+                                            <thead class="thead-light">
                                                 <tr>
                                                     <th>#</th>
                                                     <th>IP</th>
@@ -272,10 +313,14 @@
                                                         <td>{{ $session->login_time }}</td>
                                                         <td>{{ $session->expires_at }}</td>
                                                         <td>
-                                                            <form id="deleteForm-{{ $session->id }}" action="{{ route('profile.session.revoke', $session->id) }}" method="POST">
+                                                            <form id="deleteForm-{{ $session->id }}"
+                                                                action="{{ route('profile.session.revoke', $session->id) }}"
+                                                                method="POST">
                                                                 @csrf
                                                                 @method('DELETE')
-                                                                <button type="button" onclick="confirmDelete('{{ $session->id }}')" class="btn btn-danger">Delete</button>
+                                                                <button type="button"
+                                                                    onclick="confirmDelete('{{ $session->id }}')"
+                                                                    class="btn btn-danger">Delete</button>
                                                             </form>
                                                         </td>
                                                     </tr>
@@ -377,56 +422,55 @@
                 }
             });
         }
-
     </script>
-     <!-- Include SweetAlert2 -->
-     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Include SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-     <!-- DataTables Script -->
-     <script>
-         $(document).ready(function() {
-             $('#sessionTable').DataTable({
-                 "searching": true, // Enables search bar
-                 "ordering": true,
-                 "paging": true
-             });
-         });
+    <!-- DataTables Script -->
+    <script>
+        $(document).ready(function() {
+            $('#sessionTable').DataTable({
+                "searching": true, // Enables search bar
+                "ordering": true,
+                "paging": true
+            });
+        });
 
-         // Confirmation alert for deleting a session
-         function confirmDelete(sessionId) {
-             Swal.fire({
-                 title: "Are you sure?",
-                 text: "This session will be deleted permanently!",
-                 icon: "warning",
-                 showCancelButton: true,
-                 confirmButtonColor: "#d33",
-                 cancelButtonColor: "#3085d6",
-                 confirmButtonText: "Yes, delete it!"
-             }).then((result) => {
-                 if (result.isConfirmed) {
-                     document.getElementById('deleteForm-' + sessionId).submit();
-                 }
-             });
-         }
+        // Confirmation alert for deleting a session
+        function confirmDelete(sessionId) {
+            Swal.fire({
+                title: "Are you sure?",
+                text: "This session will be deleted permanently!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, delete it!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('deleteForm-' + sessionId).submit();
+                }
+            });
+        }
 
-         // Confirmation alert for revoking all sessions
-         function confirmRevokeAll() {
-             Swal.fire({
-                 title: "Are you sure?",
-                 text: "This will remove all active sessions!",
-                 icon: "warning",
-                 showCancelButton: true,
-                 confirmButtonColor: "#d33",
-                 cancelButtonColor: "#3085d6",
-                 confirmButtonText: "Yes, revoke all!"
-             }).then((result) => {
-                 if (result.isConfirmed) {
-                     document.getElementById('revokeAllForm').submit();
-                 }
-             });
-         }
-     </script>
-     <script>
+        // Confirmation alert for revoking all sessions
+        function confirmRevokeAll() {
+            Swal.fire({
+                title: "Are you sure?",
+                text: "This will remove all active sessions!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, revoke all!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('revokeAllForm').submit();
+                }
+            });
+        }
+    </script>
+    <script>
         function confirmLogout() {
             const mfaMethod = "{{ auth()->user()->mfa_method }}";
             const mfaEnabled = "{{ auth()->user()->mfa_enabled }}";
@@ -455,6 +499,15 @@
             });
         }
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const input = document.getElementById('current-url-input');
+            if (input) {
+                input.value = window.location.href;
+            }
+        });
+    </script>
+
 
 </body>
 

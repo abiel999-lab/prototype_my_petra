@@ -9,19 +9,31 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
 {
-    public function handle(Request $request, Closure $next, ...$roles)
+    public function handle($request, Closure $next, ...$roles)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login'); // Redirect if not logged in
+        $user = Auth::user();
+
+        if (!$user) {
+            abort(403);
         }
 
-        $userRole = Auth::user()->usertype;
+        $activeRole = $user->temporary_role ?? $user->usertype;
 
-        if (!in_array($userRole, $roles)) {
-            // Return 403 Forbidden error instead of redirecting
-            abort(Response::HTTP_FORBIDDEN, 'You do not have permission to access this resource.');
+        if (!in_array($activeRole, $roles)) {
+            // Jika role tidak valid, paksa reset temporary role
+            if ($user->usertype === 'admin' && $user->temporary_role !== null) {
+                $user->temporary_role = null;
+                $user->save();
+
+                // Redirect kembali ke dashboard admin agar tidak stuck di 403
+                return redirect()->route('admin.dashboard')
+                    ->with('warning', 'Session reset to admin due to role conflict.');
+            }
+
+            abort(403, 'Forbidden');
         }
 
         return $next($request);
     }
+
 }
