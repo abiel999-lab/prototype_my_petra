@@ -94,7 +94,7 @@
                                         </div>
 
                                         <div class="mb-3">
-                                            <label for="message" class="form-label">Your Message</label>
+                                            <label for="message" class="form-label">Describe Your Issues</label>
                                             <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
                                         </div>
 
