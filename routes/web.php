@@ -21,7 +21,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\ExternalMfaController;
 use App\Services\LoggingService;
 use App\Http\Controllers\LogViewerController;
-use App\Http\Controllers\AdminRoleSwitchController;
+use App\Http\Controllers\RoleSwitchController;
 
 // ðŸ”¹ Redirect root URL ('/') to the correct dashboard or login
 Route::middleware(['ip.limiter'])->get('/', function () {
@@ -227,9 +227,9 @@ Route::middleware('auth')->group(function () {
 // ðŸ”¹ Authenticated Routes (Protected by MFA & Session Middleware)
 Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(function () {
 
-    // 🧭 Route impersonasi dashboard untuk admin
-    Route::get('/admin/role-switch', [AdminRoleSwitchController::class, 'showForm'])->name('admin.role-switch');
-    Route::post('/admin/role-switch', [AdminRoleSwitchController::class, 'switch'])->name('admin.role-switch.update');
+    // 🧭 Route impersonasi dashboard untuk admin dan staff
+    Route::get('/role-switch', [RoleSwitchController::class, 'showForm'])->name('role.switch');
+    Route::post('/role-switch', [RoleSwitchController::class, 'switch'])->name('role.switch.update');
     Route::middleware(['role:student'])->get('/student/dashboard', fn() => view('student.dashboard'))->name('student.dashboard');
     Route::middleware(['role:staff'])->get('/staff/dashboard', fn() => view('staff.dashboard'))->name('staff.dashboard');
     Route::middleware(['role:general'])->get('/dashboard', fn() => view('general.dashboard'))->name('general.dashboard');

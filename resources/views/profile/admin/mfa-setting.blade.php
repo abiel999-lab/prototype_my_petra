@@ -134,38 +134,54 @@
 
             <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto">
-                {{-- 🔁 Switch Role Dropdown (Hanya untuk Admin) --}}
+                {{-- 🔁 Switch Role Dropdown (Admin & Staff) --}}
                 @php
                     $user = auth()->user();
                     $activeRole = $user->temporary_role ?? $user->usertype;
                 @endphp
 
-                @if ($user->usertype === 'admin')
+                @if (in_array($user->usertype, ['admin', 'staff']))
                     <li class="nav-item dropdown" style="margin-right: 10px">
                         <a class="nav-link btn btn-outline-secondary" data-toggle="dropdown" href="#">
                             <i class="fas fa-random"></i> {{ strtoupper($activeRole) }}
                         </a>
                         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                            <form action="{{ route('admin.role-switch.update') }}" method="POST">
+                            <form action="{{ route('role.switch.update') }}" method="POST">
                                 @csrf
-                                <input type="hidden" id="current-url-input" name="current_url" value="">
-                                <button type="submit" name="temporary_role" value="student"
-                                    class="dropdown-item {{ $activeRole === 'student' ? 'active' : '' }}">
-                                    <i class="fas fa-user-graduate"></i> Student View
-                                </button>
-                                <button type="submit" name="temporary_role" value="staff"
-                                    class="dropdown-item {{ $activeRole === 'staff' ? 'active' : '' }}">
-                                    <i class="fas fa-user-tie"></i> Staff View
-                                </button>
-                                <button type="submit" name="temporary_role" value="general"
-                                    class="dropdown-item {{ $activeRole === 'general' ? 'active' : '' }}">
-                                    <i class="fas fa-users"></i> General View
-                                </button>
-                                <div class="dropdown-divider"></div>
-                                <button type="submit" name="temporary_role" value=""
-                                    class="dropdown-item text-danger">
-                                    <i class="fas fa-user-shield"></i> Return to Admin
-                                </button>
+
+                                {{-- Staff bisa ke student --}}
+                                @if ($user->usertype === 'staff')
+                                    <button type="submit" name="temporary_role" value="student"
+                                        class="dropdown-item {{ $activeRole === 'student' ? 'active' : '' }}">
+                                        <i class="fas fa-user-graduate"></i> Student View
+                                    </button>
+                                    <div class="dropdown-divider"></div>
+                                    <button type="submit" name="temporary_role" value=""
+                                        class="dropdown-item text-danger">
+                                        <i class="fas fa-user-tie"></i> Return to Staff
+                                    </button>
+                                @endif
+
+                                {{-- Admin bebas impersonasi --}}
+                                @if ($user->usertype === 'admin')
+                                    <button type="submit" name="temporary_role" value="student"
+                                        class="dropdown-item {{ $activeRole === 'student' ? 'active' : '' }}">
+                                        <i class="fas fa-user-graduate"></i> Student View
+                                    </button>
+                                    <button type="submit" name="temporary_role" value="staff"
+                                        class="dropdown-item {{ $activeRole === 'staff' ? 'active' : '' }}">
+                                        <i class="fas fa-user-tie"></i> Staff View
+                                    </button>
+                                    <button type="submit" name="temporary_role" value="general"
+                                        class="dropdown-item {{ $activeRole === 'general' ? 'active' : '' }}">
+                                        <i class="fas fa-users"></i> General View
+                                    </button>
+                                    <div class="dropdown-divider"></div>
+                                    <button type="submit" name="temporary_role" value=""
+                                        class="dropdown-item text-danger">
+                                        <i class="fas fa-user-shield"></i> Return to Admin
+                                    </button>
+                                @endif
                             </form>
                         </div>
                     </li>
