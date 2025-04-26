@@ -319,7 +319,7 @@
                                                             </td>
                                                             <td> <!-- ðŸ”¹ Operating System Column with Trust/Untrust Buttons in One Line -->
                                                                 @if (count($user->devices) > 0)
-                                                                    @foreach ($user->devices->unique('os') as $device)
+                                                                    @foreach ($user->devices as $device)
                                                                         <div class="d-flex align-items-center gap-2">
                                                                             <span
                                                                                 class="badge badge-primary">{{ $device->os }}</span>

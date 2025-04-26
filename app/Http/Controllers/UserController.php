@@ -47,12 +47,6 @@ class UserController extends Controller
         $users = $usersQuery->with('devices')->paginate(5);
 
         foreach ($users as $user) {
-            // Trusted Device OS info
-            foreach ($user->devices as $device) {
-                $agent = new Agent();
-                $agent->setUserAgent($device->user_agent ?? '');
-                $device->os = $agent->platform() ?: 'Unknown';
-            }
 
             // Ambil sesi dari DB
             $rawSessions = DB::table('sessions')
