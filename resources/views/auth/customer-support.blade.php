@@ -94,6 +94,18 @@
                                         </div>
 
                                         <div class="mb-3">
+                                            <label for="issue_type" class="form-label">Issue Type</label>
+                                            <select class="form-control" id="issue_type" name="issue_type" required>
+                                                <option value="">Select an issue type</option>
+                                                <option value="Login problem">Login problem</option>
+                                                <option value="MFA problem">MFA problem</option>
+                                                <option value="Service problem">Service problem</option>
+                                                <option value="Other problem">Other problem</option>
+                                            </select>
+                                        </div>
+
+
+                                        <div class="mb-3">
                                             <label for="message" class="form-label">Describe Your Issues</label>
                                             <textarea class="form-control" id="message" name="message" rows="4" required></textarea>
                                         </div>
