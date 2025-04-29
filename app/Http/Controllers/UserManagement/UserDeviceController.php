@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\UserManagement;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +12,7 @@ use App\Models\TrustedDevice;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\MfaExternalMail;
 use App\Services\LoggingService;
+use App\Http\Controllers\Controller;
 
 class UserDeviceController extends Controller
 {

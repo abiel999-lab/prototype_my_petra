@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Profile;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -14,6 +14,7 @@ use App\Mail\ViolationMail;
 use App\Services\SmsService;
 use App\Services\LoggingService;
 use Illuminate\Support\Str;
+use App\Http\Controllers\Controller;
 
 class TwoFactorController extends Controller
 {

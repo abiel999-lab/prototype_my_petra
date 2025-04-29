@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\UserManagement;
 
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -10,6 +10,7 @@ use App\Services\LoggingService;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Http\Controllers\Controller;
 
 
 class UserController extends Controller

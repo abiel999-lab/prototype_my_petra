@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Support;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Services\LoggingService;
 use Carbon\Carbon;
+use App\Http\Controllers\Controller;
 
 
 

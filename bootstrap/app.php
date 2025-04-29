@@ -4,12 +4,12 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
-use App\Http\Middleware\Verify2FAMiddleware;
-use App\Http\Middleware\RoleMiddleware;
-use App\Http\Middleware\LdapAuthenticate;
-use App\Http\Middleware\CheckBannedStatus;
-use App\Http\Middleware\RestrictToMFA;
-use App\Http\Middleware\IpRateLimiter;
+use App\Http\Middleware\Authentication\Verify2FAMiddleware;
+use App\Http\Middleware\Authorization\RoleMiddleware;
+use App\Http\Middleware\Authentication\LdapAuthenticate;
+use App\Http\Middleware\Authorization\CheckBannedStatus;
+use App\Http\Middleware\Authorization\RestrictToMFA;
+use App\Http\Middleware\rateLimiting\IpRateLimiter;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(

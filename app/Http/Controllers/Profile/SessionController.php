@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Profile;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Jenssegers\Agent\Agent;
 use App\Services\LoggingService;
+use App\Http\Controllers\Controller;
 
 
 class SessionController extends Controller

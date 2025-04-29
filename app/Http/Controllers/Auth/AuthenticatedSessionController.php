@@ -14,7 +14,7 @@ use Illuminate\View\View;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ViolationMail;
-use App\Http\Controllers\UserDeviceController;
+use App\Http\Controllers\UserManagement\UserDeviceController;
 use App\Services\LoggingService;
 use Illuminate\Support\Str;
 use App\Mail\MagicLinkMail;
@@ -274,6 +274,13 @@ class AuthenticatedSessionController extends Controller
 
         if (!$user) {
             abort(403, 'Invalid or expired token.');
+        }
+
+        // 🚫 Tambahkan pengecekan banned
+        if ($user->banned_status == 1) {
+            return redirect()->route('login')->withErrors([
+                'email' => 'Your account is permanently banned. Passwordless login denied.'
+            ]);
         }
 
         Auth::login($user);

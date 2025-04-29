@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Profile;
 
 use App\Models\User;
 use App\Models\TrustedDevice;
@@ -14,6 +14,7 @@ use PragmaRX\Google2FA\Google2FA;
 use App\Mail\ViolationMail;
 use App\Services\LoggingService;
 use Illuminate\Support\Str;
+use App\Http\Controllers\Controller;
 
 
 class ExternalMfaController extends Controller
@@ -159,12 +160,50 @@ class ExternalMfaController extends Controller
 
     private function validateOtp($user, $code)
     {
-        try {
-            $decrypted = Crypt::decryptString($user->two_factor_code);
-            return $code == $decrypted && now()->lt($user->otp_expires_at);
-        } catch (\Exception $e) {
-            return false;
+        $now = now();
+
+        if ($user->mfa_method === 'email') {
+            try {
+                $decryptedOtp = Crypt::decryptString($user->two_factor_code);
+
+                // Periksa apakah OTP cocok dan belum kedaluwarsa
+                if ($code == $decryptedOtp && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
+                    return true;
+                }
+            } catch (\Exception $e) {
+                return false; // Jika gagal dekripsi, anggap OTP tidak valid
+            }
         }
+
+        if ($user->mfa_method === 'google_auth') {
+            $google2fa = new Google2FA();
+            return $google2fa->verifyKey($user->google2fa_secret, $code);
+        }
+        if ($user->mfa_method === 'whatsapp') {
+            try {
+                $decryptedOtp = Crypt::decryptString($user->two_factor_code);
+
+                if ($code == $decryptedOtp && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
+                    return true;
+                }
+            } catch (\Exception $e) {
+                return false;
+            }
+        }
+        if ($user->mfa_method === 'sms') {
+            try {
+                $decryptedOtp = Crypt::decryptString($user->two_factor_code);
+
+                if ($code == $decryptedOtp && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
+                    return true;
+                }
+            } catch (\Exception $e) {
+                return false;
+            }
+        }
+
+
+        return false;
     }
     private function generateOtpWithNumber($length = 6)
     {

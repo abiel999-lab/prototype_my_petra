@@ -26,7 +26,6 @@ return new class extends Migration {
             $table->string('mfa_method')->default('email'); // Default to email
             $table->string('google2fa_secret')->nullable();
             $table->integer('failed_login_attempts')->default(0);
-            $table->timestamp('login_ban_until')->nullable();
             $table->integer('failed_otp_attempts')->default(0);
             $table->boolean('banned_status')->default(false);
 

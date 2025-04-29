@@ -1,27 +1,27 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Profile\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\TwoFactorController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\SessionController;
-use App\Http\Middleware\StoreUserSession;
-use App\Http\Controllers\UserDeviceController; // Added UserDeviceController
+use App\Http\Controllers\Dashboard\HomeController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Profile\TwoFactorController;
+use App\Http\Controllers\UserManagement\UserController;
+use App\Http\Controllers\Profile\SessionController;
+use App\Http\Middleware\Session\StoreUserSession;
+use App\Http\Controllers\UserManagement\UserDeviceController; // Added UserDeviceController
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\SupportController;
+use App\Http\Controllers\Support\SupportController;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 use App\Models\TrustedDevice;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Http\Controllers\ExternalMfaController;
+use App\Http\Controllers\Profile\ExternalMfaController;
 use App\Services\LoggingService;
-use App\Http\Controllers\LogViewerController;
-use App\Http\Controllers\RoleSwitchController;
+use App\Http\Controllers\Dashboard\LogViewerController;
+use App\Http\Controllers\UserManagement\RoleSwitchController;
 
 // ðŸ”¹ Redirect root URL ('/') to the correct dashboard or login
 Route::middleware(['ip.limiter'])->get('/', function () {

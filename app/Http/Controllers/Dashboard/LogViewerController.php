@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Dashboard;
 
 use Illuminate\Support\Facades\File;
+use App\Http\Controllers\Controller;
 
 class LogViewerController extends Controller
 {
