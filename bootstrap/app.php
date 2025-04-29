@@ -9,7 +9,7 @@ use App\Http\Middleware\Authorization\RoleMiddleware;
 use App\Http\Middleware\Authentication\LdapAuthenticate;
 use App\Http\Middleware\Authorization\CheckBannedStatus;
 use App\Http\Middleware\Authorization\RestrictToMFA;
-use App\Http\Middleware\rateLimiting\IpRateLimiter;
+use App\Http\Middleware\RateLimiting\IpRateLimiter;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
