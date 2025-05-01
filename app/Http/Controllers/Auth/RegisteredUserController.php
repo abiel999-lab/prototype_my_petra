@@ -15,6 +15,8 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Services\LoggingService;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
+use App\Models\Mfa;
+
 
 
 class RegisteredUserController extends Controller
@@ -61,6 +63,13 @@ class RegisteredUserController extends Controller
             'email_verified_at' => Carbon::now(),
             'remember_token' => Str::random(60),
         ]);
+        // 📌 Buat record MFA kosong (default)
+        Mfa::create([
+            'user_id' => $user->id,
+            'mfa_enabled' => false,
+            'mfa_method' => 'email',
+        ]);
+
 
         event(new Registered($user));
 

@@ -312,8 +312,8 @@
     </script>
     <script>
         function confirmLogout() {
-            const mfaMethod = "{{ auth()->user()->mfa_method }}";
-            const mfaEnabled = "{{ auth()->user()->mfa_enabled }}";
+            const mfaMethod = "{{ auth()->user()->mfa->mfa_method ?? '' }}";
+            const mfaEnabled = "{{ auth()->user()->mfa->mfa_enabled ?? 0 }}";
             const phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
 
             if (mfaEnabled === "1" && (mfaMethod === "whatsapp" || mfaMethod === "sms") && phoneNumber.trim() === "") {

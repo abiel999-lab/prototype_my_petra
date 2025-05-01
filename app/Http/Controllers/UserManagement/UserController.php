@@ -31,21 +31,26 @@ class UserController extends Controller
             });
         }
 
-        if ($mfaEnabled === "on" || $mfaEnabled === "yes" || $mfaEnabled === "1") {
-            $usersQuery->where('mfa_enabled', 1);
-        } elseif ($mfaEnabled === "off" || $mfaEnabled === "no" || $mfaEnabled === "0") {
-            $usersQuery->where('mfa_enabled', 0);
-        }
+        $usersQuery->whereHas('mfa', function ($query) use ($mfaEnabled, $mfaMethod) {
+            if ($mfaEnabled === "on" || $mfaEnabled === "yes" || $mfaEnabled === "1") {
+                $query->where('mfa_enabled', 1);
+            } elseif ($mfaEnabled === "off" || $mfaEnabled === "no" || $mfaEnabled === "0") {
+                $query->where('mfa_enabled', 0);
+            }
 
-        if ($mfaMethod) {
-            $usersQuery->where('mfa_method', $mfaMethod);
-        }
+            if ($mfaMethod) {
+                $query->where('mfa_method', $mfaMethod);
+            }
+        });
+
+
 
         if ($userType) {
             $usersQuery->where('usertype', $userType);
         }
 
-        $users = $usersQuery->with('devices')->paginate(5);
+        $users = $usersQuery->with(['devices', 'mfa'])->paginate(5);
+
 
         foreach ($users as $user) {
 
@@ -92,55 +97,58 @@ class UserController extends Controller
 
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6',
-            'usertype' => 'required|string|in:admin,staff,student,general'
-        ]);
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users',
+        'password' => 'required|min:6',
+        'usertype' => 'required|string|in:admin,staff,student,general'
+    ]);
 
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'usertype' => $request->usertype, // Ensure usertype is stored correctly
-        ]);
-        LoggingService::logMfaEvent("Admin created a new user", [
-            'admin_id' => auth()->id(),
-            'created_email' => $request->email,
-            'usertype' => $request->usertype,
-        ]);
-        // 🔐 Sinkronisasi ke Active Directory
-        try {
-            $uid = explode('@', $request->email)[0];
+    $user = User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => bcrypt($request->password),
+        'usertype' => $request->usertype,
+    ]);
 
-            $ldap = new LdapUser;
-            $ldap->cn = $request->name;
-            $ldap->sAMAccountName = $uid; // ID login di AD
-            $ldap->userPrincipalName = $request->email;
-            $ldap->mail = $request->email;
+    // ✅ Tambahkan MFA default
+    $user->mfa()->create([
+        'mfa_enabled' => false,
+        'mfa_method' => 'email',
+    ]);
 
-            // Format password untuk AD (UTF-16LE dan dalam tanda kutip)
-            $quotedPwd = iconv('UTF-8', 'UTF-16LE', '"' . $request->password . '"');
-            $ldap->unicodePwd = $quotedPwd;
+    LoggingService::logMfaEvent("Admin created a new user", [
+        'admin_id' => auth()->id(),
+        'created_email' => $request->email,
+        'usertype' => $request->usertype,
+    ]);
 
-            // DN penempatan
-            $ldap->setDn("cn={$request->name},ou=staff,dc=petra,dc=ac,dc=id");
+    // 🔐 Sync ke Active Directory
+    try {
+        $uid = explode('@', $request->email)[0];
 
-            $ldap->save();
+        $ldap = new LdapUser;
+        $ldap->cn = $request->name;
+        $ldap->sAMAccountName = $uid;
+        $ldap->userPrincipalName = $request->email;
+        $ldap->mail = $request->email;
 
-            LoggingService::logMfaEvent("Synced new user to LDAP (AD): {$request->email}", []);
-        } catch (\Exception $e) {
-            LoggingService::logSecurityViolation("LDAP sync failed (AD) for user {$request->email}: " . $e->getMessage(), []);
-        }
+        $quotedPwd = iconv('UTF-8', 'UTF-16LE', '"' . $request->password . '"');
+        $ldap->unicodePwd = $quotedPwd;
+        $ldap->setDn("cn={$request->name},ou=staff,dc=petra,dc=ac,dc=id");
 
-
-        return redirect()
-            ->route('profile.admin.manageuser')
-            ->with('success', 'User created successfully.');
-
+        $ldap->save();
+        LoggingService::logMfaEvent("Synced new user to LDAP (AD): {$request->email}", []);
+    } catch (\Exception $e) {
+        LoggingService::logSecurityViolation("LDAP sync failed (AD) for user {$request->email}: " . $e->getMessage(), []);
     }
+
+    return redirect()
+        ->route('profile.admin.manageuser')
+        ->with('success', 'User created successfully.');
+}
+
 
 
 
@@ -161,7 +169,7 @@ class UserController extends Controller
         $oldMethod = $user->mfa_method;
 
         // ❌ Block switching to Google Auth if user has no secret
-        if ($newMethod === 'google_auth' && empty($user->google2fa_secret)) {
+        if ($newMethod === 'google_auth' && empty($user->mfa->google2fa_secret)) {
             return redirect()->back()->with('error', 'User has not activated Mobile Authenticator.');
         }
 
@@ -169,14 +177,18 @@ class UserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'usertype' => $request->usertype,
+        ]);
+
+        $user->mfa->update([
             'mfa_enabled' => $mfa_enabled,
             'mfa_method' => $request->mfa_method,
         ]);
+
         LoggingService::logMfaEvent("Admin updated user [ID: {$user->id}]", [
             'admin_id' => auth()->id(),
             'email' => $user->email,
-            'mfa_enabled' => $user->mfa_enabled,
-            'mfa_method' => $user->mfa_method,
+            'mfa_enabled' => $user->mfa->mfa_enabled,
+            'mfa_method' => $user->mfa->mfa_method,
             'usertype' => $user->usertype,
         ]);
 

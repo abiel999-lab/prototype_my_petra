@@ -281,7 +281,7 @@
                                             <label for="mfa-toggle" style="margin-right: 20px;">Enable MFA</label>
                                             <label class="switch">
                                                 <input type="checkbox" id="mfa-toggle"
-                                                    {{ auth()->user()->mfa_enabled ? 'checked' : '' }}>
+                                                    {{ auth()->user()->mfa && auth()->user()->mfa->mfa_enabled ? 'checked' : '' }}>
                                                 <span class="slider"></span>
                                             </label>
 
@@ -290,17 +290,21 @@
                                                 <select name="mfa_method" id="mfa_method"
                                                     style="margin-bottom: 20px;" class="form-control" required>
                                                     <option value="email"
-                                                        {{ auth()->user()->mfa_method === 'email' ? 'selected' : '' }}>
-                                                        Email</option>
+                                                        {{ auth()->user()->mfa && auth()->user()->mfa->mfa_method === 'email' ? 'selected' : '' }}>
+                                                        Email
+                                                    </option>
                                                     <option value="google_auth"
-                                                        {{ auth()->user()->mfa_method === 'google_auth' ? 'selected' : '' }}>
-                                                        Mobile Authenticator</option>
+                                                        {{ auth()->user()->mfa && auth()->user()->mfa->mfa_method === 'google_auth' ? 'selected' : '' }}>
+                                                        Mobile Authenticator
+                                                    </option>
                                                     <option value="whatsapp"
-                                                        {{ auth()->user()->mfa_method === 'whatsapp' ? 'selected' : '' }}>
-                                                        WhatsApp</option>
+                                                        {{ auth()->user()->mfa && auth()->user()->mfa->mfa_method === 'whatsapp' ? 'selected' : '' }}>
+                                                        WhatsApp
+                                                    </option>
                                                     <option value="sms"
-                                                        {{ auth()->user()->mfa_method === 'sms' ? 'selected' : '' }}>
-                                                        SMS (not recommended)</option>
+                                                        {{ auth()->user()->mfa && auth()->user()->mfa->mfa_method === 'sms' ? 'selected' : '' }}>
+                                                        SMS (not recommended)
+                                                    </option>
                                                 </select>
 
 
@@ -365,7 +369,7 @@
                                                 Passwordless Login</label>
                                             <label class="switch">
                                                 <input type="checkbox" id="passwordless_enabled"
-                                                    {{ auth()->user()->passwordless_enabled ? 'checked' : '' }}>
+                                                    {{ auth()->user()->mfa && auth()->user()->mfa->passwordless_enabled ? 'checked' : '' }}>
                                                 <span class="slider"></span>
                                             </label>
 
@@ -555,7 +559,7 @@
                                 otpInput.style.display = "block";
                                 otpInput.required = true;
                                 verifyButton.style.display =
-                                "inline-block"; // ✅ tampilkan tombol verify
+                                    "inline-block"; // ✅ tampilkan tombol verify
                             } else if (data.status === "success") {
                                 Swal.fire("Success", data.message, "success");
                                 hideQrSection();
@@ -706,8 +710,8 @@
     </script>
     <script>
         function confirmLogout() {
-            const mfaMethod = "{{ auth()->user()->mfa_method }}";
-            const mfaEnabled = "{{ auth()->user()->mfa_enabled }}";
+            const mfaMethod = "{{ auth()->user()->mfa->mfa_method ?? '' }}";
+            const mfaEnabled = "{{ auth()->user()->mfa->mfa_enabled ?? 0 }}";
             const phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
 
             if (mfaEnabled === "1" && (mfaMethod === "whatsapp" || mfaMethod === "sms") && phoneNumber.trim() === "") {

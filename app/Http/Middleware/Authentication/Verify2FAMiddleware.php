@@ -28,7 +28,7 @@ class Verify2FAMiddleware
                 session(['two_factor_authenticated' => true]); // Skip MFA
             }
 
-            if (!session()->get('two_factor_authenticated') && $user->mfa_enabled) {
+            if (!session()->get('two_factor_authenticated') && $user->mfa && $user->mfa->mfa_enabled) {
                 return redirect()->route('mfa-challenge.index');
             }
         }

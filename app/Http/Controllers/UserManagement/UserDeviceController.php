@@ -305,7 +305,7 @@ class UserDeviceController extends Controller
         };
 
         // ✅ Jika MFA aktif, kirim link ke halaman verifikasi OTP external
-        if ($user->mfa_enabled) {
+        if ($user->mfa && $user->mfa->mfa_enabled) {
             $mfaChallengeUrl = route('mfa-challenge-external', ['redirect' => $mfaSettingRoute]);
 
             // Kirim link MFA Challenge External

@@ -46,9 +46,13 @@ return [
         'passkey' => env('ZENZIVA_PASSKEY'),
     ],
     'zuwinda' => [
-        'api_url' => env('ZUWINDA_API_URL'),
+        'api_url' => env('ZUWINDA_SMS_URL'),
         'api_key' => env('ZUWINDA_API_KEY'),
         'default_route' => env('ZUWINDA_SMS_ROUTE', 'PREMIUM'), // Default to CHEAP if not set
+        // WhatsApp
+        'whatsapp_url' => env('ZUWINDA_WHATSAPP_URL', 'https://api.zuwinda.com/v2/messaging/whatsapp/message'),
+        'whatsapp_account_id' => env('ZUWINDA_WHATSAPP_ACCOUNT_ID'),
+
     ],
 
 ];

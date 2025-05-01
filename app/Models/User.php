@@ -25,10 +25,6 @@ class User extends Authenticatable implements LdapAuthenticatable
         'password',
         'email_verified_at',
         'remember_token',
-        'two_factor_code', // OTP dienkripsi otomatis
-        'otp_expires_at',  // Tambahkan waktu kedaluwarsa OTP
-        'mfa_enabled',
-        'mfa_method',
         'usertype',
         'temporary_role',
     ];
@@ -53,8 +49,6 @@ class User extends Authenticatable implements LdapAuthenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'two_factor_code' => 'encrypted', // Laravel akan otomatis enkripsi/dekripsi
-            'otp_expires_at' => 'datetime',
         ];
     }
     public function sessions()
@@ -65,4 +59,9 @@ class User extends Authenticatable implements LdapAuthenticatable
     {
         return $this->hasMany(\App\Models\TrustedDevice::class, 'user_id');
     }
+    public function mfa()
+    {
+        return $this->hasOne(Mfa::class);
+    }
+
 }

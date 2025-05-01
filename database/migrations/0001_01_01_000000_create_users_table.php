@@ -27,6 +27,7 @@ return new class extends Migration {
             $table->string('google2fa_secret')->nullable();
             $table->integer('failed_login_attempts')->default(0);
             $table->integer('failed_otp_attempts')->default(0);
+            $table->timestamp('login_ban_until')->nullable();
             $table->boolean('banned_status')->default(false);
 
         });

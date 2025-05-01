@@ -179,8 +179,8 @@
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
             <a href="{{ route('admin.dashboard') }}" class="brand-link">
-                <img src="https://my.petra.ac.id/img/logo.png" alt="Gate" class="brand-image img-circle elevation-3"
-                    style="opacity: .8">
+                <img src="https://my.petra.ac.id/img/logo.png" alt="Gate"
+                    class="brand-image img-circle elevation-3" style="opacity: .8">
                 <span class="brand-text font-weight-light">Gate</span>
             </a>
 
@@ -499,8 +499,8 @@
     </script>
     <script>
         function confirmLogout() {
-            const mfaMethod = "{{ auth()->user()->mfa_method }}";
-            const mfaEnabled = "{{ auth()->user()->mfa_enabled }}";
+            const mfaMethod = "{{ auth()->user()->mfa->mfa_method ?? '' }}";
+            const mfaEnabled = "{{ auth()->user()->mfa->mfa_enabled ?? 0 }}";
             const phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
 
             if (mfaEnabled === "1" && (mfaMethod === "whatsapp" || mfaMethod === "sms") && phoneNumber.trim() === "") {
@@ -527,7 +527,7 @@
         }
     </script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const input = document.getElementById('current-url-input');
             if (input) {
                 input.value = window.location.href;

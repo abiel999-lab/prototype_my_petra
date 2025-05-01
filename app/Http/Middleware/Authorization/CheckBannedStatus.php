@@ -36,13 +36,18 @@ class CheckBannedStatus
         }
 
         // ✅ Auto-reset OTP ban if expired
-        if ($user->otp_ban_until && Carbon::parse($user->otp_ban_until)->lt(now())) {
-            $user->update(['otp_ban_until' => null, 'failed_otp_attempts' => 0]);
+        if ($user->mfa && $user->mfa->otp_ban_until && Carbon::parse($user->mfa->otp_ban_until)->lt(now())) {
+            $user->mfa->update([
+                'otp_ban_until' => null,
+            ]);
+            $user->failed_otp_attempts = 0;
+            $user->save();
         }
 
+
         // ✅ Check OTP Ban (redirect to OTP page if still banned)
-        if ($user->otp_ban_until && Carbon::parse($user->otp_ban_until)->gt(now())) {
-            $banEnd = Carbon::parse($user->otp_ban_until)->setTimezone('Asia/Jakarta')->format('H:i:s');
+        if ($user->mfa && $user->mfa->otp_ban_until && Carbon::parse($user->mfa->otp_ban_until)->gt(now())) {
+            $banEnd = Carbon::parse($user->mfa->otp_ban_until)->setTimezone('Asia/Jakarta')->format('H:i:s');
             return redirect()->route('mfa-challenge.index')->withErrors([
                 'code' => "Too many incorrect OTP attempts. You are banned until {$banEnd} Jakarta Time."
             ]);
@@ -50,10 +55,11 @@ class CheckBannedStatus
 
         // ✅ Auto logout and force login after 20 failed OTP attempts
         if ($user->failed_otp_attempts >= 20) {
-            $user->update([
-                'otp_ban_until' => now()->addMinutes(30), // 30-minute ban
-                'failed_otp_attempts' => 0
+            $user->mfa->update([
+                'otp_ban_until' => now()->addMinutes(30),
             ]);
+            $user->failed_otp_attempts = 0;
+            $user->save();
 
             Auth::logout();
             return redirect()->route('login')->withErrors([

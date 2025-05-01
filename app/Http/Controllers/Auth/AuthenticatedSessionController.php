@@ -18,6 +18,8 @@ use App\Http\Controllers\UserManagement\UserDeviceController;
 use App\Services\LoggingService;
 use Illuminate\Support\Str;
 use App\Mail\MagicLinkMail;
+use App\Models\Mfa;
+
 
 
 
@@ -217,8 +219,9 @@ class AuthenticatedSessionController extends Controller
 
         // 🚫 Prevent logout if MFA is enabled and phone is required but missing (just in case)
         if (
-            $user->mfa_enabled &&
-            in_array($user->mfa_method, ['whatsapp', 'sms']) &&
+            $user->mfa &&
+            $user->mfa->mfa_enabled &&
+            in_array($user->mfa->mfa_method, ['whatsapp', 'sms']) &&
             empty($user->phone_number)
         ) {
             return redirect()->back()->withErrors([
@@ -250,14 +253,14 @@ class AuthenticatedSessionController extends Controller
         $request->validate(['email' => 'required|email']);
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !$user->passwordless_enabled) {
+        if (!$user || !$user->mfa || !$user->mfa->passwordless_enabled) {
             return back()->withErrors(['email' => 'Passwordless login not allowed for this account.']);
         }
 
         $token = Str::random(64);
-        $user->passwordless_token = hash('sha256', $token);
-        $user->passwordless_expires_at = now()->addMinutes(15);
-        $user->save();
+        $user->mfa->passwordless_token = hash('sha256', $token);
+        $user->mfa->passwordless_expires_at = now()->addMinutes(15);
+        $user->mfa->save();
 
         $link = route('passwordless.verify', ['token' => $token]);
         Mail::to($user)->send(new MagicLinkMail($link));
@@ -268,9 +271,16 @@ class AuthenticatedSessionController extends Controller
     public function verifyMagicLink($token): RedirectResponse
     {
         $hashed = hash('sha256', $token);
-        $user = User::where('passwordless_token', $hashed)
+        $mfa = Mfa::where('passwordless_token', $hashed)
             ->where('passwordless_expires_at', '>', now())
             ->first();
+
+        if (!$mfa || !$mfa->user) {
+            abort(403, 'Invalid or expired token.');
+        }
+
+        $user = $mfa->user;
+
 
         if (!$user) {
             abort(403, 'Invalid or expired token.');
@@ -284,7 +294,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         Auth::login($user);
-        $user->update([
+        $mfa->update([
             'passwordless_token' => null,
             'passwordless_expires_at' => null
         ]);
@@ -293,12 +303,9 @@ class AuthenticatedSessionController extends Controller
             'login_method' => 'magic_link',
         ]);
 
-        return $user->mfa_enabled
-            ? redirect()->route('mfa-challenge.index') // Sesuai metode MFA yang digunakan
+        return ($user->mfa && $user->mfa->mfa_enabled)
+            ? redirect()->route('mfa-challenge.index')
             : $this->redirectUser($user);
+
     }
-
-
-
-
 }

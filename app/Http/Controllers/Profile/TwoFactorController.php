@@ -23,18 +23,18 @@ class TwoFactorController extends Controller
         $user = auth()->user();
         $qrCodeUrl = null;
 
-        if ($user->mfa_method === 'email') {
-            if (!$user->two_factor_code) {
+        if ($user->mfa && $user->mfa->mfa_method === 'email') {
+            if (!$user->mfa->two_factor_code) {
                 $this->handleEmailOtp($user);
             }
-        } elseif ($user->mfa_method === 'google_auth') {
+        } elseif ($user->mfa && $user->mfa->mfa_method === 'google_auth') {
             $qrCodeUrl = $this->generateGoogleQrCode($user);
-        } elseif ($user->mfa_method === 'whatsapp') {
-            if (!$user->two_factor_code) {
+        } elseif ($user->mfa && $user->mfa->mfa_method === 'whatsapp') {
+            if (!$user->mfa->two_factor_code) {
                 $this->handleWhatsAppOtp($user);
             }
-        } elseif ($user->mfa_method === 'sms') {
-            if (!$user->two_factor_code) {
+        } elseif ($user->mfa && $user->mfa->mfa_method === 'sms') {
+            if (!$user->mfa->two_factor_code) {
                 $this->handleSmsOtp($user);
             }
         }
@@ -66,11 +66,12 @@ class TwoFactorController extends Controller
             session()->forget('pending_user_id');
 
             // ✅ Reset failed attempts and clear OTP data
-            $user->update([
+            $user->mfa->update([
                 'two_factor_code' => null,
                 'otp_expires_at' => null,
-                'failed_otp_attempts' => 0,
             ]);
+            $user->failed_otp_attempts = 0;
+            $user->save();
 
             // ✅ Redirect based on redirect param or fallback to dashboard
             $redirectTo = $request->input('redirect') ?? route($this->getUserDashboard($user));
@@ -84,7 +85,7 @@ class TwoFactorController extends Controller
 
         // 🚨 If failed 10 times, trigger lockout
         if ($user->failed_otp_attempts == 10) {
-            LoggingService::logSecurityViolation("User [ID: {$user->id}] locked out after 10 OTP failures (MFA method: {$user->mfa_method})");
+            LoggingService::logSecurityViolation("User [ID: {$user->id}] locked out after 10 OTP failures (MFA method: {$user->mfa->mfa_method})");
             Mail::to('mfa.mypetra@petra.ac.id')->send(new ViolationMail($user, 'otp'));
             return redirect()->route('mfa-challenge.index')->with([
                 'otp_failed_limit' => true
@@ -101,16 +102,16 @@ class TwoFactorController extends Controller
         $now = now();
 
         // Prevent generating a new OTP if still valid
-        if ($user->two_factor_code && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
+        if ($user->mfa->two_factor_code && $user->mfa->otp_expires_at && $now->lt($user->mfa->otp_expires_at)) {
             return;
         }
 
         // Generate new OTP
         $code = $this->generateOtpWithNumber(); // 🔁 ganti jadi yang wajib angka
-        $user->two_factor_code = Crypt::encryptString($code);
-        $user->otp_expires_at = $now->addMinutes(10);
+        $user->mfa->two_factor_code = Crypt::encryptString($code);
+        $user->mfa->otp_expires_at = $now->addMinutes(10);
         $user->failed_otp_attempts = 0; // Reset failed attempts on new OTP generation
-        $user->save();
+        $user->mfa->save();
 
 
 
@@ -129,16 +130,16 @@ class TwoFactorController extends Controller
     {
         $google2fa = new Google2FA();
 
-        if (!$user->google2fa_secret) {
+        if (!$user->mfa->google2fa_secret) {
             $secretKey = $google2fa->generateSecretKey();
-            $user->google2fa_secret = $secretKey;
-            $user->save();
+            $user->mfa->google2fa_secret = $secretKey;
+            $user->mfa->save();
         }
 
         return $google2fa->getQRCodeUrl(
             config('app.name'),
             $user->email,
-            $user->google2fa_secret
+            $user->mfa->google2fa_secret
         );
     }
 
@@ -150,16 +151,16 @@ class TwoFactorController extends Controller
         $failedAttempts = $user->failed_otp_attempts;
 
         // **Reset OTP but keep failed attempts**
-        $user->two_factor_code = null;
-        $user->otp_expires_at = null;
-        $user->save(); // ✅ Ensure the database is updated
+        $user->mfa->two_factor_code = null;
+        $user->mfa->otp_expires_at = null;
+        $user->mfa->save(); // ✅ Ensure the database is updated
 
         // ✅ Generate and send new OTP
-        if ($user->mfa_method === 'email') {
+        if ($user->mfa->mfa_method === 'email') {
             $this->handleEmailOtp($user);
-        } elseif ($user->mfa_method === 'whatsapp') {
+        } elseif ($user->mfa->mfa_method === 'whatsapp') {
             $this->handleWhatsAppOtp($user);
-        } elseif ($user->mfa_method === 'sms') {
+        } elseif ($user->mfa->mfa_method === 'sms') {
             $this->handleSmsOtp($user);
         }
 
@@ -177,12 +178,12 @@ class TwoFactorController extends Controller
     {
         $now = now();
 
-        if ($user->mfa_method === 'email') {
+        if ($user->mfa->mfa_method === 'email') {
             try {
-                $decryptedOtp = Crypt::decryptString($user->two_factor_code);
+                $decryptedOtp = Crypt::decryptString($user->mfa->two_factor_code);
 
                 // Periksa apakah OTP cocok dan belum kedaluwarsa
-                if ($code == $decryptedOtp && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
+                if ($code == $decryptedOtp && $user->mfa->otp_expires_at && $now->lt($user->mfa->otp_expires_at)) {
                     return true;
                 }
             } catch (\Exception $e) {
@@ -190,26 +191,26 @@ class TwoFactorController extends Controller
             }
         }
 
-        if ($user->mfa_method === 'google_auth') {
+        if ($user->mfa->mfa_method === 'google_auth') {
             $google2fa = new Google2FA();
-            return $google2fa->verifyKey($user->google2fa_secret, $code);
+            return $google2fa->verifyKey($user->mfa->google2fa_secret, $code);
         }
-        if ($user->mfa_method === 'whatsapp') {
+        if ($user->mfa->mfa_method === 'whatsapp') {
             try {
-                $decryptedOtp = Crypt::decryptString($user->two_factor_code);
+                $decryptedOtp = Crypt::decryptString($user->mfa->two_factor_code);
 
-                if ($code == $decryptedOtp && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
+                if ($code == $decryptedOtp && $user->mfa->otp_expires_at && $now->lt($user->mfa->otp_expires_at)) {
                     return true;
                 }
             } catch (\Exception $e) {
                 return false;
             }
         }
-        if ($user->mfa_method === 'sms') {
+        if ($user->mfa->mfa_method === 'sms') {
             try {
-                $decryptedOtp = Crypt::decryptString($user->two_factor_code);
+                $decryptedOtp = Crypt::decryptString($user->mfa->two_factor_code);
 
-                if ($code == $decryptedOtp && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
+                if ($code == $decryptedOtp && $user->mfa->otp_expires_at && $now->lt($user->mfa->otp_expires_at)) {
                     return true;
                 }
             } catch (\Exception $e) {
@@ -258,15 +259,15 @@ class TwoFactorController extends Controller
         $now = now();
 
         // Jika OTP masih berlaku, jangan generate ulang
-        if ($user->two_factor_code && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
+        if ($user->mfa->two_factor_code && $user->mfa->otp_expires_at && $now->lt($user->mfa->otp_expires_at)) {
             return;
         }
 
         // Generate OTP baru
         $code = $this->generateOtpWithNumber(); // 🔁 ganti jadi yang wajib angka
-        $user->two_factor_code = Crypt::encryptString($code);
-        $user->otp_expires_at = $now->addMinutes(5);
-        $user->save();
+        $user->mfa->two_factor_code = Crypt::encryptString($code);
+        $user->mfa->otp_expires_at = $now->addMinutes(5);
+        $user->mfa->save();
         LoggingService::logMfaEvent("WhatsApp OTP sent to {$user->phone_number}", [
             'method' => 'whatsapp',
         ]);
@@ -285,16 +286,16 @@ class TwoFactorController extends Controller
 
 
         // If OTP is still valid, do not regenerate
-        if ($user->two_factor_code && $user->otp_expires_at && $now->lt($user->otp_expires_at)) {
+        if ($user->mfa->two_factor_code && $user->mfa->otp_expires_at && $now->lt($user->mfa->otp_expires_at)) {
 
             return;
         }
 
         // Generate new OTP
         $code = $this->generateOtpWithNumber(); // 🔁 ganti jadi yang wajib angka
-        $user->two_factor_code = Crypt::encryptString($code);
-        $user->otp_expires_at = $now->addMinutes(5);
-        $user->save();
+        $user->mfa->two_factor_code = Crypt::encryptString($code);
+        $user->mfa->otp_expires_at = $now->addMinutes(5);
+        $user->mfa->save();
         LoggingService::logMfaEvent("Generated OTP for {$user->phone_number}", [
             'method' => 'sms',
             'code' => $code // Optional — you can remove if not safe

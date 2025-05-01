@@ -296,24 +296,25 @@
                                                             <td class="text-center">
                                                                 <input type="checkbox"
                                                                     id="mfa_enabled-{{ $user->id }}"
-                                                                    {{ $user->mfa_enabled ? 'checked' : '' }} disabled>
+                                                                    {{ optional($user->mfa)->mfa_enabled ? 'checked' : '' }}
+                                                                    disabled>
                                                             </td>
                                                             <td>
                                                                 <select id="mfa_method-{{ $user->id }}"
                                                                     class="form-control form-control-sm" disabled>
                                                                     <option value="email"
-                                                                        {{ $user->mfa_method == 'email' ? 'selected' : '' }}>
+                                                                        {{ optional($user->mfa)->mfa_method == 'email' ? 'selected' : '' }}>
                                                                         Email</option>
                                                                     <option value="google_auth"
-                                                                        {{ $user->mfa_method == 'google_auth' ? 'selected' : '' }}
-                                                                        {{ is_null($user->google2fa_secret) ? 'disabled' : '' }}>
+                                                                        {{ optional($user->mfa)->mfa_method == 'google_auth' ? 'selected' : '' }}
+                                                                        {{ is_null(optional($user->mfa)->google2fa_secret) ? 'disabled' : '' }}>
                                                                         Mobile Authenticator
                                                                     </option>
                                                                     <option value="whatsapp"
-                                                                        {{ $user->mfa_method == 'whatsapp' ? 'selected' : '' }}>
+                                                                        {{ optional($user->mfa)->mfa_method == 'whatsapp' ? 'selected' : '' }}>
                                                                         WhatsApp</option>
                                                                     <option value="sms"
-                                                                        {{ $user->mfa_method == 'sms' ? 'selected' : '' }}>
+                                                                        {{ optional($user->mfa)->mfa_method == 'sms' ? 'selected' : '' }}>
                                                                         SMS</option>
                                                                 </select>
                                                             </td>
@@ -719,8 +720,8 @@
     <!-- Logout SweetAlert -->
     <script>
         function confirmLogout() {
-            const mfaMethod = "{{ auth()->user()->mfa_method }}";
-            const mfaEnabled = "{{ auth()->user()->mfa_enabled }}";
+            const mfaMethod = "{{ auth()->user()->mfa->mfa_method ?? '' }}";
+            const mfaEnabled = "{{ auth()->user()->mfa->mfa_enabled ?? 0 }}";
             const phoneNumber = "{{ auth()->user()->phone_number ?? '' }}";
 
             if (mfaEnabled === "1" && (mfaMethod === "whatsapp" || mfaMethod === "sms") && phoneNumber.trim() === "") {

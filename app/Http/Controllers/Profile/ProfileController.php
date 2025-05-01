@@ -202,8 +202,9 @@ class ProfileController extends Controller
     public function toggleMfa(Request $request)
     {
         $user = auth()->user();
-        $user->mfa_enabled = !$user->mfa_enabled;
-        $user->save();
+        $user->mfa->mfa_enabled = !$user->mfa->mfa_enabled;
+        $user->mfa->save();
+
 
         return response()->json([
             'status' => 'success',
@@ -225,14 +226,14 @@ class ProfileController extends Controller
         if ($method === 'google_auth') {
             $google2fa = new \PragmaRX\Google2FA\Google2FA();
 
-            if (!$user->google2fa_secret) {
-                $user->google2fa_secret = $google2fa->generateSecretKey();
-                $user->save();
+            if (!$user->mfa->google2fa_secret) {
+                $user->mfa->google2fa_secret = $google2fa->generateSecretKey();
+                $user->mfa->save();
 
                 $qrCodeUrl = $google2fa->getQRCodeUrl(
                     config('app.name'),
                     $user->email,
-                    $user->google2fa_secret
+                    $user->mfa->google2fa_secret
                 );
 
 
@@ -245,10 +246,10 @@ class ProfileController extends Controller
             }
 
             if ($otp) {
-                $isValid = $google2fa->verifyKey($user->google2fa_secret, $otp);
+                $isValid = $google2fa->verifyKey($user->mfa->google2fa_secret, $otp);
                 if ($isValid) {
-                    $user->mfa_method = 'google_auth';
-                    $user->save();
+                    $user->mfa->mfa_method = 'google_auth';
+                    $user->mfa->save();
 
                     return response()->json([
                         'status' => 'success',
@@ -266,7 +267,7 @@ class ProfileController extends Controller
             $qrCodeUrl = $google2fa->getQRCodeUrl(
                 config('app.name'),
                 $user->email,
-                $user->google2fa_secret
+                $user->mfa->google2fa_secret
             );
 
 
@@ -291,8 +292,9 @@ class ProfileController extends Controller
         }
 
         // Set method for email / sms / whatsapp
-        $user->mfa_method = $method;
-        $user->save();
+        $user->mfa->mfa_method = $method;
+        $user->mfa->save();
+
 
         return response()->json([
             'status' => 'success',
@@ -324,8 +326,8 @@ class ProfileController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
         }
 
-        $user->passwordless_enabled = !$user->passwordless_enabled;
-        $user->save();
+        $user->mfa->passwordless_enabled = !$user->mfa->passwordless_enabled;
+        $user->mfa->save();
 
         return response()->json([
             'status' => 'success',
@@ -343,8 +345,8 @@ class ProfileController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
         }
 
-        $user->passwordless_enabled = !$user->passwordless_enabled;
-        $user->save();
+        $user->mfa->passwordless_enabled = !$user->mfa->passwordless_enabled;
+        $user->mfa->save();
 
         return response()->json([
             'status' => 'success',
@@ -360,8 +362,8 @@ class ProfileController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
         }
 
-        $user->passwordless_enabled = !$user->passwordless_enabled;
-        $user->save();
+        $user->mfa->passwordless_enabled = !$user->mfa->passwordless_enabled;
+        $user->mfa->save();
 
         return response()->json([
             'status' => 'success',
@@ -378,8 +380,8 @@ class ProfileController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
         }
 
-        $user->passwordless_enabled = !$user->passwordless_enabled;
-        $user->save();
+        $user->mfa->passwordless_enabled = !$user->mfa->passwordless_enabled;
+        $user->mfa->save();
 
         return response()->json([
             'status' => 'success',
