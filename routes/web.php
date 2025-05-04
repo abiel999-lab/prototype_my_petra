@@ -9,7 +9,7 @@ use App\Http\Controllers\Profile\TwoFactorController;
 use App\Http\Controllers\UserManagement\UserController;
 use App\Http\Controllers\Profile\SessionController;
 use App\Http\Middleware\Session\StoreUserSession;
-use App\Http\Controllers\UserManagement\UserDeviceController; // Added UserDeviceController
+use App\Http\Controllers\UserManagement\UserDeviceController;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
