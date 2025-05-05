@@ -318,7 +318,7 @@
                     <a class="thing" href="https://s.petra.ac.id/">
                         <i class=""></i> Shortener
                     </a>
-                    <a class="thing" href="https://sim-eltc.petra.ac.id">
+                    <a class="thing" href="{{ route('profile.admin.mfa') }}">
                         <i class="fas fa-shield-alt"></i> Activate MFA
                     </a>
                 </div>

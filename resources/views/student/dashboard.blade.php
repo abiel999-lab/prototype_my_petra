@@ -266,7 +266,7 @@
                     <a class="thing" href="https://alumni.petra.ac.id/">
                         <i class=""></i> alumni
                     </a>
-                    <a class="thing" href="https://sim-eltc.petra.ac.id">
+                    <a class="thing" href="{{ route('profile.student.mfa') }}">
                         <i class="fas fa-shield-alt"></i> Activate MFA
                     </a>
                     <a class="thing" href="{{ route('customer-support') }}">
