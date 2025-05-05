@@ -132,25 +132,25 @@
 
                                 <p class="login-wrapper-footer-text" style="margin-top: 20px;">
                                     Try Passwordless Login?
-                                    <a href="{{ route('passwordless.request') }}"
+                                    <a style="color: blue !important;" href="{{ route('passwordless.request') }}"
                                         class="text-reset"><strong>here</strong></a>.
                                     <br />
                                     Forgot your password? Reset your password
-                                    <a href="{{ route('password.request') }}"
+                                    <a style="color: blue !important;"href="{{ route('password.request') }}"
                                         class="text-reset"><strong>here</strong></a>.
                                     <br />
                                     <!-- Register -->
                                     Doesn't have account? Register on
-                                    <a href="{{ route('register') }}" class="text-reset"><strong>here</strong></a>.
+                                    <a style="color: blue !important;"href="{{ route('register') }}" class="text-reset"><strong>here</strong></a>.
                                     <br />
                                     You are not a student or staff? Click
-                                    <a href="{{ route('login.public') }}" class="text-reset"><strong>here</strong></a>.
+                                    <a style="color: blue !important;"href="{{ route('login.public') }}" class="text-reset"><strong>here</strong></a>.
                                     <br />
                                     Are you an admin? Click
-                                    <a href="{{ route('login.admin') }}" class="text-reset"><strong>here</strong></a>.
+                                    <a style="color: blue !important;"href="{{ route('login.admin') }}" class="text-reset"><strong>here</strong></a>.
                                     <br />
                                     Need support? Click
-                                    <a href="{{ route('customer-support') }}"
+                                    <a style="color: blue !important;" href="{{ route('customer-support') }}"
                                         class="text-reset"><strong>here</strong></a>.
                                 </p>
                             </div>

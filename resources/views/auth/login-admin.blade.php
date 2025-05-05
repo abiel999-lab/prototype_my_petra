@@ -287,33 +287,26 @@
                                     <p class="login-wrapper-footer-text"
                                         style="margin-top: 20px; margin-bottom: 10px; display: block;">
                                         Try Passwordless Login?
-                                        <a href="{{ route('passwordless.request') }}"
-                                            class="text-reset"><strong>here</strong></a>.
-                                        <br />
-                                        Forgot your password? Reset your password
-                                        <a href="{{ route('password.request') }}"
-                                            class="text-reset"><strong>here</strong></a>.
-
-                                        <br />
-                                        <!-- Register -->
-                                        Doesn't have account? Register on
-                                        <a href="{{ route('register') }}"
-                                            class="text-reset"><strong>here</strong></a>.
-                                        <br />
-                                        <!-- Student or staff login -->
-                                        You are not a student or staff, click
-                                        <a href="{{ route('login.public') }}"
-                                            class="text-reset"><strong>here</strong></a>.
-                                        <br />
-                                        <!-- Student or staff login -->
-                                        You are not an admin, click
-                                        <a href="{{ route('login') }}" class="text-reset"><strong>here</strong></a>.
-                                        <br />
-                                        <!-- support -->
-                                        Need support? click
-                                        <a href="{{ route('customer-support') }}"
-                                            class="text-reset"><strong>here</strong></a>.
-
+                                    <a style="color: blue !important;" href="{{ route('passwordless.request') }}"
+                                        class="text-reset"><strong>here</strong></a>.
+                                    <br />
+                                    Forgot your password? Reset your password
+                                    <a style="color: blue !important;"href="{{ route('password.request') }}"
+                                        class="text-reset"><strong>here</strong></a>.
+                                    <br />
+                                    <!-- Register -->
+                                    Doesn't have account? Register on
+                                    <a style="color: blue !important;"href="{{ route('register') }}" class="text-reset"><strong>here</strong></a>.
+                                    <br />
+                                    You are not a student or staff? Click
+                                    <a style="color: blue !important;"href="{{ route('login.public') }}" class="text-reset"><strong>here</strong></a>.
+                                    <br />
+                                    Are you an admin? Click
+                                    <a style="color: blue !important;"href="{{ route('login.admin') }}" class="text-reset"><strong>here</strong></a>.
+                                    <br />
+                                    Need support? Click
+                                    <a style="color: blue !important;" href="{{ route('customer-support') }}"
+                                        class="text-reset"><strong>here</strong></a>.
                                     </p>
                                 </div>
 
