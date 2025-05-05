@@ -52,8 +52,7 @@ class SessionController extends Controller
 
     public function show()
     {
-
-
+        $sessions = $this->getSessionData(auth()->id());
         return view('profile.session', compact('sessions')); // Corrected view path
     }
 
