@@ -8,8 +8,9 @@ use Illuminate\Notifications\Notifiable;
 use LdapRecord\Laravel\Auth\HasLdapUser;
 use LdapRecord\Laravel\Auth\LdapAuthenticatable;
 use LdapRecord\Laravel\Auth\AuthenticatesWithLdap;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-class User extends Authenticatable implements LdapAuthenticatable
+class User extends Authenticatable implements LdapAuthenticatable, MustVerifyEmail
 {
     use HasFactory, Notifiable, AuthenticatesWithLdap, HasLdapUser;
 
