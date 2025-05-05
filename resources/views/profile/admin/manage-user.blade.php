@@ -515,6 +515,18 @@
                                             </form>
                                         </div>
                                     </div>
+                                    <p style="margin-top: 15px; font-size: 16px;">
+                                        <strong>Tentang Fitur Manage Users</strong><br>
+                                        Fitur ini memungkinkan administrator untuk <strong>mengelola seluruh akun pengguna</strong> dalam sistem secara menyeluruh. Berikut adalah fungsi-fungsi utamanya:
+                                        <ul style="margin-top: 10px;">
+                                            <li><strong>Edit Data:</strong> Mengubah nama, email, dan jenis user (admin, staff, student, general) secara langsung melalui antarmuka tabel.</li>
+                                            <li><strong>Manajemen Keamanan:</strong> Menampilkan status MFA dan metode autentikasi yang digunakan oleh setiap pengguna, termasuk Google Authenticator, email, WhatsApp, atau SMS.</li>
+                                            <li><strong>Manajemen Perangkat:</strong> Memantau semua perangkat yang pernah digunakan untuk login, serta memberikan opsi untuk <strong>trust</strong>, <strong>untrust</strong>, atau <strong>menghapus</strong> perangkat.</li>
+                                            <li><strong>Sesi Aktif:</strong> Menampilkan sesi login pengguna secara real-time, termasuk IP address, perangkat, sistem operasi, browser, serta waktu login dan waktu kedaluwarsa sesi. Admin dapat mencabut sesi tertentu bila diperlukan.</li>
+                                            <li><strong>Aksi Akun:</strong> Memberikan kontrol untuk membekukan (ban), mengaktifkan kembali (unban), atau menghapus akun pengguna non-admin secara manual.</li>
+                                            <li><strong>Tambah Pengguna:</strong> Formulir registrasi di bagian bawah halaman memungkinkan admin untuk <strong>menambahkan akun baru</strong> ke dalam sistem.</li>
+                                        </ul>
+                                    </p>
                                 </div>
 
 

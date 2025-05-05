@@ -351,6 +351,12 @@
                                                 @endforeach
                                             </tbody>
                                         </table>
+                                        <p style="margin-top: 15px; font-size: 16px;">
+                                            <strong>Session</strong><br>
+                                            Halaman ini menampilkan semua <strong>sesi login aktif</strong> yang sedang berlangsung di berbagai perangkat.<br>
+                                            Anda bisa <strong>melihat lokasi/IP, jenis perangkat, waktu login, dan waktu sesi berakhir</strong>.<br>
+                                            Jika menemukan sesi yang mencurigakan, Anda bisa <strong>mengakhiri satu sesi atau semua sesi sekaligus</strong> untuk mengamankan akun.
+                                        </p>
                                     </div>
                                 </div> <!-- /.card-body -->
                             </div> <!-- /.card -->
