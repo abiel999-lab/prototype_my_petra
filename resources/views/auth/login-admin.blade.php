@@ -274,9 +274,7 @@
                                     </div>
                                 </form>
 
-                                <a href="{{ route('passwordless.request') }}" class="btn btn-lg login-btn">
-                                    Login Without Password
-                                </a>
+
 
 
                                 <div>

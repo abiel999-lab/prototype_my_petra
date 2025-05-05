@@ -47,6 +47,12 @@ class UserSeeder extends Seeder
                 'remember_token' => Str::random(60),
             ]);
 
+            // ✅ Buat MFA setelah user
+            $user->mfa()->create([
+                'mfa_enabled' => false,
+                'mfa_method' => 'email',
+            ]);
+
             // Insert MFA config into 'mfa' table
             DB::table('mfa')->insert([
                 'user_id' => $user->id,

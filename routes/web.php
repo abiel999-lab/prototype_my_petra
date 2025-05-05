@@ -89,6 +89,14 @@ Route::get('auth/google/callback', function () {
                 'banned_status' => false,
                 'failed_login_attempts' => 0,
             ]);
+            // if (!$user->mfa()->exists()) {
+            //     $user->mfa()->create([
+            //         'mfa_enabled' => false,
+            //         'mfa_method' => 'email',
+            //     ]);
+            // }
+
+
         }
 
         Auth::login($user);

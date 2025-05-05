@@ -153,6 +153,15 @@ class AuthenticatedSessionController extends Controller
                         'password' => Hash::make($request->password),
                         'usertype' => $usertype,
                     ]);
+                    // // ✅ Tambahkan MFA default jika user baru
+                    // if (!$user->mfa()->exists()) {
+                    //     $user->mfa()->create([
+                    //         'mfa_enabled' => false,
+                    //         'mfa_method' => 'email',
+                    //     ]);
+                    // }
+
+
                 }
 
                 Auth::login($user);

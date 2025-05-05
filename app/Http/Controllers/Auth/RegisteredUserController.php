@@ -64,11 +64,15 @@ class RegisteredUserController extends Controller
             'remember_token' => Str::random(60),
         ]);
         // 📌 Buat record MFA kosong (default)
-        Mfa::create([
-            'user_id' => $user->id,
-            'mfa_enabled' => false,
-            'mfa_method' => 'email',
-        ]);
+        // if (!$user->mfa()->exists()) {
+        //     $user->mfa()->create([
+        //         'mfa_enabled' => false,
+        //         'mfa_method' => 'email',
+        //     ]);
+        // }
+
+
+
 
 
         event(new Registered($user));
