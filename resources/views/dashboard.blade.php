@@ -73,13 +73,14 @@
                 <img src="https://my.petra.ac.id/img/logo.png" alt="Gate" style="width: 153px;">
             </a>
             <ul class="order-1 order-md-3 navbar-nav navbar-no-expand ml-auto">
-                {{-- 🔁 Switch Role Dropdown (Admin & Staff) --}}
+                {{-- 🔁 Switch Role Dropdown --}}
                 @php
                     $user = auth()->user();
-                    $activeRole = $user->temporary_role ?? $user->usertype;
+                    $activeRole = session('active_role', $user->usertype);
+                    $roles = $user->roles->pluck('name')->toArray(); // dari relasi many-to-many
                 @endphp
 
-                @if (in_array($user->usertype, ['admin', 'staff']))
+                @if (!empty($roles))
                     <li class="nav-item dropdown" style="margin-right: 10px">
                         <a class="nav-link btn btn-outline-secondary" data-toggle="dropdown" href="#">
                             <i class="fas fa-random"></i> {{ strtoupper($activeRole) }}
@@ -88,39 +89,32 @@
                             <form action="{{ route('role.switch.update') }}" method="POST">
                                 @csrf
 
-                                {{-- Staff bisa ke student --}}
-                                @if ($user->usertype === 'staff')
-                                    <button type="submit" name="temporary_role" value="student"
-                                        class="dropdown-item {{ $activeRole === 'student' ? 'active' : '' }}">
-                                        <i class="fas fa-user-graduate"></i> Student View
-                                    </button>
-                                    <div class="dropdown-divider"></div>
-                                    <button type="submit" name="temporary_role" value=""
-                                        class="dropdown-item text-danger">
-                                        <i class="fas fa-user-tie"></i> Return to Staff
-                                    </button>
-                                @endif
+                                {{-- Default role (usertype) --}}
+                                <button type="submit" name="role" value="{{ $user->usertype }}"
+                                    class="dropdown-item {{ $activeRole === $user->usertype ? 'active' : '' }}">
+                                    <i class="fas fa-user-check"></i> Return to {{ ucfirst($user->usertype) }}
+                                </button>
 
-                                {{-- Admin bebas impersonasi --}}
-                                @if ($user->usertype === 'admin')
-                                    <button type="submit" name="temporary_role" value="student"
-                                        class="dropdown-item {{ $activeRole === 'student' ? 'active' : '' }}">
-                                        <i class="fas fa-user-graduate"></i> Student View
-                                    </button>
-                                    <button type="submit" name="temporary_role" value="staff"
-                                        class="dropdown-item {{ $activeRole === 'staff' ? 'active' : '' }}">
-                                        <i class="fas fa-user-tie"></i> Staff View
-                                    </button>
-                                    <button type="submit" name="temporary_role" value="general"
-                                        class="dropdown-item {{ $activeRole === 'general' ? 'active' : '' }}">
-                                        <i class="fas fa-users"></i> General View
-                                    </button>
-                                    <div class="dropdown-divider"></div>
-                                    <button type="submit" name="temporary_role" value=""
-                                        class="dropdown-item text-danger">
-                                        <i class="fas fa-user-shield"></i> Return to Admin
-                                    </button>
-                                @endif
+                                <div class="dropdown-divider"></div>
+
+                                {{-- Role tambahan dari tabel role_user --}}
+                                @foreach ($roles as $role)
+                                    @if ($role !== $user->usertype)
+                                        <button type="submit" name="role" value="{{ $role }}"
+                                            class="dropdown-item {{ $activeRole === $role ? 'active' : '' }}">
+                                            @if ($role === 'student')
+                                                <i class="fas fa-user-graduate"></i>
+                                            @elseif ($role === 'staff')
+                                                <i class="fas fa-user-tie"></i>
+                                            @elseif ($role === 'admin')
+                                                <i class="fas fa-user-shield"></i>
+                                            @else
+                                                <i class="fas fa-users"></i>
+                                            @endif
+                                            {{ ucfirst($role) }} View
+                                        </button>
+                                    @endif
+                                @endforeach
                             </form>
                         </div>
                     </li>

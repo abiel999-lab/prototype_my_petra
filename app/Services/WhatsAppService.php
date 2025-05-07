@@ -42,4 +42,29 @@ class WhatsAppService
 
         return $response->json();
     }
+    public function sendSupportTicket($phone, $ticketCode, $issueType, $name)
+    {
+        $message = "*[My Petra] Customer Support*\n";
+        $message .= "Hello *$name*, thank you for contacting our support team.\n\n";
+        $message .= "Your Ticket Code: *$ticketCode*\n";
+        $message .= "Issue Type: $issueType\n";
+        $message .= "Date: " . now('Asia/Jakarta')->format('d M Y H:i') . " WIB\n";
+        $message .= "--------------------------------------\n";
+        $message .= "We will respond as soon as possible.\n";
+        $message .= "Track or update your request via:\n";
+        $message .= "https://mfa-mypetra.projects.petra.ac.id/customer-support\n";
+        $message .= "--------------------------------------\n";
+        $message .= "_This is an automatic message. Please do not reply._";
+
+        return Http::withHeaders([
+            'X-Access-Key' => $this->apiKey,
+        ])->post($this->apiUrl, [
+                    'accountId' => $this->accountId,
+                    'to' => $phone,
+                    'messageType' => 'text',
+                    'content' => $message,
+                ])->json();
+    }
+
+
 }

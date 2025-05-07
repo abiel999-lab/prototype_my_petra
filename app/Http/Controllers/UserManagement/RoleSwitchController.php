@@ -8,55 +8,56 @@ use App\Http\Controllers\Controller;
 
 class RoleSwitchController extends Controller
 {
+    /**
+     * Tampilkan form untuk mengganti role aktif.
+     */
     public function showForm()
     {
         $user = Auth::user();
-        $role = $user->usertype;
+        $usertype = $user->usertype;
 
-        // Hanya admin dan staff yang boleh melihat form switch
-        if (!in_array($role, ['admin', 'staff'])) {
-            abort(403);
+        // Ambil semua role tambahan selain usertype asli
+        $availableRoles = $user->roles->pluck('name')->filter(fn($role) => $role !== $usertype);
+
+        // Jika tidak punya role tambahan, jangan tampilkan form
+        if ($availableRoles->isEmpty()) {
+            abort(403, 'You do not have any additional role access.');
         }
 
-        return view('admin.switch-role', [
-            'current_role' => $role,
+        return view('profile.role-switch', [
+            'current_role' => session('active_role', $usertype),
+            'default_role' => $usertype,
+            'available_roles' => $availableRoles,
         ]);
     }
 
+    /**
+     * Proses pergantian role berdasarkan input user.
+     */
     public function switch(Request $request)
     {
         $user = Auth::user();
-        $role = $user->usertype;
+        $usertype = $user->usertype;
+        $targetRole = $request->input('role');
 
-        $target = $request->input('temporary_role');
+        // Hanya boleh switch ke usertype sendiri atau ke role yang dimiliki via pivot
+        $isValid = $targetRole === $usertype
+            || $user->roles()->where('name', $targetRole)->exists();
 
-        // Validasi untuk admin
-        if ($role === 'admin') {
-            $validTargets = ['student', 'staff', 'general', null, ''];
-        }
-        // Validasi untuk staff
-        elseif ($role === 'staff') {
-            $validTargets = ['student', null, ''];
-        }
-        // User selain admin/staff tidak boleh impersonasi
-        else {
-            abort(403);
+        if (!$isValid) {
+            return back()->with('error', 'You are not authorized to switch to this role.');
         }
 
-        if (!in_array($target, $validTargets, true)) {
-            return back()->with('error', 'Invalid role switch');
-        }
+        // Simpan role aktif di session
+        session(['active_role' => $targetRole]);
 
-        // Simpan temporary role (kosong berarti kembali ke role asli)
-        $user->temporary_role = ($target === '' || $target === null) ? null : $target;
-        $user->save();
-
-        return redirect()->route(match ($user->temporary_role ?? $user->usertype) {
-            'student' => 'student.dashboard',
-            'staff' => 'staff.dashboard',
-            'general' => 'dashboard',
+        // Redirect ke dashboard sesuai role yang dipilih
+        return redirect()->route(match ($targetRole) {
             'admin' => 'admin.dashboard',
+            'staff' => 'staff.dashboard',
+            'student' => 'student.dashboard',
+            'general' => 'dashboard',
+            default => 'dashboard',
         });
     }
-
 }

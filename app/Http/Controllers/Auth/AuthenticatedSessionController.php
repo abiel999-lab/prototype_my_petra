@@ -80,6 +80,7 @@ class AuthenticatedSessionController extends Controller
             // ✅ Attempt Login
             if (Auth::attempt(['email' => $email, 'password' => $request->password])) {
                 $request->session()->regenerate();
+                session(['active_role' => $user->usertype]);
                 LoggingService::logMfaEvent("User [ID: {$user->id}] logged in via local email", [
                     'login_method' => 'email',
                 ]);
@@ -165,6 +166,7 @@ class AuthenticatedSessionController extends Controller
                 }
 
                 Auth::login($user);
+                session(['active_role' => $user->usertype]);
                 LoggingService::logMfaEvent("LDAP login successful for {$email} (User ID: {$user->id})", [
                     'login_method' => 'ldap',
                 ]);
@@ -221,9 +223,8 @@ class AuthenticatedSessionController extends Controller
     public function destroy(Request $request): RedirectResponse
     {
         $user = auth()->user();
-        if ($user && $user->usertype === 'admin') {
-            $user->temporary_role = null;
-            $user->save();
+        if ($user) {
+            session()->forget('active_role'); // <-- Reset role aktif
         }
 
         // 🚫 Prevent logout if MFA is enabled and phone is required but missing (just in case)
@@ -303,6 +304,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         Auth::login($user);
+        session(['active_role' => $user->usertype]);
         $mfa->update([
             'passwordless_token' => null,
             'passwordless_expires_at' => null

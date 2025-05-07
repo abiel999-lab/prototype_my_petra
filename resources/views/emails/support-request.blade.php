@@ -29,6 +29,7 @@
                 <p>A new customer support request has been submitted:</p>
 
                 <p><strong>Submitted At:</strong> {{ $submitted_at }}</p>
+                <p><strong>Ticket Code:</strong> {{ $ticket_code }}</p>
                 <p><strong>Name:</strong> {{ $name }}</p>
                 <p><strong>Email:</strong> {{ $email }}</p>
                 <p><strong>Issue Type:</strong> {{ $issue_type }}</p>

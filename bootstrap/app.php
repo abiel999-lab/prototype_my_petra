@@ -10,6 +10,7 @@ use App\Http\Middleware\Authentication\LdapAuthenticate;
 use App\Http\Middleware\Authorization\CheckBannedStatus;
 use App\Http\Middleware\Authorization\RestrictToMFA;
 use App\Http\Middleware\RateLimiting\IpRateLimiter;
+use \App\Http\Middleware\Authorization\CheckActiveRole;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'ldap.auth' => LdapAuthenticate::class,
             'check.banned' => CheckBannedStatus::class,
+            'checkrole' => CheckActiveRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

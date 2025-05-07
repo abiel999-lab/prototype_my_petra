@@ -100,6 +100,7 @@ Route::get('auth/google/callback', function () {
         }
 
         Auth::login($user);
+        session(['active_role' => $user->usertype]);
         LoggingService::logMfaEvent("Google OAuth login successful for {$user->email}", [
             'user_id' => $user->id,
             'ip' => request()->ip(),
@@ -194,6 +195,7 @@ Route::post('/login', function (Request $request) {
 
 
             Auth::login($user);
+            session(['active_role' => $user->usertype]);
             LoggingService::logMfaEvent("LDAP login success for {$user->email}", [
                 'user_id' => $user->id,
                 'ip' => request()->ip(),
@@ -238,13 +240,13 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
     // 🧭 Route impersonasi dashboard untuk admin dan staff
     Route::get('/role-switch', [RoleSwitchController::class, 'showForm'])->name('role.switch');
     Route::post('/role-switch', [RoleSwitchController::class, 'switch'])->name('role.switch.update');
-    Route::middleware(['role:student'])->get('/student/dashboard', fn() => view('student.dashboard'))->name('student.dashboard');
-    Route::middleware(['role:staff'])->get('/staff/dashboard', fn() => view('staff.dashboard'))->name('staff.dashboard');
-    Route::middleware(['role:general'])->get('/dashboard', fn() => view('general.dashboard'))->name('general.dashboard');
+    Route::middleware(['checkrole:student'])->get('/student/dashboard', fn() => view('student.dashboard'))->name('student.dashboard');
+    Route::middleware(['checkrole:staff'])->get('/staff/dashboard', fn() => view('staff.dashboard'))->name('staff.dashboard');
+    Route::middleware(['checkrole:general'])->get('/dashboard', fn() => view('general.dashboard'))->name('general.dashboard');
 
 
     // ðŸ”¹ Admin Routes
-    Route::middleware(['role:admin'])->group(function () {
+    Route::middleware(['checkrole:admin'])->group(function () {
 
 
         Route::get('/admin/dashboard', [HomeController::class, 'indexAdmin'])->name('admin.dashboard');
@@ -271,7 +273,7 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
     });
 
     // ðŸ”¹ Student Routes
-    Route::middleware(['role:student'])->group(function () {
+    Route::middleware(['checkrole:student'])->group(function () {
         Route::get('/student/dashboard', [HomeController::class, 'indexStudent'])->name('student.dashboard');
         Route::get('/student/setting', [ProfileController::class, 'studentprofile'])->name('profile.student.setting');
         Route::get('/student/setting/profile', [ProfileController::class, 'studenteditprofile'])->name('profile.student.profile');
@@ -295,7 +297,7 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
     });
 
     // ðŸ”¹ Staff Routes
-    Route::middleware(['role:staff'])->group(function () {
+    Route::middleware(['checkrole:staff'])->group(function () {
         Route::get('/staff/dashboard', [HomeController::class, 'indexStaff'])->name('staff.dashboard');
         Route::get('/staff/setting', [ProfileController::class, 'staffprofile'])->name('profile.staff.setting');
         Route::get('/staff/setting/profile', [ProfileController::class, 'staffeditprofile'])->name('profile.staff.profile');
@@ -317,7 +319,7 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
     });
 
     // ðŸ”¹ General User Routes
-    Route::middleware(['role:general'])->group(function () {
+    Route::middleware(['checkrole:general'])->group(function () {
         Route::get('/dashboard', function () {
             return view('dashboard');
         })->name('dashboard');
@@ -359,7 +361,9 @@ Route::post('/send-mfa-link', [UserDeviceController::class, 'sendExternalEmailLi
 // ðŸ”¹ Email & Password Check
 Route::post('/check-email-password', [AuthController::class, 'checkEmailAndPassword'])->name('checkEmailAndPassword');
 Route::get('/customer-support', [SupportController::class, 'index'])->name('customer-support');
-Route::post('/customer-support/send', [SupportController::class, 'sendEmail'])->name('customer-support.send');
+Route::post('/customer-support/send', [SupportController::class, 'sendEmail'])
+    ->middleware('throttle:3,10') // Maks. 3x request per 10 menit
+    ->name('customer-support.send');
 Route::put('/profile/update-phone', [ProfileController::class, 'updatePhone'])->name('profile.update.phone');
 
 // Passwordless Login

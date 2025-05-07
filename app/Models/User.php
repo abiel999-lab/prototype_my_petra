@@ -64,5 +64,15 @@ class User extends Authenticatable implements LdapAuthenticatable, MustVerifyEma
     {
         return $this->hasOne(Mfa::class);
     }
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class);
+    }
+
+    public function hasRole($role)
+    {
+        return $this->roles()->where('name', $role)->exists();
+    }
+
 
 }

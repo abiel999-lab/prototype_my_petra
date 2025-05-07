@@ -17,6 +17,9 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
+        if (session('active_role') !== 'admin') {
+            abort(403, 'Unauthorized. You are not currently using the Admin role.');
+        }
         $search = $request->input('search');
         $mfaEnabled = $request->input('mfa_enabled');
         $mfaMethod = $request->input('mfa_method');
@@ -97,57 +100,61 @@ class UserController extends Controller
 
 
     public function store(Request $request)
-{
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users',
-        'password' => 'required|min:6',
-        'usertype' => 'required|string|in:admin,staff,student,general'
-    ]);
+    {
+        if (session('active_role') !== 'admin') {
+            abort(403);
+        }
 
-    $user = User::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => bcrypt($request->password),
-        'usertype' => $request->usertype,
-    ]);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6',
+            'usertype' => 'required|string|in:admin,staff,student,general'
+        ]);
 
-    // ✅ Tambahkan MFA default
-    $user->mfa()->create([
-        'mfa_enabled' => false,
-        'mfa_method' => 'email',
-    ]);
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+            'usertype' => $request->usertype,
+        ]);
 
-    LoggingService::logMfaEvent("Admin created a new user", [
-        'admin_id' => auth()->id(),
-        'created_email' => $request->email,
-        'usertype' => $request->usertype,
-    ]);
+        // // ✅ Tambahkan MFA default
+        // $user->mfa()->create([
+        //     'mfa_enabled' => false,
+        //     'mfa_method' => 'email',
+        // ]);
 
-    // 🔐 Sync ke Active Directory
-    try {
-        $uid = explode('@', $request->email)[0];
+        LoggingService::logMfaEvent("Admin created a new user", [
+            'admin_id' => auth()->id(),
+            'created_email' => $request->email,
+            'usertype' => $request->usertype,
+        ]);
 
-        $ldap = new LdapUser;
-        $ldap->cn = $request->name;
-        $ldap->sAMAccountName = $uid;
-        $ldap->userPrincipalName = $request->email;
-        $ldap->mail = $request->email;
+        // 🔐 Sync ke Active Directory
+        try {
+            $uid = explode('@', $request->email)[0];
 
-        $quotedPwd = iconv('UTF-8', 'UTF-16LE', '"' . $request->password . '"');
-        $ldap->unicodePwd = $quotedPwd;
-        $ldap->setDn("cn={$request->name},ou=staff,dc=petra,dc=ac,dc=id");
+            $ldap = new LdapUser;
+            $ldap->cn = $request->name;
+            $ldap->sAMAccountName = $uid;
+            $ldap->userPrincipalName = $request->email;
+            $ldap->mail = $request->email;
 
-        $ldap->save();
-        LoggingService::logMfaEvent("Synced new user to LDAP (AD): {$request->email}", []);
-    } catch (\Exception $e) {
-        LoggingService::logSecurityViolation("LDAP sync failed (AD) for user {$request->email}: " . $e->getMessage(), []);
+            $quotedPwd = iconv('UTF-8', 'UTF-16LE', '"' . $request->password . '"');
+            $ldap->unicodePwd = $quotedPwd;
+            $ldap->setDn("cn={$request->name},ou=staff,dc=petra,dc=ac,dc=id");
+
+            $ldap->save();
+            LoggingService::logMfaEvent("Synced new user to LDAP (AD): {$request->email}", []);
+        } catch (\Exception $e) {
+            LoggingService::logSecurityViolation("LDAP sync failed (AD) for user {$request->email}: " . $e->getMessage(), []);
+        }
+
+        return redirect()
+            ->route('profile.admin.manageuser')
+            ->with('success', 'User created successfully.');
     }
-
-    return redirect()
-        ->route('profile.admin.manageuser')
-        ->with('success', 'User created successfully.');
-}
 
 
 
@@ -155,6 +162,10 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        if (session('active_role') !== 'admin') {
+            abort(403);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
@@ -198,6 +209,10 @@ class UserController extends Controller
 
     public function destroy($id)
     {
+        if (session('active_role') !== 'admin') {
+            abort(403);
+        }
+
         $user = User::findOrFail($id);
         if ($user->usertype === 'admin') {
             return redirect()->route('profile.admin.manageuser')
@@ -214,20 +229,25 @@ class UserController extends Controller
     }
     public function ban(User $user)
     {
-        if ($user->usertype === 'admin') {
-            return response()->json(["success" => false, "message" => "Cannot ban an admin user."]);
+        if (session('active_role') !== 'admin') {
+            return response()->json(["success" => false, "message" => "Unauthorized: Only active Admin role can ban users."]);
         }
+
+        if ($user->usertype === 'admin') {
+            return response()->json(["success" => false, "message" => "Cannot ban a user with Admin usertype."]);
+        }
+
         if ($user->banned_status) {
             return response()->json(["success" => false, "message" => "User is already banned."]);
         }
 
-        $user->banned_status = 1; // Ban user
+        $user->banned_status = 1;
         $user->save();
+
         LoggingService::logSecurityViolation("Admin banned user [ID: {$user->id}]", [
             'admin_id' => auth()->id(),
             'email' => $user->email,
         ]);
-
 
         return response()->json([
             "success" => true,
@@ -235,22 +255,31 @@ class UserController extends Controller
         ]);
     }
 
+
     public function unban(User $user)
     {
+        if (session('active_role') !== 'admin') {
+            return response()->json(["success" => false, "message" => "Unauthorized: Only active Admin role can unban users."]);
+        }
+
         if (!$user->banned_status) {
             return response()->json(["success" => false, "message" => "User is not banned."]);
         }
 
-        $user->banned_status = 0; // Unban user
+        $user->banned_status = 0;
         $user->save();
 
-
+        LoggingService::logSecurityViolation("Admin unbanned user [ID: {$user->id}]", [
+            'admin_id' => auth()->id(),
+            'email' => $user->email,
+        ]);
 
         return response()->json([
             "success" => true,
             "message" => "User has been unbanned successfully."
         ]);
     }
+
     private function getSessionData($userId)
     {
         return DB::table('sessions')

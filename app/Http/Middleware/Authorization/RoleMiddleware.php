@@ -5,35 +5,39 @@ namespace App\Http\Middleware\Authorization;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
 {
-    public function handle($request, Closure $next, ...$roles)
+    /**
+     * Handle an incoming request based on active role.
+     */
+    public function handle(Request $request, Closure $next, ...$roles)
     {
         $user = Auth::user();
 
         if (!$user) {
-            abort(403);
+            abort(403, 'Unauthorized');
         }
 
-        $activeRole = $user->temporary_role ?? $user->usertype;
+        // Ambil role aktif dari session, fallback ke usertype bawaan
+        $activeRole = session('active_role') ?? $user->usertype;
 
+        // Jika role aktif tidak diizinkan oleh route
         if (!in_array($activeRole, $roles)) {
-            // Jika role tidak valid, paksa reset temporary role
-            if ($user->usertype === 'admin' && $user->temporary_role !== null) {
-                $user->temporary_role = null;
-                $user->save();
+            abort(403, 'Access denied: Role not permitted for this route.');
+        }
 
-                // Redirect kembali ke dashboard admin agar tidak stuck di 403
-                return redirect()->route('admin.dashboard')
-                    ->with('warning', 'Session reset to admin due to role conflict.');
-            }
+        // Jika role aktif adalah identitas asli user, lanjutkan
+        if ($activeRole === $user->usertype) {
+            return $next($request);
+        }
 
-            abort(403, 'Forbidden');
+        // Jika bukan usertype, pastikan user memang punya akses tambahan ke role tersebut
+        if (!$user->roles()->where('name', $activeRole)->exists()) {
+            session()->forget('active_role'); // Reset session jika invalid
+            return redirect()->route('home')->with('warning', 'Access denied. Role reset to default.');
         }
 
         return $next($request);
     }
-
 }
