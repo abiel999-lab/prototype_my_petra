@@ -311,7 +311,7 @@
                         <i class=""></i> Shortener
                     </a>
                     <a class="thing" href="{{ route('profile.admin.mfa') }}">
-                        <i class="fas fa-shield-alt"></i> Activate MFA
+                        <i class="fas fa-shield-alt"></i> Activate Security
                     </a>
                 </div>
 

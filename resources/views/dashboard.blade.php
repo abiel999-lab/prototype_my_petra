@@ -240,7 +240,7 @@
                         <i class=""></i> Shortener
                     </a>
                     <a class="thing" href="{{ route('profile.mfa') }}">
-                        <i class="fas fa-shield-alt"></i> Activate MFA
+                        <i class="fas fa-shield-alt"></i> Activate Security
                     </a>
                     <a class="thing" href="{{ route('customer-support') }}">
                         <i class=""></i> Support

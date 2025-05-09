@@ -261,7 +261,7 @@
                         <i class=""></i> alumni
                     </a>
                     <a class="thing" href="{{ route('profile.student.mfa') }}">
-                        <i class="fas fa-shield-alt"></i> Activate MFA
+                        <i class="fas fa-shield-alt"></i> Activate Security
                     </a>
                     <a class="thing" href="{{ route('customer-support') }}">
                         <i class=""></i> Support
