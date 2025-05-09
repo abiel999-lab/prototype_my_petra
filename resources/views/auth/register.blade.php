@@ -102,7 +102,7 @@
                                     <div>
                                         <p class="login-wrapper-footer-text" style="margin-top: 20px; margin-bottom: 10px; display: block;">
                                             Already have an account?
-                                            <a href="{{ route('login.public') }}" class="text-reset"><strong>Login here</strong></a>
+                                            <a href="{{ route('login') }}" class="text-reset"><strong>Login here</strong></a>
                                         </p>
                                     </div>
                                 </div>
