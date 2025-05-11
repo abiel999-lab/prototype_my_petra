@@ -374,14 +374,21 @@
                                             </label>
                                             <p style="margin-top: 15px; font-size: 16px;">
                                                 <strong>Apa itu Multi-Factor Authentication (MFA)?</strong><br>
-                                                MFA menambahkan lapisan keamanan ekstra saat login. Setelah memasukkan password, Anda akan diminta memasukkan <strong>kode OTP</strong> yang dikirim melalui metode yang Anda pilih (Email, WhatsApp, SMS, atau Google Authenticator).<br>
-                                                Tujuannya adalah untuk <strong>melindungi akun Anda jika password diketahui orang lain</strong>.
+                                                MFA menambahkan lapisan keamanan ekstra saat login. Setelah memasukkan
+                                                password, Anda akan diminta memasukkan <strong>kode OTP</strong> yang
+                                                dikirim melalui metode yang Anda pilih (Email, WhatsApp, SMS, atau
+                                                Google Authenticator).<br>
+                                                Tujuannya adalah untuk <strong>melindungi akun Anda jika password
+                                                    diketahui orang lain</strong>.
 
                                                 <br><br>
 
                                                 <strong>Apa itu Passwordless Login?</strong><br>
-                                                Passwordless Login memungkinkan Anda <strong>login tanpa memasukkan password</strong>. Sistem akan langsung mengirimkan <strong>OTP melalui metode MFA</strong> untuk memverifikasi identitas Anda.<br>
-                                                Fitur ini memberikan <strong>kemudahan tanpa mengorbankan keamanan</strong>, selama metode MFA Anda aktif dan dapat diakses.
+                                                Passwordless Login memungkinkan Anda <strong>login tanpa memasukkan
+                                                    password</strong>. Sistem akan langsung mengirimkan <strong>OTP
+                                                    melalui metode MFA</strong> untuk memverifikasi identitas Anda.<br>
+                                                Fitur ini memberikan <strong>kemudahan tanpa mengorbankan
+                                                    keamanan</strong>, selama metode MFA Anda aktif dan dapat diakses.
                                             </p>
 
                                         </div>
@@ -465,8 +472,13 @@
                                             </div>
                                             <p style="margin-top: 15px; font-size: 16px;">
                                                 <strong>Apa itu Manage Device?</strong><br>
-                                                Fitur ini menampilkan daftar perangkat yang pernah digunakan untuk login ke akun Anda. Anda bisa <strong>menandai perangkat sebagai "Trusted"</strong> agar tidak diminta OTP berulang kali saat login.<br>
-                                                Jika Anda melihat perangkat asing, <strong>hapus atau untrust segera</strong> untuk mencegah akses tidak sah. Fitur ini membantu Anda <strong>mengontrol keamanan dari sisi perangkat</strong>.
+                                                Fitur ini menampilkan daftar perangkat yang pernah digunakan untuk login
+                                                ke akun Anda. Anda bisa <strong>menandai perangkat sebagai
+                                                    "Trusted"</strong> agar tidak diminta OTP berulang kali saat
+                                                login.<br>
+                                                Jika Anda melihat perangkat asing, <strong>hapus atau untrust
+                                                    segera</strong> untuk mencegah akses tidak sah. Fitur ini membantu
+                                                Anda <strong>mengontrol keamanan dari sisi perangkat</strong>.
                                             </p>
                                         </div>
                                     </div>
@@ -637,12 +649,13 @@
                     .then((data) => {
                         Swal.fire({
                             icon: data.status === "success" ? "success" : "error",
-                            title: "MFA Status",
+                            title: "Settings Updated",
                             text: data.status === "success" ?
-                                `MFA is now ${data.mfa_enabled ? "enabled" : "disabled"}.` :
-                                "Failed to toggle MFA.",
+                                "Your MFA setting has been updated." :
+                                "Failed to update MFA setting.",
                         });
                     })
+
                     .catch((error) => {
                         console.error("Toggle MFA Error:", error);
                         Swal.fire("Error", "Failed to toggle MFA.", "error");
@@ -768,10 +781,11 @@
                 .then(data => {
                     if (data.status === 'success') {
                         Swal.fire({
-                            icon: 'success',
-                            title: 'Passwordless Login',
-                            text: data.passwordless_enabled ? 'Passwordless login enabled.' :
-                                'Passwordless login disabled.',
+                            icon: data.status === 'success' ? 'success' : 'error',
+                            title: 'Settings Updated',
+                            text: data.status === 'success' ?
+                                'Your passwordless setting has been updated.' :
+                                'Failed to update passwordless setting.',
                         });
                     } else {
                         Swal.fire('Error', 'Failed to toggle passwordless.', 'error');
