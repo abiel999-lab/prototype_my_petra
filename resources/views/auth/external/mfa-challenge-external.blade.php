@@ -4,7 +4,7 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
-    <title>Auth | Register</title>
+    <title>Auth | MFA challenge</title>
     <link href="https://login.petra.ac.id/css/bootstrap.css" rel="stylesheet">
     <link href="https://login.petra.ac.id/css/style.css" rel="stylesheet">
     <link href="https://login.petra.ac.id/css/mmenu.css" rel="stylesheet">

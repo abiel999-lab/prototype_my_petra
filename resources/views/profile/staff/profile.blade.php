@@ -436,6 +436,28 @@
             }
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        @if (session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: '{{ session('success') }}',
+                confirmButtonText: 'OK'
+            });
+        @endif
+
+        @if (session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops!',
+                text: '{{ session('error') }}',
+                confirmButtonText: 'OK'
+            });
+        @endif
+    </script>
+
 
 
 </body>

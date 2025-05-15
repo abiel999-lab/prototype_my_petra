@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\UserManagement\UserDeviceController;
+use Illuminate\Support\Facades\Validator;
+
 
 
 class ProfileController extends Controller
@@ -306,9 +308,13 @@ class ProfileController extends Controller
 
     public function updatePhone(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'phone_number' => ['required', 'regex:/^[0-9]{10,15}$/'],
         ]);
+
+        if ($validator->fails()) {
+            return back()->with('error', 'Format nomor HP tidak valid. Pastikan hanya angka, 10-15 digit.');
+        }
 
         auth()->user()->update([
             'phone_number' => $request->phone_number,
@@ -316,6 +322,7 @@ class ProfileController extends Controller
 
         return back()->with('success', 'Nomor HP berhasil diperbarui!');
     }
+
 
     public function studentTogglePasswordless(Request $request)
     {
