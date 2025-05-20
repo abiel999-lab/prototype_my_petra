@@ -58,7 +58,7 @@
                         <div class="col-sm-6">
                             <div class="login-wrapper">
                                 <div class="tab-content mt-4">
-                                    <h1 class="login-title">Forgot your password?</h1>
+                                    <h1 class="login-title">Forgot/change your password?</h1>
                                     <p style="margin-top: 10px; margin-bottom: 10px;">Please tell us your email.</p>
 
                                     <!-- Laravel CSRF Form -->
