@@ -22,6 +22,7 @@ use App\Http\Controllers\Profile\ExternalMfaController;
 use App\Services\LoggingService;
 use App\Http\Controllers\Dashboard\LogViewerController;
 use App\Http\Controllers\UserManagement\RoleSwitchController;
+use App\Http\Controllers\Auth\LdapRegisterController;
 
 // ðŸ”¹ Redirect root URL ('/') to the correct dashboard or login
 Route::middleware(['ip.limiter'])->get('/', function () {
@@ -365,6 +366,12 @@ Route::post('/customer-support/send', [SupportController::class, 'sendEmail'])
     ->middleware('throttle:3,10') // Maks. 3x request per 10 menit
     ->name('customer-support.send');
 Route::put('/profile/update-phone', [ProfileController::class, 'updatePhone'])->name('profile.update.phone');
+
+// LDAP Registration
+Route::middleware('throttle:5,1')->group(function () {
+    Route::get('/ldap-register', [LdapRegisterController::class, 'showForm'])->name('ldap.register');
+    Route::post('/ldap-register', [LdapRegisterController::class, 'register']);
+});
 
 // Passwordless Login
 Route::get('/passwordless/request', [AuthenticatedSessionController::class, 'showPasswordlessForm'])->name('passwordless.request');

@@ -296,7 +296,7 @@
                                     <br />
                                     <!-- Register -->
                                     Doesn't have account? Register on
-                                    <a style="color: blue !important;"href="{{ route('register') }}" class="text-reset"><strong>here</strong></a>.
+                                    <a style="color: blue !important;"href="{{ route('ldap.register') }}" class="text-reset"><strong>here</strong></a>.
                                     <br />
                                     You are not a student or staff? Click
                                     <a style="color: blue !important;"href="{{ route('login.public') }}" class="text-reset"><strong>here</strong></a>.
