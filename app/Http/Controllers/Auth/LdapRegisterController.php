@@ -42,11 +42,15 @@ class LdapRegisterController extends Controller
             return back()->withErrors(['uid' => 'UID tidak ditemukan dalam sistem LDAP.']);
         }
 
+        // Tentukan usertype berdasarkan domain
+        $usertype = $request->domain === 'john.petra.ac.id' ? 'student' : 'staff';
+
         // Buat akun lokal
         $user = User::create([
             'name' => $request->uid,
             'email' => $fullEmail,
             'password' => Hash::make('changeme'),
+            'usertype' => $usertype,
             'email_verified_at' => now(),
         ]);
 
