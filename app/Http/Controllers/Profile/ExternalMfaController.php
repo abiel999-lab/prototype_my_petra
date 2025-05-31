@@ -38,6 +38,7 @@ class ExternalMfaController extends Controller
 
             return view('auth.external.mfa-challenge-external', [
                 'redirect' => $request->query('redirect'),
+                'mfaMethod' => $user->mfa?->mfa_method, // ⬅️ Kirim metode MFA ke view
             ]);
         }
 
@@ -218,5 +219,15 @@ class ExternalMfaController extends Controller
             }
         } while (!preg_match('/[A-Z]/', $otp) || !preg_match('/[a-z]/', $otp) || !preg_match('/\d/', $otp));
         return $otp;
+    }
+
+    public function showChallenge()
+    {
+        $user = auth()->user();
+        $mfaMethod = optional($user->mfa)->mfa_method; // Ambil metode MFA dari relasi
+
+        return view('auth.mfa-challenge', [
+            'mfaMethod' => strtoupper($mfaMethod), // Misal: "SMS", "EMAIL", "GOOGLE_AUTH"
+        ]);
     }
 }

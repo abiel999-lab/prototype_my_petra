@@ -22,7 +22,7 @@ class TwoFactorController extends Controller
     {
         $user = auth()->user();
         $qrCodeUrl = null;
-
+        $mfaMethod = optional($user->mfa)->mfa_method;
         if ($user->mfa && $user->mfa->mfa_method === 'email') {
             if (!$user->mfa->two_factor_code) {
                 $this->handleEmailOtp($user);
@@ -41,6 +41,7 @@ class TwoFactorController extends Controller
 
         return view('auth.mfa-challenge', [
             'qrCodeUrl' => $qrCodeUrl,
+            'mfaMethod' => strtoupper($mfaMethod),
         ]);
     }
 
@@ -326,4 +327,15 @@ class TwoFactorController extends Controller
         } while (!preg_match('/[A-Z]/', $otp) || !preg_match('/[a-z]/', $otp) || !preg_match('/\d/', $otp));
         return $otp;
     }
+
+    public function showChallenge()
+    {
+        $user = auth()->user();
+        $mfaMethod = optional($user->mfa)->mfa_method; // Ambil metode MFA dari relasi
+
+        return view('auth.mfa-challenge', [
+            'mfaMethod' => strtoupper($mfaMethod), // Misal: "SMS", "EMAIL", "GOOGLE_AUTH"
+        ]);
+    }
+
 }

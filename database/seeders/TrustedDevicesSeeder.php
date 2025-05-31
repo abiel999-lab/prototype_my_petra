@@ -15,7 +15,7 @@ class TrustedDevicesSeeder extends Seeder
     {
         DB::table('trusted_devices')->insert([
             [
-                'user_id' => 1,
+                'user_id' => 5,
                 'ip_address' => '192.168.1.10',
                 'device' => 'Laptop',
                 'os' => 'MacOS',
@@ -25,7 +25,7 @@ class TrustedDevicesSeeder extends Seeder
                 'updated_at' => Carbon::now(),
             ],
             [
-                'user_id' => 1,
+                'user_id' => 5,
                 'ip_address' => '192.168.1.11',
                 'device' => 'Desktop',
                 'os' => 'Linux',
@@ -35,7 +35,7 @@ class TrustedDevicesSeeder extends Seeder
                 'updated_at' => Carbon::now(),
             ],
             [
-                'user_id' => 1,
+                'user_id' => 5,
                 'ip_address' => '192.168.1.12',
                 'device' => 'Tablet',
                 'os' => 'Android',

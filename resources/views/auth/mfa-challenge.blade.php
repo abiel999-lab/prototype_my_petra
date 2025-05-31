@@ -66,6 +66,17 @@
                                         notification to arrive.
                                         <b>If the correct OTP is showing an error, try resending the OTP
                                             again.</b><br><br>
+                                        @php
+                                            $methodLabels = [
+                                                'sms' => 'SMS',
+                                                'email' => 'Email',
+                                                'google_auth' => 'Mobile Authenticator',
+                                                'whatsapp' => 'WhatsApp',
+                                            ];
+                                        @endphp
+                                        <strong>Authentication method:</strong>
+                                        {{ $methodLabels[strtolower($mfaMethod ?? '')] ?? 'Unknown' }}
+                                        <br>
                                         <b>Note:</b> If you are not receiving the message,
                                         please click <b>Resend OTP</b> until the OTP arrives on your Email/Whatsapp/SMS.
                                     </p>
