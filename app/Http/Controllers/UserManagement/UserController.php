@@ -11,6 +11,7 @@ use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 
 
 class UserController extends Controller
@@ -93,11 +94,9 @@ class UserController extends Controller
             $user->active_sessions = $activeSessions;
         }
 
-        return view('profile.admin.manage-user', compact('users', 'search'));
+        $roles = Role::all();
+        return view('profile.admin.manage-user', compact('users', 'search', 'roles'));
     }
-
-
-
 
     public function store(Request $request)
     {
@@ -170,6 +169,8 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'usertype' => 'required|string|in:general,admin,staff,student',
+            'roles' => 'array',
+            'roles.*' => 'integer|exists:roles,id',
             'mfa_enabled' => 'nullable|boolean',
             'mfa_method' => 'required|string|in:email,google_auth,whatsapp,sms',
         ]);
@@ -194,6 +195,7 @@ class UserController extends Controller
             'mfa_enabled' => $mfa_enabled,
             'mfa_method' => $request->mfa_method,
         ]);
+        $user->roles()->sync($request->input('roles', []));
 
         LoggingService::logMfaEvent("Admin updated user [ID: {$user->id}]", [
             'admin_id' => auth()->id(),

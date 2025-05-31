@@ -255,6 +255,7 @@
                                                         <th>Name</th>
                                                         <th>Email</th>
                                                         <th>User Type</th>
+                                                        <th>Roles</th>
                                                         <th>MFA Enabled</th>
                                                         <th>MFA Method</th>
                                                         <th>Operating Systems</th> <!-- OS Column -->
@@ -292,6 +293,20 @@
                                                                         {{ $user->usertype == 'general' ? 'selected' : '' }}>
                                                                         General</option>
                                                                 </select>
+                                                            </td>
+                                                            <td>
+                                                                @foreach ($roles as $role)
+                                                                    <div class="form-check">
+                                                                        <input type="checkbox"
+                                                                            class="form-check-input" name="roles[]"
+                                                                            value="{{ $role->id }}"
+                                                                            id="role-{{ $user->id }}-{{ $role->id }}"
+                                                                            {{ $user->roles->contains($role->id) ? 'checked' : '' }}
+                                                                            disabled>
+                                                                        <label class="form-check-label"
+                                                                            for="role-{{ $user->id }}-{{ $role->id }}">{{ ucfirst($role->name) }}</label>
+                                                                    </div>
+                                                                @endforeach
                                                             </td>
                                                             <td class="text-center">
                                                                 <input type="checkbox"
@@ -428,13 +443,15 @@
                                                                         id="hidden-email-{{ $user->id }}">
                                                                     <input type="hidden" name="usertype"
                                                                         id="hidden-usertype-{{ $user->id }}">
+                                                                    @foreach ($roles as $role)
+                                                                        <input type="hidden" name="roles[]"
+                                                                            id="hidden-role-{{ $user->id }}-{{ $role->id }}">
+                                                                    @endforeach
                                                                     <input type="hidden" name="mfa_enabled"
                                                                         id="hidden-mfa_enabled-{{ $user->id }}">
                                                                     <input type="hidden" name="mfa_method"
                                                                         id="hidden-mfa_method-{{ $user->id }}">
                                                                 </form>
-
-
 
                                                                 @if ($user->usertype !== 'admin')
                                                                     <!-- Ban/Unban Form -->
@@ -517,15 +534,30 @@
                                     </div>
                                     <p style="margin-top: 15px; font-size: 16px;">
                                         <strong>Tentang Fitur Manage Users</strong><br>
-                                        Fitur ini memungkinkan administrator untuk <strong>mengelola seluruh akun pengguna</strong> dalam sistem secara menyeluruh. Berikut adalah fungsi-fungsi utamanya:
-                                        <ul style="margin-top: 10px;">
-                                            <li><strong>Edit Data:</strong> Mengubah nama, email, dan jenis user (admin, staff, student, general) secara langsung melalui antarmuka tabel.</li>
-                                            <li><strong>Manajemen Keamanan:</strong> Menampilkan status MFA dan metode autentikasi yang digunakan oleh setiap pengguna, termasuk Google Authenticator, email, WhatsApp, atau SMS.</li>
-                                            <li><strong>Manajemen Perangkat:</strong> Memantau semua perangkat yang pernah digunakan untuk login, serta memberikan opsi untuk <strong>trust</strong>, <strong>untrust</strong>, atau <strong>menghapus</strong> perangkat.</li>
-                                            <li><strong>Sesi Aktif:</strong> Menampilkan sesi login pengguna secara real-time, termasuk IP address, perangkat, sistem operasi, browser, serta waktu login dan waktu kedaluwarsa sesi. Admin dapat mencabut sesi tertentu bila diperlukan.</li>
-                                            <li><strong>Aksi Akun:</strong> Memberikan kontrol untuk membekukan (ban), mengaktifkan kembali (unban), atau menghapus akun pengguna non-admin secara manual.</li>
-                                            <li><strong>Tambah Pengguna:</strong> Formulir registrasi di bagian bawah halaman memungkinkan admin untuk <strong>menambahkan akun baru</strong> ke dalam sistem.</li>
-                                        </ul>
+                                        Fitur ini memungkinkan administrator untuk <strong>mengelola seluruh akun
+                                            pengguna</strong> dalam sistem secara menyeluruh. Berikut adalah
+                                        fungsi-fungsi utamanya:
+                                    <ul style="margin-top: 10px;">
+                                        <li><strong>Edit Data:</strong> Mengubah nama, email, dan jenis user (admin,
+                                            staff, student, general) secara langsung melalui antarmuka tabel.</li>
+                                        <li><strong>Manajemen Keamanan:</strong> Menampilkan status MFA dan metode
+                                            autentikasi yang digunakan oleh setiap pengguna, termasuk Google
+                                            Authenticator, email, WhatsApp, atau SMS.</li>
+                                        <li><strong>Manajemen Perangkat:</strong> Memantau semua perangkat yang pernah
+                                            digunakan untuk login, serta memberikan opsi untuk <strong>trust</strong>,
+                                            <strong>untrust</strong>, atau <strong>menghapus</strong> perangkat.
+                                        </li>
+                                        <li><strong>Sesi Aktif:</strong> Menampilkan sesi login pengguna secara
+                                            real-time, termasuk IP address, perangkat, sistem operasi, browser, serta
+                                            waktu login dan waktu kedaluwarsa sesi. Admin dapat mencabut sesi tertentu
+                                            bila diperlukan.</li>
+                                        <li><strong>Aksi Akun:</strong> Memberikan kontrol untuk membekukan (ban),
+                                            mengaktifkan kembali (unban), atau menghapus akun pengguna non-admin secara
+                                            manual.</li>
+                                        <li><strong>Tambah Pengguna:</strong> Formulir registrasi di bagian bawah
+                                            halaman memungkinkan admin untuk <strong>menambahkan akun baru</strong> ke
+                                            dalam sistem.</li>
+                                    </ul>
                                     </p>
                                 </div>
 
@@ -656,6 +688,18 @@
                     `email-${userId}`).value;
                 document.getElementById(`hidden-usertype-${userId}`).value = document.getElementById(
                     `usertype-${userId}`).value;
+                @foreach ($roles as $role)
+                    const roleCheckbox_{{ $role->id }} = document.getElementById(
+                        `role-${userId}-{{ $role->id }}`);
+                    const hiddenRoleInput_{{ $role->id }} = document.getElementById(
+                        `hidden-role-${userId}-{{ $role->id }}`);
+                    if (roleCheckbox_{{ $role->id }}.checked) {
+                        hiddenRoleInput_{{ $role->id }}.value = {{ $role->id }};
+                        hiddenRoleInput_{{ $role->id }}.disabled = false;
+                    } else {
+                        hiddenRoleInput_{{ $role->id }}.disabled = true;
+                    }
+                @endforeach
                 document.getElementById(`hidden-mfa_enabled-${userId}`).value = document.getElementById(
                     `mfa_enabled-${userId}`).checked ? 1 : 0;
                 document.getElementById(`hidden-mfa_method-${userId}`).value = document.getElementById(
@@ -686,6 +730,12 @@
             fields.forEach(field => {
                 const el = document.getElementById(`${field}-${userId}`);
                 el.disabled = !el.disabled;
+            });
+
+            // ✅ Aktifkan checkbox role
+            const roleCheckboxes = document.querySelectorAll(`[id^="role-${userId}-"]`);
+            roleCheckboxes.forEach(cb => {
+                cb.disabled = !cb.disabled;
             });
 
             const editBtn = document.getElementById(`edit-btn-${userId}`);
