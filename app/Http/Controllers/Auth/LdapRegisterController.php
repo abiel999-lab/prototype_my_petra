@@ -53,18 +53,20 @@ class LdapRegisterController extends Controller
         // Tentukan usertype berdasarkan domain
         $usertype = $request->domain === 'john.petra.ac.id' ? 'student' : 'staff';
 
+        $password = $this->generatePasswordFromUid($request->uid);
+
         // Buat akun lokal
         $user = User::create([
             'name' => $request->uid,
             'email' => $fullEmail,
-            'password' => Hash::make($this->generatePasswordFromUid($request->uid)),
+            'password' => Hash::make($password),
             'usertype' => $usertype,
             'email_verified_at' => now(),
         ]);
 
         // Kirim email konfirmasi
         Mail::to($request->email_confirmation)->send(
-            new LdapAccountCreatedMail($request->uid, $fullEmail)
+            new LdapAccountCreatedMail($request->uid, $fullEmail, $password)
         );
 
         return back()->with('status', 'Akun berhasil dibuat. Silakan cek email Anda untuk detail login.');

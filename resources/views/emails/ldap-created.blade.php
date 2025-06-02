@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>Your My Petra LDAP Account</title>
@@ -39,7 +40,8 @@
                 <p>Welcome to <strong>My Petra</strong>. Your LDAP-based account has been successfully registered.</p>
 
                 <p><strong>Email:</strong> {{ $email }}<br>
-                   <strong>Password:</strong> changeme</p>
+                    <strong>Password:</strong> {{ $defaultPassword }}
+                </p>
 
                 <div style="text-align: center; margin: 20px 0;">
                     <a href="{{ url('/login') }}" class="button">Login to My Petra</a>
@@ -58,4 +60,5 @@
         </tr>
     </table>
 </body>
+
 </html>

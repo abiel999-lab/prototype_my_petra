@@ -11,21 +11,23 @@ class LdapAccountCreatedMail extends Mailable
 
     public string $uid;
     public string $email;
+    public string $defaultPassword;
 
-    public function __construct($uid, $email)
+    public function __construct($uid, $email, $password)
     {
         $this->uid = $uid;
         $this->email = $email;
+        $this->defaultPassword = $password;
     }
 
     public function build()
     {
         return $this->subject('Your My Petra LDAP Account')
-                    ->view('emails.ldap-created')
-                    ->with([
-                        'uid' => $this->uid,
-                        'email' => $this->email,
-                        'defaultPassword' => 'changeme',
-                    ]);
+            ->view('emails.ldap-created')
+            ->with([
+                'uid' => $this->uid,
+                'email' => $this->email,
+                'defaultPassword' => $this->defaultPassword,
+            ]);
     }
 }
