@@ -17,6 +17,14 @@ class LdapRegisterController extends Controller
         return view('auth.register-ldap');
     }
 
+    private function generatePasswordFromUid(string $uid): string
+    {
+        $prefix = strtoupper($uid); // Kapitalisasi UID
+        $random = substr(bin2hex(random_bytes(3)), 0, 6); // 6 karakter hex
+        return $prefix . '!' . $random; // Contoh: C14210157!e1a9f4
+    }
+
+
     public function register(Request $request)
     {
         $request->validate([
@@ -49,7 +57,7 @@ class LdapRegisterController extends Controller
         $user = User::create([
             'name' => $request->uid,
             'email' => $fullEmail,
-            'password' => Hash::make('changeme'),
+            'password' => Hash::make($this->generatePasswordFromUid($request->uid)),
             'usertype' => $usertype,
             'email_verified_at' => now(),
         ]);
