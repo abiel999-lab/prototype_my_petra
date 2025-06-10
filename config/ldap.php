@@ -43,6 +43,21 @@ return [
                 LDAP_OPT_X_TLS_REQUIRE_CERT => LDAP_OPT_X_TLS_NEVER, // Abaikan validasi sertifikat
             ],
         ],
+        'student' => [
+            'hosts' => [env('LDAP_STUDENT_HOST', 'ldap.petra.ac.id')],
+            'port' => env('LDAP_STUDENT_PORT', 636),
+            'base_dn' => env('LDAP_STUDENT_BASE_DN', 'dc=petra,dc=ac,dc=id'),
+            'username' => env('LDAP_STUDENT_USERNAME', 'cn=admin,dc=petra,dc=ac,dc=id'),
+            'password' => env('LDAP_STUDENT_PASSWORD', 'LD4P53rv3r@UKP'),
+            'timeout' => env('LDAP_STUDENT_TIMEOUT', 5),
+            'use_ssl' => env('LDAP_STUDENT_SSL', true),
+            'use_tls' => env('LDAP_STUDENT_TLS', false),
+            'options' => [
+                LDAP_OPT_PROTOCOL_VERSION => 3,
+                LDAP_OPT_REFERRALS => 0,
+                LDAP_OPT_X_TLS_REQUIRE_CERT => LDAP_OPT_X_TLS_NEVER,
+            ],
+        ],
 
     ],
 

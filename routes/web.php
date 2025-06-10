@@ -322,7 +322,8 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
     // ðŸ”¹ General User Routes
     Route::middleware(['checkrole:general'])->group(function () {
         Route::get('/dashboard', function () {
-            return view('dashboard');
+            $showMfaReminder = Auth::check() && optional(Auth::user()->mfa)->mfa_enabled != 1;
+            return view('dashboard', compact('showMfaReminder'));
         })->name('dashboard');
         Route::get('/setting', [ProfileController::class, 'profile'])->name('profile.setting');
         Route::get('/setting/profile', [ProfileController::class, 'editprofile'])->name('profile.profile');

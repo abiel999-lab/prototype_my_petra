@@ -60,6 +60,7 @@
         .dropdown-toggle::after {
             display: none !important;
         }
+
     </style>
 </head>
 
@@ -168,8 +169,8 @@
                 <div class="col-sm-8 mt-3 mb-2" style="margin-left: auto; margin-right: auto;">
                     <form action="{{ url('/') }}" method="GET">
                         <div class="input-group input-group-md">
-                            <input class="form-control form-control-lg" type="search" id="search" name="search"
-                                value="" placeholder="Cari Aplikasi" aria-label="Search App">
+                            <input class="form-control form-control-lg" type="search" id="search-input"
+                                placeholder="Cari Aplikasi">
                             <div class="input-group-append">
                                 <button class="btn btn-navbar" type="submit">
                                     <i class="fas fa-search"></i>
@@ -181,6 +182,21 @@
             </div>
 
             <!-- Main Content -->
+
+            @if ($showMfaReminder)
+                <div id="mfa-alert" class="alert alert-warning alert-dismissible fade show mx-3 mt-3" role="alert">
+                    <strong>Security Reminder:</strong> For better protection, please enable Multi-Factor Authentication
+                    in your account's security settings.
+                    <a href="{{ route('profile.admin.mfa') }}" class="text-primary font-weight-bold ml-2">Go to
+                        Security
+                        Settings</a>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"
+                        onclick="dismissMfaAlert()">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
+
             <div class="flexgrid">
                 <div class="mb-3 container" style="text-align: left;">
                     <h1 class="col-lg-5"
@@ -402,6 +418,50 @@
                 }
             });
         }
+    </script>
+    @if ($showMfaReminder)
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                if (!localStorage.getItem('mfaAlertDismissed')) {
+                    Swal.fire({
+                        title: 'Security Reminder',
+                        text: 'For better protection, please enable Multi-Factor Authentication in your account\'s security settings.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Go to Security Settings',
+                        cancelButtonText: 'Dismiss',
+                        reverseButtons: true,
+                        allowOutsideClick: false,
+                        allowEscapeKey: true,
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '{{ route('profile.admin.mfa') }}';
+                        } else if (result.dismiss === Swal.DismissReason.cancel) {
+                            localStorage.setItem('mfaAlertDismissed', 'true');
+                        }
+                    });
+                }
+            });
+        </script>
+    @endif
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const searchInput = document.getElementById("search-input");
+            const appLinks = document.querySelectorAll(".thing");
+
+            searchInput.addEventListener("keyup", function() {
+                const keyword = this.value.toLowerCase().trim();
+
+                appLinks.forEach(link => {
+                    const text = link.textContent.toLowerCase().trim();
+                    if (text.includes(keyword)) {
+                        link.style.display = ""; // tampilkan
+                    } else {
+                        link.style.display = "none"; // sembunyikan
+                    }
+                });
+            });
+        });
     </script>
 
 </body>
