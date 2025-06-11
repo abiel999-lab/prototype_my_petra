@@ -23,6 +23,7 @@ use App\Services\LoggingService;
 use App\Http\Controllers\Dashboard\LogViewerController;
 use App\Http\Controllers\UserManagement\RoleSwitchController;
 use App\Http\Controllers\Auth\LdapRegisterController;
+use App\Http\Controllers\Auth\LdapManageController;
 
 // ðŸ”¹ Redirect root URL ('/') to the correct dashboard or login
 Route::middleware(['ip.limiter'])->get('/', function () {
@@ -271,6 +272,10 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::get('/admin/external/setting/mfa', [ProfileController::class, 'adminmfasettingexternal'])->name('profile.admin.mfa.external');
         Route::post('/profile/admin/toggle-passwordless', [ProfileController::class, 'adminTogglePasswordless'])->name('profile.admin.toggle-passwordless');
         Route::get('/admin/logs', [LogViewerController::class, 'index'])->name('admin.logs');
+        //ldap
+        Route::get('/admin/setting/manage-user/ldap', [LdapManageController::class, 'create'])->name('ldap.create');
+        Route::post('/admin/setting/manage-user/ldap', [LdapManageController::class, 'store'])->name('ldap.store');
+
     });
 
     // ðŸ”¹ Student Routes

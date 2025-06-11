@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OtpMail;
 use LdapRecord\Container;
+use Symfony\Component\Console\Command\Command as BaseCommand;
+
 
 class SyncLdapUsers extends Command
 {
@@ -26,7 +28,7 @@ class SyncLdapUsers extends Command
 
         if ($input != $otp) {
             $this->error('OTP salah. Sinkronisasi dibatalkan.');
-            return Command::FAILURE;
+            return BaseCommand::FAILURE;
         }
 
         $this->info('OTP valid. Memulai proses sinkronisasi...');
@@ -78,6 +80,6 @@ class SyncLdapUsers extends Command
         }
 
         $this->info("Sinkronisasi selesai. Berhasil: $inserted | Dilewati: $skipped");
-        return Command::SUCCESS;
+        return BaseCommand::SUCCESS;
     }
 }
