@@ -79,7 +79,7 @@ class LdapRegisterController extends Controller
         $password = $this->generatePasswordFromUid($request->uid);
 
         $user = User::create([
-            'name' => $request->uid,
+            'name' => $ldapUser['cn'][0] ?? $request->uid,
             'email' => $fullEmail,
             'password' => Hash::make($password),
             'usertype' => $usertype,
