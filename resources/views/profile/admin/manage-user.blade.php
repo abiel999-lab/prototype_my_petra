@@ -532,6 +532,19 @@
                                             </form>
                                         </div>
                                     </div>
+                                    <!-- Link ke halaman LDAP -->
+                                    <div class="mt-4">
+                                        <a href="{{ route('ldap.index') }}" class="btn btn-outline-primary">
+                                            Manage LDAP Users
+                                        </a>
+                                        <p class="mt-2" style="font-size: 15px;">
+                                            <strong>Fitur LDAP User Management:</strong> Halaman ini digunakan untuk
+                                            <strong>melihat, mencari, menambahkan, dan menghapus pengguna LDAP</strong>
+                                            (student/staff) secara langsung dari sistem MyPetra. Sangat berguna untuk
+                                            kebutuhan provisioning akun internal kampus secara cepat dan efisien.
+                                        </p>
+                                    </div>
+
                                     <p style="margin-top: 15px; font-size: 16px;">
                                         <strong>Tentang Fitur Manage Users</strong><br>
                                         Fitur ini memungkinkan administrator untuk <strong>mengelola seluruh akun
@@ -896,12 +909,6 @@
             });
         }
     </script>
-
-
-
-
-
-
 </body>
 
 </html>

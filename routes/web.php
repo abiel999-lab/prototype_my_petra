@@ -273,8 +273,10 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::post('/profile/admin/toggle-passwordless', [ProfileController::class, 'adminTogglePasswordless'])->name('profile.admin.toggle-passwordless');
         Route::get('/admin/logs', [LogViewerController::class, 'index'])->name('admin.logs');
         //ldap
-        Route::get('/admin/setting/manage-user/ldap', [LdapManageController::class, 'create'])->name('ldap.create');
+        Route::get('/admin/setting/manage-user/ldap', [LdapManageController::class, 'index'])->name('ldap.create');
         Route::post('/admin/setting/manage-user/ldap', [LdapManageController::class, 'store'])->name('ldap.store');
+        Route::delete('/admin/setting/manage-user/ldap/delete', [LdapManageController::class, 'destroy'])->name('ldap.delete');
+
 
     });
 
