@@ -24,6 +24,7 @@ use App\Http\Controllers\Dashboard\LogViewerController;
 use App\Http\Controllers\UserManagement\RoleSwitchController;
 use App\Http\Controllers\Auth\LdapRegisterController;
 use App\Http\Controllers\Auth\LdapManageController;
+use App\Http\Controllers\Auth\OtpLdapVerificationController;
 
 // ðŸ”¹ Redirect root URL ('/') to the correct dashboard or login
 Route::middleware(['ip.limiter'])->get('/', function () {
@@ -272,10 +273,20 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::get('/admin/external/setting/mfa', [ProfileController::class, 'adminmfasettingexternal'])->name('profile.admin.mfa.external');
         Route::post('/profile/admin/toggle-passwordless', [ProfileController::class, 'adminTogglePasswordless'])->name('profile.admin.toggle-passwordless');
         Route::get('/admin/logs', [LogViewerController::class, 'index'])->name('admin.logs');
-        //ldap
-        Route::get('/admin/setting/manage-user/ldap', [LdapManageController::class, 'index'])->name('ldap.create');
-        Route::post('/admin/setting/manage-user/ldap', [LdapManageController::class, 'store'])->name('ldap.store');
-        Route::delete('/admin/setting/manage-user/ldap/delete', [LdapManageController::class, 'destroy'])->name('ldap.delete');
+        // LDAP Access Challenge (OTP + MFA + Foto)
+        Route::get('/admin/setting/manage-user/ldap/verify-access', [OtpLdapVerificationController::class, 'form'])->name('ldap.otp.form');
+        Route::post('/admin/setting/manage-user/ldap/verify-access', [OtpLdapVerificationController::class, 'verify'])->name('ldap.otp.verify');
+        Route::post('/admin/setting/manage-user/ldap/verify-access/resend', [OtpLdapVerificationController::class, 'resend'])->name('ldap.otp.resend');
+        Route::post('/admin/setting/manage-user/ldap/verify-access/cancel', [OtpLdapVerificationController::class, 'cancel'])->name('ldap.otp.cancel');
+
+        // LDAP routes yang dibatasi MFA OTP
+        Route::middleware(['ensure.ldap.otp'])->group(function () {
+            Route::get('/admin/setting/manage-user/ldap', [LdapManageController::class, 'index'])->name('ldap.index');
+            Route::post('/admin/setting/manage-user/ldap', [LdapManageController::class, 'store'])->name('ldap.store');
+            Route::delete('/admin/setting/manage-user/ldap/delete', [LdapManageController::class, 'destroy'])->name('ldap.delete');
+            Route::put('/admin/setting/manage-user/ldap/update', [LdapManageController::class, 'update'])->name('ldap.update');
+        });
+
 
 
     });

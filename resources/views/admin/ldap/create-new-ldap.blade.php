@@ -43,6 +43,11 @@
         ul {
             padding-left: 0px !important;
         }
+
+        input.form-control-sm {
+            font-size: 14px;
+            padding: 4px 8px;
+        }
     </style>
 </head>
 
@@ -130,11 +135,11 @@
 
                             <div class="mt-3">
                                 <!-- Link ke halaman LDAP -->
-                                    <div class="mt-4">
-                                        <a href="{{ route('profile.admin.manageuser') }}" class="btn btn-outline-primary">
-                                            Back to Manage Users
-                                        </a>
-                                    </div>
+                                <div class="mt-4">
+                                    <a href="{{ route('profile.admin.manageuser') }}" class="btn btn-outline-primary">
+                                        Back to Manage Users
+                                    </a>
+                                </div>
                             </div>
                         </div>
 
@@ -161,21 +166,48 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($allUsers as $user)
-                        <tr>
-                            <td>{{ $user['uid'] }}</td>
-                            <td>{{ $user['cn'] }}</td>
-                            <td>{{ $user['dn'] }}</td>
-                            <td>
-                                <form method="POST" action="{{ route('ldap.delete') }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <input type="hidden" name="dn" value="{{ $user['dn'] }}">
-                                    <input type="hidden" name="connection" value="{{ $user['connection'] }}">
-                                    <button class="btn btn-sm btn-danger"
-                                        onclick="return confirm('Yakin ingin menghapus user ini?')">Delete</button>
-                                </form>
-                            </td>
+                    @forelse ($allUsers as $index => $user)
+                        <tr id="row-{{ $index }}">
+                            <form method="POST" action="{{ route('ldap.update') }}">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="dn" value="{{ $user['dn'] }}">
+                                <input type="hidden" name="connection" value="{{ $user['connection'] }}">
+
+                                <td>
+                                    <span class="display-uid">{{ $user['uid'] }}</span>
+                                    <input type="text" name="uid" value="{{ $user['uid'] }}"
+                                        class="form-control edit-uid d-none">
+                                </td>
+                                <td>
+                                    <span class="display-cn">{{ $user['cn'] }}</span>
+                                    <input type="text" name="cn" value="{{ $user['cn'] }}"
+                                        class="form-control edit-cn d-none">
+                                </td>
+                                <td>{{ $user['dn'] }}</td>
+                                <td>
+                                    <div class="action-default">
+                                        <button type="button" class="btn btn-warning btn-sm"
+                                            onclick="enableEdit({{ $index }})">Edit</button>
+                                        <div class="text-muted small">Protected</div>
+                                    </div>
+                                    <div class="action-edit d-none">
+                                        <button type="button" class="btn btn-sm btn-secondary"
+                                            onclick="cancelEdit({{ $index }})">Cancel</button>
+                                        <button type="submit" class="btn btn-sm btn-success">Save</button>
+                                        <form method="POST" action="{{ route('ldap.delete') }}"
+                                            style="display:inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <input type="hidden" name="dn" value="{{ $user['dn'] }}">
+                                            <input type="hidden" name="connection"
+                                                value="{{ $user['connection'] }}">
+                                            <button class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Yakin ingin menghapus user ini?')">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </form>
                         </tr>
                     @empty
                         <tr>
@@ -229,6 +261,28 @@
         filterRows(); // on load
     });
 </script>
+<script>
+    function enableEdit(index) {
+        const row = document.getElementById('row-' + index);
+        row.querySelector('.display-uid').classList.add('d-none');
+        row.querySelector('.display-cn').classList.add('d-none');
+        row.querySelector('.edit-uid').classList.remove('d-none');
+        row.querySelector('.edit-cn').classList.remove('d-none');
+        row.querySelector('.action-default').classList.add('d-none');
+        row.querySelector('.action-edit').classList.remove('d-none');
+    }
+
+    function cancelEdit(index) {
+        const row = document.getElementById('row-' + index);
+        row.querySelector('.display-uid').classList.remove('d-none');
+        row.querySelector('.display-cn').classList.remove('d-none');
+        row.querySelector('.edit-uid').classList.add('d-none');
+        row.querySelector('.edit-cn').classList.add('d-none');
+        row.querySelector('.action-default').classList.remove('d-none');
+        row.querySelector('.action-edit').classList.add('d-none');
+    }
+</script>
+
 
 
 </html>

@@ -156,6 +156,34 @@ class LdapManageController extends Controller
             return back()->withErrors(['ldap' => 'Gagal menghapus user: ' . $e->getMessage()]);
         }
     }
+    public function update(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'dn' => 'required|string',
+            'connection' => 'required|in:student,default',
+            'uid' => 'required|string',
+            'cn' => 'required|string',
+        ]);
+
+        try {
+            $entry = Entry::find($request->dn);
+
+            if (!$entry) {
+                return back()->withErrors(['ldap' => 'Entry not found.']);
+            }
+
+            $entry->setConnection($request->connection);
+            $entry->setAttribute('uid', $request->uid);
+            $entry->setAttribute('cn', $request->cn);
+            $entry->save();
+
+            return back()->with('success', 'User berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['ldap' => 'Gagal mengupdate user: ' . $e->getMessage()]);
+        }
+    }
+
+
 
 
 }
