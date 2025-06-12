@@ -64,6 +64,9 @@
                 <p><strong>Ticket Code:</strong> <span class="code">{{ $ticket_code }}</span></p>
                 <p><strong>Issue Type:</strong> {{ $issue_type }}</p>
                 <p><strong>Date:</strong> {{ $submitted_at }}</p>
+                <p><strong>Message:</strong></p>
+                <p style="background-color: #f2f2f2; padding: 10px; border-radius: 5px;">{{ $message_body }}</p>
+
 
                 <p>Please keep this code safe and use it when following up on your request.</p>
 

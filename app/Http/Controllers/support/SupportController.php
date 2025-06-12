@@ -28,12 +28,12 @@ class SupportController extends Controller
             'g-recaptcha-response' => 'required|captcha',
         ]);
 
-        $isLogin = $request->issue_type === 'login problem';
+        $needsAttachment = in_array($request->issue_type, ['login problem', 'MFA problem']);
 
-        if ($isLogin) {
+        if ($needsAttachment) {
             $request->validate([
                 'phone_number' => 'required|string',
-                'attachment' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+                'attachment' => 'required|file|mimes:jpg,jpeg,png,pdf|max:10240',
             ]);
         } else {
             $request->validate([
@@ -79,8 +79,12 @@ class SupportController extends Controller
             $attachmentPath = null;
 
             if ($request->hasFile('attachment')) {
-                $attachmentPath = $request->file('attachment')->store('support_attachments', 'public');
+                $file = $request->file('attachment');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('support_images'), $filename);
+                $attachmentPath = 'support_images/' . $filename;
             }
+
 
             Ticketing::create([
                 'ticket_code' => $ticketCode,
@@ -94,22 +98,23 @@ class SupportController extends Controller
             ]);
 
             // Kirim email/whatsapp ke user
-            $emailEmpty = empty($request->email) || $request->email === '-';
-
-            if ($emailEmpty && !empty($request->phone_number)) {
+            if (!empty($request->phone_number)) {
                 $wa = new WhatsAppService();
                 $wa->sendSupportTicket($request->phone_number, $ticketCode, $request->issue_type, $request->name);
-            } elseif (!$emailEmpty) {
+            }
+
+            if (!empty($request->email) && $request->email !== '-') {
                 Mail::send('emails.ticket-confirmation', [
-                    'name'         => $request->name,
-                    'ticket_code'  => $ticketCode,
-                    'issue_type'   => $request->issue_type,
+                    'name' => $request->name,
+                    'ticket_code' => $ticketCode,
+                    'issue_type' => $request->issue_type,
                     'submitted_at' => $submittedAt,
                 ], function ($message) use ($request, $ticketCode) {
                     $message->to($request->email)
-                            ->subject("Ticket Confirmation [{$ticketCode}]");
+                        ->subject("Ticket Confirmation [{$ticketCode}]");
                 });
             }
+
 
 
             Mail::send('emails.support-request', [
@@ -118,15 +123,21 @@ class SupportController extends Controller
                 'issue_type' => $request->issue_type,
                 'message_body' => $request->message,
                 'submitted_at' => $submittedAt,
-                'ticket_code' => $ticketCode, // ✅ tambahkan ini
-            ], function ($message) use ($request, $supportEmail) {
+                'ticket_code' => $ticketCode,
+            ], function ($message) use ($request, $supportEmail, $attachmentPath) {
                 $fromEmail = filter_var($request->email, FILTER_VALIDATE_EMAIL) ? $request->email : $supportEmail;
 
                 $message->to($supportEmail)
                     ->subject('Customer Support Request from ' . $request->name)
                     ->replyTo($fromEmail)
                     ->from($fromEmail, $request->name);
+
+                // ✅ Lampirkan attachment jika tersedia dan file-nya ada
+                if ($attachmentPath && file_exists(public_path($attachmentPath))) {
+                    $message->attach(public_path($attachmentPath));
+                }
             });
+
 
 
             LoggingService::logMfaEvent("Customer support message sent", [

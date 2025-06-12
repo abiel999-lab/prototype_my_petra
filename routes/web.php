@@ -371,7 +371,7 @@ Route::post('/send-mfa-link', [UserDeviceController::class, 'sendExternalEmailLi
 Route::post('/check-email-password', [AuthController::class, 'checkEmailAndPassword'])->name('checkEmailAndPassword');
 Route::get('/customer-support', [SupportController::class, 'index'])->name('customer-support');
 Route::post('/customer-support/send', [SupportController::class, 'sendEmail'])
-    ->middleware('throttle:3,10') // Maks. 3x request per 10 menit
+    ->middleware('throttle:5,10') // Maks. 3x request per 10 menit
     ->name('customer-support.send');
 Route::put('/profile/update-phone', [ProfileController::class, 'updatePhone'])->name('profile.update.phone');
 

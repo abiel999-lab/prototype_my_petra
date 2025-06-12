@@ -295,10 +295,10 @@
                                                 <!-- Input Nomor HP -->
                                                 <div class="form-group row">
                                                     <label for="phone_number" class="col-sm-2 col-form-label">Nomor
-                                                        HP</label>
+                                                        HP/WA</label>
                                                     <div class="col-sm-8">
                                                         <input type="text" class="form-control" id="phone_number"
-                                                            name="phone_number" placeholder="Nomor HP"
+                                                            name="phone_number" placeholder="Nomor HP/WA"
                                                             value="{{ auth()->user()->phone_number ?? '' }}" required>
                                                     </div>
                                                     <div class="col-sm-2">
