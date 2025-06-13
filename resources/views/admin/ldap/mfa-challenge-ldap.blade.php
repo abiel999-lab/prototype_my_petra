@@ -8,10 +8,12 @@
     <link href="https://login.petra.ac.id/css/bootstrap.css" rel="stylesheet">
     <link href="https://login.petra.ac.id/css/style.css" rel="stylesheet">
     <link href="https://login.petra.ac.id/css/mmenu.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://login.petra.ac.id/adminlte/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+    <link rel="stylesheet"
+        href="https://login.petra.ac.id/adminlte/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
     <link rel="stylesheet" href="https://login.petra.ac.id/css/loading.css">
     <link rel="icon" href="https://login.petra.ac.id/images/favicon.png" type="image/x-icon">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .login-wrapper .form-control {
             background: #fdfdfd;
@@ -55,17 +57,20 @@
                     <div class="col-sm-8">
                         <div class="login-wrapper">
                             <h1 class="login-title">Verify LDAP Access</h1>
-                            <p>Please enter the OTP code and upload your identity photo/selfie. The OTP was sent to your email.</p>
+                            <p>Please enter the OTP code and upload your identity photo/selfie. The OTP was sent to your
+                                email.</p>
 
                             <form action="{{ route('ldap.otp.verify') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 <div class="input-group mb-3">
-                                    <input type="text" class="form-control" name="code" placeholder="OTP code" required>
+                                    <input type="text" class="form-control" name="code" placeholder="OTP code"
+                                        required>
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="attachment">Upload ID/Selfie (jpg, png, pdf)</label>
-                                    <input type="file" class="form-control" name="attachment" accept=".jpg,.jpeg,.png,.pdf" required>
+                                    <input type="file" class="form-control" name="attachment"
+                                        accept=".jpg,.jpeg,.png,.pdf" required>
                                 </div>
 
                                 <div class="form-group mt-3">
@@ -74,9 +79,11 @@
                             </form>
 
                             <div style="display: flex; gap: 10px; margin-top: 15px;">
-                                <form id="resend-form" action="{{ route('ldap.otp.resend') }}" method="POST" onsubmit="handleResend(event)">
+                                <form id="resend-form" action="{{ route('ldap.otp.resend') }}" method="POST"
+                                    onsubmit="handleResend(event)">
                                     @csrf
-                                    <button id="resend-button" type="submit" class="btn btn-secondary">Resend OTP</button>
+                                    <button id="resend-button" type="submit" class="btn btn-secondary">Resend
+                                        OTP</button>
                                 </form>
                                 <form action="{{ route('ldap.otp.cancel') }}" method="POST">
                                     @csrf
@@ -84,7 +91,8 @@
                                 </form>
                             </div>
 
-                            <p class="mt-3">Need support? Click <a href="{{ route('customer-support') }}"><strong>here</strong></a>.</p>
+                            <p class="mt-3">Need support? Click <a
+                                    href="{{ route('customer-support') }}"><strong>here</strong></a>.</p>
                         </div>
                     </div>
                 </div>
@@ -124,28 +132,54 @@
             }, 1000);
 
             fetch(form.action, {
-                method: "POST",
-                headers: {
-                    "X-CSRF-TOKEN": csrfToken,
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({})
-            })
-            .then(response => {
-                document.querySelector('.loading-screen').style.display = 'none';
-                if (!response.ok) throw new Error("Failed to resend OTP");
-                Swal.fire({ icon: 'success', title: 'OTP resent successfully' });
-            })
-            .catch(() => {
-                document.querySelector('.loading-screen').style.display = 'none';
-                clearInterval(countdown);
-                button.disabled = false;
-                button.innerText = "Resend OTP";
-                Swal.fire({ icon: 'error', title: 'Failed to resend OTP' });
-            });
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": csrfToken,
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => {
+                    document.querySelector('.loading-screen').style.display = 'none';
+                    if (!response.ok) throw new Error("Failed to resend OTP");
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'OTP resent successfully'
+                    });
+                })
+                .catch(() => {
+                    document.querySelector('.loading-screen').style.display = 'none';
+                    clearInterval(countdown);
+                    button.disabled = false;
+                    button.innerText = "Resend OTP";
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed to resend OTP'
+                    });
+                });
         }
     </script>
+    @if ($errors->has('code'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'OTP Incorrect',
+                text: '{{ $errors->first('code') }}',
+            });
+        </script>
+    @endif
+    @if ($errors->has('attachment'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Attachment Error',
+                text: '{{ $errors->first('attachment') }}',
+            });
+        </script>
+    @endif
+
+
 </body>
 
 </html>
