@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\MfaExternalMail;
 use App\Services\LoggingService;
 use App\Http\Controllers\Controller;
+use App\Mail\AdminExternalAccessNotifyMail;
 
 class UserDeviceController extends Controller
 {
@@ -287,6 +288,23 @@ class UserDeviceController extends Controller
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
         }
+
+        // Ambil informasi device
+        $ip = request()->ip();
+        $agent = new Agent();
+        $agent->setUserAgent(request()->header('User-Agent'));
+        $os = $agent->platform() ?? 'Unknown';
+        $device = $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
+        $timestamp = Carbon::now('Asia/Jakarta')->toDayDateTimeString();
+
+        // Kirim email ke admin utama
+        Mail::to('mfa.mypetra@petra.ac.id')->send(new AdminExternalAccessNotifyMail(
+            $user,
+            $ip,
+            $os,
+            $device,
+            $timestamp
+        ));
 
         // ✅ Tentukan view MFA setting external berdasarkan role
         $externalMfaSettingRoute = match ($user->usertype) {

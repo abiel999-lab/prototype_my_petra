@@ -168,46 +168,50 @@
                 <tbody>
                     @forelse ($allUsers as $index => $user)
                         <tr id="row-{{ $index }}">
-                            <form method="POST" action="{{ route('ldap.update') }}">
-                                @csrf
-                                @method('PUT')
-                                <input type="hidden" name="dn" value="{{ $user['dn'] }}">
-                                <input type="hidden" name="connection" value="{{ $user['connection'] }}">
+                            <td>
+                                <span class="display-uid">{{ $user['uid'] }}</span>
+                                <input type="text" name="uid" value="{{ $user['uid'] }}"
+                                    class="form-control form-control-sm edit-uid d-none">
+                            </td>
+                            <td>
+                                <span class="display-cn">{{ $user['cn'] }}</span>
+                                <input type="text" name="cn" value="{{ $user['cn'] }}"
+                                    class="form-control form-control-sm edit-cn d-none">
+                            </td>
+                            <td>{{ $user['dn'] }}</td>
+                            <td>
+                                <div class="action-default">
+                                    <button type="button" class="btn btn-warning btn-sm"
+                                        onclick="enableEdit({{ $index }})">Edit</button>
+                                </div>
 
-                                <td>
-                                    <span class="display-uid">{{ $user['uid'] }}</span>
-                                    <input type="text" name="uid" value="{{ $user['uid'] }}"
-                                        class="form-control edit-uid d-none">
-                                </td>
-                                <td>
-                                    <span class="display-cn">{{ $user['cn'] }}</span>
-                                    <input type="text" name="cn" value="{{ $user['cn'] }}"
-                                        class="form-control edit-cn d-none">
-                                </td>
-                                <td>{{ $user['dn'] }}</td>
-                                <td>
-                                    <div class="action-default">
-                                        <button type="button" class="btn btn-warning btn-sm"
-                                            onclick="enableEdit({{ $index }})">Edit</button>
-                                        <div class="text-muted small">Protected</div>
-                                    </div>
-                                    <div class="action-edit d-none">
-                                        <button type="button" class="btn btn-sm btn-secondary"
-                                            onclick="cancelEdit({{ $index }})">Cancel</button>
-                                        <button type="submit" class="btn btn-sm btn-success">Save</button>
-                                        <form method="POST" action="{{ route('ldap.delete') }}"
-                                            style="display:inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <input type="hidden" name="dn" value="{{ $user['dn'] }}">
-                                            <input type="hidden" name="connection"
-                                                value="{{ $user['connection'] }}">
-                                            <button class="btn btn-sm btn-danger"
-                                                onclick="return confirm('Yakin ingin menghapus user ini?')">Delete</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </form>
+                                <div class="action-edit d-none">
+                                    <form method="POST" action="{{ route('ldap.update') }}" class="d-inline-block">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" name="dn" value="{{ $user['dn'] }}">
+                                        <input type="hidden" name="connection" value="{{ $user['connection'] }}">
+                                        <input type="hidden" name="uid" class="uid-input-{{ $index }}">
+                                        <input type="hidden" name="cn" class="cn-input-{{ $index }}">
+                                        <button type="submit" class="btn btn-success btn-sm"
+                                            onclick="return applyEditValues({{ $index }})">Save</button>
+                                    </form>
+
+                                    <button type="button" class="btn btn-secondary btn-sm"
+                                        onclick="cancelEdit({{ $index }})">Cancel</button>
+                                </div>
+
+                                {{-- Delete Form di luar action-edit --}}
+                                <form method="POST" action="{{ route('ldap.delete') }}"
+                                    class="d-inline-block mt-1">
+                                    @csrf
+                                    @method('DELETE')
+                                    <input type="hidden" name="dn" value="{{ $user['dn'] }}">
+                                    <input type="hidden" name="connection" value="{{ $user['connection'] }}">
+                                    <button class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Yakin ingin menghapus user ini?')">Delete</button>
+                                </form>
+                            </td>
                         </tr>
                     @empty
                         <tr>
@@ -215,6 +219,7 @@
                         </tr>
                     @endforelse
                 </tbody>
+
             </table>
 
             <div class="d-flex justify-content-between align-items-center mt-3">
@@ -280,6 +285,16 @@
         row.querySelector('.edit-cn').classList.add('d-none');
         row.querySelector('.action-default').classList.remove('d-none');
         row.querySelector('.action-edit').classList.add('d-none');
+    }
+</script>
+<script>
+    function applyEditValues(index) {
+        const row = document.getElementById('row-' + index);
+        const uidValue = row.querySelector('.edit-uid').value;
+        const cnValue = row.querySelector('.edit-cn').value;
+        row.querySelector('.uid-input-' + index).value = uidValue;
+        row.querySelector('.cn-input-' + index).value = cnValue;
+        return true;
     }
 </script>
 

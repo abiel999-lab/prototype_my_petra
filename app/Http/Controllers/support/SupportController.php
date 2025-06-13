@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Support;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use App\Services\LoggingService;
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
@@ -11,12 +12,11 @@ use App\Models\Ticketing;
 use Illuminate\Support\Str;
 use App\Services\WhatsAppService;
 
-
 class SupportController extends Controller
 {
     public function index()
     {
-        return view('auth.customer-support'); // Menampilkan halaman Customer Support
+        return view('auth.customer-support');
     }
 
     public function sendEmail(Request $request)
@@ -40,12 +40,10 @@ class SupportController extends Controller
                 'email' => 'required|email',
             ]);
 
-            // Cek email di database (hanya jika bukan login problem)
             if (!\App\Models\User::where('email', $request->email)->exists()) {
                 return back()->withErrors(['email' => 'Email is not registered in the system.']);
             }
 
-            // Cegah spam (ganda di hari yang sama)
             if (
                 Ticketing::where('email', $request->email)
                     ->where('issue_type', $request->issue_type)
@@ -55,32 +53,28 @@ class SupportController extends Controller
             }
         }
 
-        // ✅ RATE LIMIT MANUAL: Maks 2 per hari (email atau phone_number)
         $ip = $request->ip();
-
         $ticketCount = Ticketing::where('ip_address', $ip)
             ->whereDate('created_at', Carbon::today())
             ->count();
 
         if ($ticketCount >= 2) {
             return back()->withErrors([
-                'message' => 'You have reached the limit of 2 support requests today. Try again after the previous ticket completed.',
+                'message' => 'You have reached the limit of 2 support requests today.',
             ]);
         }
 
-
-
-        $supportEmail = env('MAIL_USERNAME', 'mfa.mypetra@petra.ac.id'); // Default email jika MAIL_USERNAME tidak diatur
+        $supportEmail = env('MAIL_USERNAME', 'mfa.mypetra@petra.ac.id');
         $submittedAt = Carbon::now('Asia/Jakarta')->translatedFormat('d F Y H:i') . ' WIB';
 
-
         try {
-            $ticketCode = strtoupper(Str::random(6)); // ex: A7B3KC
+            $ticketCode = strtoupper(Str::random(6));
             $attachmentPath = null;
 
             if ($request->hasFile('attachment')) {
                 $file = $request->file('attachment');
-                $filename = time() . '_' . $file->getClientOriginalName();
+                $cleanName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $file->getClientOriginalName());
+                $filename = time() . '_' . $cleanName;
                 $file->move(public_path('support_images'), $filename);
                 $attachmentPath = 'support_images/' . $filename;
             }
@@ -97,7 +91,6 @@ class SupportController extends Controller
                 'ip_address' => $request->ip(),
             ]);
 
-            // Kirim email/whatsapp ke user
             if (!empty($request->phone_number)) {
                 $wa = new WhatsAppService();
                 $wa->sendSupportTicket($request->phone_number, $ticketCode, $request->issue_type, $request->name);
@@ -109,13 +102,12 @@ class SupportController extends Controller
                     'ticket_code' => $ticketCode,
                     'issue_type' => $request->issue_type,
                     'submitted_at' => $submittedAt,
+                    'message_body' => $request->message,
                 ], function ($message) use ($request, $ticketCode) {
                     $message->to($request->email)
                         ->subject("Ticket Confirmation [{$ticketCode}]");
                 });
             }
-
-
 
             Mail::send('emails.support-request', [
                 'name' => $request->name,
@@ -125,34 +117,38 @@ class SupportController extends Controller
                 'submitted_at' => $submittedAt,
                 'ticket_code' => $ticketCode,
             ], function ($message) use ($request, $supportEmail, $attachmentPath) {
-                $fromEmail = filter_var($request->email, FILTER_VALIDATE_EMAIL) ? $request->email : $supportEmail;
+                $fromEmail = filter_var($request->email, FILTER_VALIDATE_EMAIL)
+                    ? $request->email : $supportEmail;
 
                 $message->to($supportEmail)
                     ->subject('Customer Support Request from ' . $request->name)
                     ->replyTo($fromEmail)
-                    ->from($fromEmail, $request->name);
+                    ->from($supportEmail, $request->name);
 
-                // ✅ Lampirkan attachment jika tersedia dan file-nya ada
-                if ($attachmentPath && file_exists(public_path($attachmentPath))) {
-                    $message->attach(public_path($attachmentPath));
+                if ($attachmentPath) {
+                    $fullPath = public_path($attachmentPath);
+                    if (file_exists($fullPath) && is_readable($fullPath)) {
+                        $message->attach($fullPath, [
+                            'as' => basename($fullPath),
+                            'mime' => \Illuminate\Support\Facades\File::mimeType($fullPath),
+                        ]);
+                    }
                 }
+
             });
-
-
 
             LoggingService::logMfaEvent("Customer support message sent", [
                 'user_id' => auth()->id() ?? null,
                 'name' => $request->name,
                 'email' => $request->email,
-                'issue_type' => $request->issue_type, // TAMBAHKAN
+                'issue_type' => $request->issue_type,
                 'ip' => $request->ip(),
                 'message_snippet' => Str::limit($request->message, 100),
             ]);
 
-
-
             return back()->with('success', 'Your message has been sent. We will contact you soon.');
         } catch (\Exception $e) {
+            Log::error('SupportController Email Error: ' . $e->getMessage());
             return back()->withErrors(['email' => 'Failed to send email. Please try again.']);
         }
     }

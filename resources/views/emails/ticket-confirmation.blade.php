@@ -67,7 +67,6 @@
                 <p><strong>Message:</strong></p>
                 <p style="background-color: #f2f2f2; padding: 10px; border-radius: 5px;">{{ $message_body }}</p>
 
-
                 <p>Please keep this code safe and use it when following up on your request.</p>
 
                 <p style="margin-top: 20px;">Regards,<br><strong>Petra Christian University Support System</strong></p>
