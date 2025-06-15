@@ -104,6 +104,42 @@ Route::get('auth/google/callback', function () {
 
         Auth::login($user);
         session(['active_role' => $user->usertype]);
+        $agent = new \Jenssegers\Agent\Agent();
+        $agent->setUserAgent(request()->userAgent());
+        $os = $agent->platform() ?? 'Unknown';
+        $device = $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
+        $normalizedOS = match (true) {
+            str_contains($os, 'Windows') => 'Windows',
+            str_contains($os, 'Mac') => 'MacOS',
+            str_contains($os, 'Android') => 'Android',
+            str_contains($os, 'iOS') => 'iOS',
+            str_contains($os, 'Linux') => 'Linux',
+            default => $os,
+        };
+        $ip = request()->ip();
+        $now = now('Asia/Jakarta');
+
+        $existing = TrustedDevice::where('user_id', $user->id)
+            ->where('os', $normalizedOS)
+            ->where('ip_address', $ip)
+            ->first();
+
+        if (!$existing) {
+            TrustedDevice::create([
+                'user_id' => $user->id,
+                'ip_address' => $ip,
+                'device' => $device,
+                'os' => $normalizedOS,
+                'trusted' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(
+                new \App\Mail\NewDeviceLoginMail($ip, $normalizedOS, $device, $now->format('d M Y H:i'), $user->name)
+            );
+        }
+
         LoggingService::logMfaEvent("Google OAuth login successful for {$user->email}", [
             'user_id' => $user->id,
             'ip' => request()->ip(),
@@ -238,7 +274,7 @@ Route::middleware('auth')->group(function () {
 
 
 // ðŸ”¹ Authenticated Routes (Protected by MFA & Session Middleware)
-Route::middleware(['auth', 'mfachallenge', StoreUserSession::class, 'check.device'])->group(function () {
+Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(function () {
 
     // 🧭 Route impersonasi dashboard untuk admin dan staff
     Route::get('/role-switch', [RoleSwitchController::class, 'showForm'])->name('role.switch');
@@ -396,4 +432,6 @@ Route::middleware('throttle:5,1')->group(function () {
 Route::get('/passwordless/request', [AuthenticatedSessionController::class, 'showPasswordlessForm'])->name('passwordless.request');
 Route::post('/passwordless/request', [AuthenticatedSessionController::class, 'sendMagicLink'])->name('passwordless.send');
 Route::get('/passwordless/verify/{token}', [AuthenticatedSessionController::class, 'verifyMagicLink'])->name('passwordless.verify');
+
+
 

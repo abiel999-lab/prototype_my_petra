@@ -14,13 +14,15 @@ class NewDeviceLoginMail extends Mailable
     public $os;
     public $device;
     public $time;
+    public $userName;
 
-    public function __construct($ip, $os, $device, $time)
+    public function __construct($ip, $os, $device, $time, $userName)
     {
         $this->ip = $ip;
         $this->os = $os;
         $this->device = $device;
         $this->time = $time;
+        $this->userName = $userName;
     }
 
     public function build()

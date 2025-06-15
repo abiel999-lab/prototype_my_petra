@@ -26,8 +26,12 @@
 
         <tr>
             <td>
-                <h2>Halo, {{ explode(' ', $userName)[0] }}!</h2>
-                <p>Kami mendeteksi bahwa akun Anda telah login dari perangkat baru yang belum pernah dikenali sebelumnya.</p>
+                @php
+                    $firstName = explode(' ', $userName)[0] ?? 'Pengguna';
+                @endphp
+                <h2>Halo, {{ $firstName }}!</h2>
+                <p>Kami mendeteksi bahwa akun Anda telah login dari perangkat baru yang belum pernah dikenali
+                    sebelumnya.</p>
 
                 <p><strong>Alamat IP:</strong> {{ $ip }}</p>
                 <p><strong>Sistem Operasi:</strong> {{ $os }}</p>
@@ -39,10 +43,12 @@
                 </h3>
 
                 <p style="margin-top: 10px;">
-                    Jika Anda tidak mengenali aktivitas ini, segera ubah kata sandi Anda dan hubungi tim keamanan kami untuk mencegah akses tidak sah.
+                    Jika Anda tidak mengenali aktivitas ini, segera ubah kata sandi Anda dan hubungi tim keamanan kami
+                    untuk mencegah akses tidak sah.
                 </p>
 
-                <p style="margin-top: 20px;">Salam hormat,<br><strong>Tim Keamanan Universitas Kristen Petra</strong></p>
+                <p style="margin-top: 20px;">Salam hormat,<br><strong>Tim Keamanan Universitas Kristen Petra</strong>
+                </p>
             </td>
         </tr>
     </table>

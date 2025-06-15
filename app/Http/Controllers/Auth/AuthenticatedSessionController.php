@@ -99,6 +99,41 @@ class AuthenticatedSessionController extends Controller
                 $user->login_ban_until = null;
                 $user->save(); // ✅ Force save to database
 
+                $agent = new \Jenssegers\Agent\Agent();
+                $agent->setUserAgent($request->userAgent());
+                $os = $agent->platform() ?? 'Unknown';
+                $device = $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
+                $normalizedOS = match (true) {
+                    str_contains($os, 'Windows') => 'Windows',
+                    str_contains($os, 'Mac') => 'MacOS',
+                    str_contains($os, 'Android') => 'Android',
+                    str_contains($os, 'iOS') => 'iOS',
+                    str_contains($os, 'Linux') => 'Linux',
+                    default => $os,
+                };
+                $ip = $request->ip();
+                $now = now('Asia/Jakarta');
+
+                $existing = \App\Models\TrustedDevice::where('user_id', $user->id)
+                    ->where('os', $normalizedOS)
+                    ->where('ip_address', $ip)
+                    ->first();
+
+                if (!$existing) {
+                    \App\Models\TrustedDevice::create([
+                        'user_id' => $user->id,
+                        'ip_address' => $ip,
+                        'device' => $device,
+                        'os' => $normalizedOS,
+                        'trusted' => false,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+
+                    Mail::to($user->email)->send(
+                        new \App\Mail\NewDeviceLoginMail($ip, $normalizedOS, $device, $now->format('d M Y H:i'), $user->name)
+                    );
+                }
                 return $this->redirectUser($user);
             }
 
