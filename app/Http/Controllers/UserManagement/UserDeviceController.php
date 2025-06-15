@@ -70,6 +70,9 @@ class UserDeviceController extends Controller
         TrustedDevice::where('user_id', $userId)
             ->where('updated_at', '<', $now->subDays(30))
             ->delete();
+        //TrustedDevice::where('user_id', $userId)
+            //->where('updated_at', '<', now()->subMinutes(1))
+            //->delete();
 
         // 🔍 Check if OS already exists (regardless of IP/device)
         $existingDevice = TrustedDevice::where('user_id', $userId)

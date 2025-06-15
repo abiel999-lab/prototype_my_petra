@@ -69,6 +69,8 @@ class LoginRequest extends FormRequest
                 );
 
                 Auth::login($user);
+                app(\App\Http\Controllers\UserManagement\UserDeviceController::class)
+                    ->handleDeviceTracking($user->id);
                 RateLimiter::clear($this->throttleKey());
                 return;
             }
@@ -91,7 +93,7 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             return;
         }
 
@@ -112,6 +114,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 }
