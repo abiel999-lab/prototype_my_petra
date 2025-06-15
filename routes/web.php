@@ -238,7 +238,7 @@ Route::middleware('auth')->group(function () {
 
 
 // ðŸ”¹ Authenticated Routes (Protected by MFA & Session Middleware)
-Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(function () {
+Route::middleware(['auth', 'mfachallenge', StoreUserSession::class, 'check.device'])->group(function () {
 
     // 🧭 Route impersonasi dashboard untuk admin dan staff
     Route::get('/role-switch', [RoleSwitchController::class, 'showForm'])->name('role.switch');

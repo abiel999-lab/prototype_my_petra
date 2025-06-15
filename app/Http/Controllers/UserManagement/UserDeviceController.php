@@ -79,6 +79,8 @@ class UserDeviceController extends Controller
         // 🔍 Check if OS already exists (regardless of IP/device)
         $existingDevice = TrustedDevice::where('user_id', $userId)
             ->where('os', $normalizedOS)
+            ->where('device', $deviceType)
+            ->where('ip_address', $currentIp)
             ->first();
 
         if ($existingDevice) {
@@ -116,9 +118,6 @@ class UserDeviceController extends Controller
             'created_at' => $now,
             'updated_at' => $now,
         ]);
-
-        $user = User::find($userId);
-        Mail::to($user->email)->send(new NewDeviceLoginMail($currentIp,$normalizedOS,$deviceType,$now->format('d M Y H:i')));
 
         LoggingService::logMfaEvent("New OS added", [
             'user_id' => $userId,
@@ -291,7 +290,7 @@ class UserDeviceController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $user = \App\Models\User::find($userId);
+        $user = User::find($userId);
 
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
