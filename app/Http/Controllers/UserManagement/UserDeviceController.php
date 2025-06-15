@@ -14,6 +14,8 @@ use App\Mail\MfaExternalMail;
 use App\Services\LoggingService;
 use App\Http\Controllers\Controller;
 use App\Mail\AdminExternalAccessNotifyMail;
+use App\Mail\NewDeviceLoginMail;
+use App\Models\User;
 
 class UserDeviceController extends Controller
 {
@@ -71,8 +73,8 @@ class UserDeviceController extends Controller
             ->where('updated_at', '<', $now->subDays(30))
             ->delete();
         //TrustedDevice::where('user_id', $userId)
-            //->where('updated_at', '<', now()->subMinutes(1))
-            //->delete();
+        //->where('updated_at', '<', now()->subMinutes(1))
+        //->delete();
 
         // 🔍 Check if OS already exists (regardless of IP/device)
         $existingDevice = TrustedDevice::where('user_id', $userId)
@@ -114,6 +116,9 @@ class UserDeviceController extends Controller
             'created_at' => $now,
             'updated_at' => $now,
         ]);
+
+        $user = User::find($userId);
+        Mail::to($user->email)->send(new NewDeviceLoginMail($currentIp,$normalizedOS,$deviceType,$now->format('d M Y H:i')));
 
         LoggingService::logMfaEvent("New OS added", [
             'user_id' => $userId,
