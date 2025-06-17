@@ -122,26 +122,49 @@ class ProfileController extends Controller
     }
     public function studentmfasetting(Request $request): View
     {
+        $user = $request->user();
+        $userDeviceController = new UserDeviceController();
+        $devices = $userDeviceController->getUserDevices($user->id);
+
         return view('profile.student.mfa-setting', [
-            'user' => $request->user(),
+            'user' => $user,
+            'devices' => $devices,
         ]);
     }
+
     public function staffmfasetting(Request $request): View
     {
+        $user = $request->user();
+        $userDeviceController = new UserDeviceController();
+        $devices = $userDeviceController->getUserDevices($user->id);
+
         return view('profile.staff.mfa-setting', [
-            'user' => $request->user(),
+            'user' => $user,
+            'devices' => $devices,
         ]);
     }
+
     public function adminmfasetting(Request $request): View
     {
+        $user = $request->user();
+        $userDeviceController = new UserDeviceController();
+        $devices = $userDeviceController->getUserDevices($user->id);
+
         return view('profile.admin.mfa-setting', [
-            'user' => $request->user(),
+            'user' => $user,
+            'devices' => $devices,
         ]);
     }
+
     public function mfasetting(Request $request): View
     {
+        $user = $request->user();
+        $userDeviceController = new UserDeviceController();
+        $devices = $userDeviceController->getUserDevices($user->id);
+
         return view('profile.mfa-setting', [
-            'user' => $request->user(),
+            'user' => $user,
+            'devices' => $devices,
         ]);
     }
     public function manageuser(Request $request): View
@@ -327,7 +350,7 @@ class ProfileController extends Controller
     public function studentTogglePasswordless(Request $request)
     {
         $user = auth()->user();
-        $role = $user->temporary_role ?? $user->usertype;
+        $role = session('active_role', $user->usertype);
 
         if ($role !== 'student') {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
@@ -338,7 +361,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'passwordless_enabled' => $user->passwordless_enabled,
+            'passwordless_enabled' => $user->mfa->passwordless_enabled,
         ]);
     }
 
@@ -346,7 +369,7 @@ class ProfileController extends Controller
     public function staffTogglePasswordless(Request $request)
     {
         $user = auth()->user();
-        $role = $user->temporary_role ?? $user->usertype;
+        $role = session('active_role', $user->usertype);
 
         if ($role !== 'staff') {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
@@ -357,7 +380,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'passwordless_enabled' => $user->passwordless_enabled,
+            'passwordless_enabled' => $user->mfa->passwordless_enabled,
         ]);
     }
 
@@ -365,6 +388,7 @@ class ProfileController extends Controller
     public function adminTogglePasswordless(Request $request)
     {
         $user = auth()->user();
+        $role = session('active_role', $user->usertype);
         if ($user->usertype !== 'admin') {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
         }
@@ -374,14 +398,14 @@ class ProfileController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'passwordless_enabled' => $user->passwordless_enabled,
+            'passwordless_enabled' => $user->mfa->passwordless_enabled,
         ]);
     }
 
     public function generalTogglePasswordless(Request $request)
     {
         $user = auth()->user();
-        $role = $user->temporary_role ?? $user->usertype;
+        $role = session('active_role', $user->usertype);
 
         if ($role !== 'general') {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
@@ -392,7 +416,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'passwordless_enabled' => $user->passwordless_enabled,
+            'passwordless_enabled' => $user->mfa->passwordless_enabled,
         ]);
     }
 

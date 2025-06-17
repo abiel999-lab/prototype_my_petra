@@ -222,7 +222,7 @@
                     </h1>
                 </div>
                 <div class="container">
-                    <a class="thing" href="{{ route('sso.to.bap') }}">
+                    <a class="thing" href="{{ route('sso.to.bap.new') }}">
                         <i class="fas fa-chalkboard-teacher"></i> BAP
                     </a>
                     <a class="thing" href="{{ route('sso.to.bimbingan') }}">
@@ -293,7 +293,7 @@
                     <a class="thing" href="{{ route('sso.to.sim') }}">
                         <i class="fas fa-cubes"></i> SIM UK Petra
                     </a>
-                    <a class="thing" href="{{ route('sso.to.simeltc') }}">
+                    <a class="thing" href="{{ route('sso.to.sim-eltc') }}">
                         <i class="fas fa-network-wired"></i> SIM-ELTC
                     </a>
                     <a class="thing" href="{{ route('sso.to.tnc') }}">

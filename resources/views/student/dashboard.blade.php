@@ -222,7 +222,7 @@
                     </h1>
                 </div>
                 <div class="container">
-                    <a class="thing" href="{{ route('sso.to.bap') }}">
+                    <a class="thing" href="{{ route('sso.to.bap.new') }}">
                         <i class="fas fa-chalkboard-teacher"></i> BAP
                     </a>
                     <a class="thing" href="{{ route('sso.to.sim') }}">
@@ -231,7 +231,7 @@
                     <a class="thing" href="{{ route('sso.to.leap') }}">
                         <i class=""></i> LEAP-MBKM
                     </a>
-                    <a class="thing" href="{{ route('sso.to.servicelearning') }}">
+                    <a class="thing" href="{{ route('sso.to.service') }}">
                         <i class=""></i> Service-Learning
                     </a>
                 </div>
@@ -250,7 +250,7 @@
                     <a class="thing" href="{{ route('sso.to.sister') }}">
                         <i class="far fa-chart-bar"></i> Sister
                     </a>
-                    <a class="thing" href="{{ route('sso.to.events') }}">
+                    <a class="thing" href="{{ route('sso.to.event') }}">
                         <i class="fas fa-calendar-alt"></i> Event Website
                     </a>
                     <a class="thing" href="{{ route('sso.to.uppk') }}">
@@ -259,7 +259,7 @@
                     <a class="thing" href="{{ route('sso.to.shortener') }}">
                         <i class="fas fa-link"></i> Shortener
                     </a>
-                    <a class="thing" href="{{ route('sso.to.lostfound') }}">
+                    <a class="thing" href="{{ route('sso.to.lost') }}">
                         <i class="fas fa-person-circle-plus"></i> LOST &amp; FOUND
                     </a>
                     <a class="thing" href="{{ route('sso.to.konseling') }}">
@@ -268,7 +268,7 @@
                     <a class="thing" href="{{ route('sso.to.library') }}">
                         <i class="fas fa-book-reader"></i> Library
                     </a>
-                    <a class="thing" href="{{ route('sso.to.simeltc') }}">
+                    <a class="thing" href="{{ route('sso.to.sim-eltc') }}">
                         <i class="fas fa-network-wired"></i> SIM-ELTC
                     </a>
                     <a class="thing" href="{{ route('sso.to.tnc') }}">

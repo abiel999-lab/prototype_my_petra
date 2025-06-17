@@ -221,7 +221,7 @@
                     </h1>
                 </div>
                 <div class="container">
-                    <a class="thing" href="{{ route('sso.to.events') }}">
+                    <a class="thing" href="{{ route('sso.to.event') }}">
                         <i class=""></i> Event Website
                     </a>
                     <a class="thing" href="{{ route('sso.to.konseling') }}">
