@@ -25,6 +25,9 @@ use App\Http\Controllers\UserManagement\RoleSwitchController;
 use App\Http\Controllers\Auth\LdapRegisterController;
 use App\Http\Controllers\Auth\LdapManageController;
 use App\Http\Controllers\Auth\OtpLdapVerificationController;
+use App\Http\Controllers\Sso\SsoController;
+use App\Http\Controllers\Profile\ExtendedMfaController;
+use Illuminate\Support\Facades\Session;
 
 // ðŸ”¹ Redirect root URL ('/') to the correct dashboard or login
 Route::middleware(['ip.limiter'])->get('/', function () {
@@ -52,26 +55,21 @@ Route::get('auth/google', function () {
 
 Route::get('auth/google/callback', function () {
     try {
-        $googleUser = Socialite::driver('google')->stateless()->user(); // Use stateless() to avoid session issues
+        $googleUser = Socialite::driver('google')->stateless()->user();
 
-        // Check if user exists
         $user = User::where('email', $googleUser->getEmail())->first();
 
         if ($user) {
-            // 🚨 Prevent banned users from logging in
             if ($user->banned_status) {
                 return redirect()->route('login')->withErrors([
                     'email' => "Your account is banned. Please contact support."
                 ]);
             }
 
-            // ✅ Update Google ID and Reset Failed Login Attempts
             $user->update([
                 'google_id' => $googleUser->getId(),
-
             ]);
         } else {
-            // Create new user with 'general' as default usertype
             $email = $googleUser->getEmail();
             $usertype = 'general';
 
@@ -92,52 +90,19 @@ Route::get('auth/google/callback', function () {
                 'banned_status' => false,
                 'failed_login_attempts' => 0,
             ]);
-            // if (!$user->mfa()->exists()) {
-            //     $user->mfa()->create([
-            //         'mfa_enabled' => false,
-            //         'mfa_method' => 'email',
-            //     ]);
-            // }
-
-
         }
 
         Auth::login($user);
         session(['active_role' => $user->usertype]);
-        $agent = new \Jenssegers\Agent\Agent();
-        $agent->setUserAgent(request()->userAgent());
-        $os = $agent->platform() ?? 'Unknown';
-        $device = $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
-        $normalizedOS = match (true) {
-            str_contains($os, 'Windows') => 'Windows',
-            str_contains($os, 'Mac') => 'MacOS',
-            str_contains($os, 'Android') => 'Android',
-            str_contains($os, 'iOS') => 'iOS',
-            str_contains($os, 'Linux') => 'Linux',
-            default => $os,
-        };
-        $ip = request()->ip();
-        $now = now('Asia/Jakarta');
 
-        $existing = TrustedDevice::where('user_id', $user->id)
-            ->where('os', $normalizedOS)
-            ->where('ip_address', $ip)
-            ->first();
+        // ✅ Check OS limit + only send email if device is new
+        $userId = Auth::id();
+        $deviceController = new UserDeviceController();
+        $deviceLimitCheck = $deviceController->handleDeviceTracking($userId);
 
-        if (!$existing) {
-            TrustedDevice::create([
-                'user_id' => $user->id,
-                'ip_address' => $ip,
-                'device' => $device,
-                'os' => $normalizedOS,
-                'trusted' => false,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-
-            \Illuminate\Support\Facades\Mail::to($user->email)->send(
-                new \App\Mail\NewDeviceLoginMail($ip, $normalizedOS, $device, $now->format('d M Y H:i'), $user->name)
-            );
+        if ($deviceLimitCheck instanceof \Illuminate\Http\RedirectResponse) {
+            LoggingService::logSecurityViolation("Device limit hit for user [ID: {$userId}] during Google OAuth login");
+            return $deviceLimitCheck;
         }
 
         LoggingService::logMfaEvent("Google OAuth login successful for {$user->email}", [
@@ -146,36 +111,20 @@ Route::get('auth/google/callback', function () {
             'user_agent' => request()->userAgent(),
         ]);
 
+        // ✅ Redirect based on user type
+        return match ($user->usertype) {
+            'admin' => redirect()->route('admin.dashboard'),
+            'student' => redirect()->route('student.dashboard'),
+            'staff' => redirect()->route('staff.dashboard'),
+            default => redirect()->route('dashboard'),
+        };
 
-
-
-        // ✅ Call OS limit check before redirecting to the dashboard
-        $userId = Auth::id();
-        $deviceController = new UserDeviceController();
-        $deviceLimitCheck = $deviceController->handleDeviceTracking($userId);
-
-        if ($deviceLimitCheck instanceof \Illuminate\Http\RedirectResponse) {
-            LoggingService::logSecurityViolation("Device limit hit for user [ID: {$userId}] during Google OAuth login");
-            return $deviceLimitCheck; // 🚨 Redirect to warning page if OS limit is reached
-        }
-
-        // Redirect based on user type
-        switch ($user->usertype) {
-            case 'admin':
-                return redirect()->route('admin.dashboard');
-            case 'student':
-                return redirect()->route('student.dashboard');
-            case 'staff':
-                return redirect()->route('staff.dashboard');
-            case 'general':
-            default:
-                return redirect()->route('dashboard');
-        }
     } catch (\Exception $e) {
         LoggingService::logSecurityViolation("Google OAuth error: " . $e->getMessage());
         return redirect()->route('login')->with('error', 'Google authentication failed.');
     }
 })->name('google.callback');
+
 
 // 🔹 LDAP Authentication (Custom Login Handler)
 Route::post('/login', function (Request $request) {
@@ -270,6 +219,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/mfa-challenge/send-otp', [TwoFactorController::class, 'handleWhatsAppOtp'])->name('mfa-challenge.send-otp');
     Route::get('/mfa-challenge-external', [ExternalMfaController::class, 'handle'])->name('mfa-challenge-external');
     Route::post('/mfa-challenge-external/verify', [ExternalMfaController::class, 'verify'])->name('mfa-challenge-external.verify');
+    Route::get('/extended-mfa', [ExtendedMfaController::class, 'showChallenge'])->name('extended-mfa.challenge');
+    Route::post('/extended-mfa', [ExtendedMfaController::class, 'verifyChallenge'])->name('extended-mfa.verify');
+    Route::post('/extended-mfa/resend', [ExtendedMfaController::class, 'resend'])->name('extended-mfa.resend');
+    Route::post('/extended-mfa/cancel', [ExtendedMfaController::class, 'cancel'])->name('extended-mfa.cancel');
+    Route::post('/admin/setting/extended-mfa-setting', [ExtendedMfaController::class, 'updateSetting'])->name('profile.extended-mfa.setting');
 });
 
 
@@ -309,6 +263,7 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::get('/admin/external/setting/mfa', [ProfileController::class, 'adminmfasettingexternal'])->name('profile.admin.mfa.external');
         Route::post('/profile/admin/toggle-passwordless', [ProfileController::class, 'adminTogglePasswordless'])->name('profile.admin.toggle-passwordless');
         Route::get('/admin/logs', [LogViewerController::class, 'index'])->name('admin.logs');
+        Route::post('/admin/setting/extended-mfa-setting', [ExtendedMfaController::class, 'updateSettingAdmin'])->name('profile.admin.extended-mfa.setting');
         // LDAP Access Challenge (OTP + MFA + Foto)
         Route::get('/admin/setting/manage-user/ldap/verify-access', [OtpLdapVerificationController::class, 'form'])->name('ldap.otp.form');
         Route::post('/admin/setting/manage-user/ldap/verify-access', [OtpLdapVerificationController::class, 'verify'])->name('ldap.otp.verify');
@@ -347,6 +302,7 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::get('/student/external/setting/mfa', [ProfileController::class, 'studentmfasettingexternal'])->name('profile.student.mfa.external');
 
         Route::post('/profile/student/toggle-passwordless', [ProfileController::class, 'studentTogglePasswordless'])->name('profile.student.toggle-passwordless');
+        Route::post('/student/setting/extended-mfa-setting', [ExtendedMfaController::class, 'updateSettingStudent'])->name('profile.student.extended-mfa.setting');
 
 
     });
@@ -371,6 +327,7 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::get('/staff/external/setting/mfa', [ProfileController::class, 'staffmfasettingexternal'])->name('profile.staff.mfa.external');
 
         Route::post('/profile/staff/toggle-passwordless', [ProfileController::class, 'staffTogglePasswordless'])->name('profile.staff.toggle-passwordless');
+        Route::post('/staff/setting/extended-mfa-setting', [ExtendedMfaController::class, 'updateSettingStaff'])->name('profile.staff.extended-mfa.setting');
     });
 
     // ðŸ”¹ General User Routes
@@ -382,20 +339,17 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
         Route::get('/setting', [ProfileController::class, 'profile'])->name('profile.setting');
         Route::get('/setting/profile', [ProfileController::class, 'editprofile'])->name('profile.profile');
         Route::get('/setting/mfa', [ProfileController::class, 'mfasetting'])->name('profile.mfa');
-
         Route::get('/setting/session', [SessionController::class, 'show'])->name('profile.session.show');
         Route::delete('/setting/session/{id}', [SessionController::class, 'revoke'])->name('profile.session.revoke');
         Route::post('/setting/session/revoke-all', [SessionController::class, 'revokeAll'])->name('profile.session.revokeAll');
-
         Route::get('/setting/mfa', [UserDeviceController::class, 'Generalindex'])->name('profile.mfa');
         Route::delete('/setting/mfa/{id}', [UserDeviceController::class, 'Generaldelete'])->name('profile.mfa.delete');
         Route::post('/setting/mfa/{id}/trust', [UserDeviceController::class, 'Generaltrust'])->name('profile.mfa.trust');
         Route::post('/setting/mfa/{id}/untrust', [UserDeviceController::class, 'Generaluntrust'])->name('profile.mfa.untrust');
-
         // General External MFA Route
         Route::get('/external/setting/mfa', [ProfileController::class, 'mfasettingexternal'])->name('profile.mfa.external');
-
         Route::post('/profile/toggle-passwordless', [ProfileController::class, 'generalTogglePasswordless'])->name('profile.toggle-passwordless');
+        Route::post('/profile/extended-mfa-setting', [ExtendedMfaController::class, 'updateSetting'])->name('profile.extended-mfa.setting');
     });
 });
 
@@ -432,6 +386,79 @@ Route::middleware('throttle:5,1')->group(function () {
 Route::get('/passwordless/request', [AuthenticatedSessionController::class, 'showPasswordlessForm'])->name('passwordless.request');
 Route::post('/passwordless/request', [AuthenticatedSessionController::class, 'sendMagicLink'])->name('passwordless.send');
 Route::get('/passwordless/verify/{token}', [AuthenticatedSessionController::class, 'verifyMagicLink'])->name('passwordless.verify');
+
+// aplikasi bap
+Route::get('/sso/bap', [SsoController::class, 'redirectToBap'])->middleware(['auth', 'ensure.extended.mfa'])->name('sso.to.bap');
+Route::get('/from-bap', function () {
+    $user = auth()->user();
+    $active = session('active_role', $user->usertype);
+
+    // Jika role aktif tidak sama dengan usertype, reset session dan redirect ke default
+    if ($active !== $user->usertype) {
+        session(['active_role' => $user->usertype]);
+    }
+
+    return redirect()->route(match ($user->usertype) {
+        'admin' => 'admin.dashboard',
+        'staff' => 'staff.dashboard',
+        'student' => 'student.dashboard',
+        default => 'dashboard',
+    });
+})->middleware(['auth']);
+Route::get('/from-bap/setting', function () {
+    $user = auth()->user();
+    $active = session('active_role', $user->usertype);
+
+    if ($active !== $user->usertype) {
+        session(['active_role' => $user->usertype]);
+    }
+
+    return redirect()->route(match ($user->usertype) {
+        'admin' => 'profile.admin.setting',
+        'staff' => 'profile.staff.setting',
+        'student' => 'profile.student.setting',
+        default => 'profile.setting',
+    });
+})->middleware(['auth'])->name('from.bap.setting');
+Route::get('/from-bap/support', function () {
+    return redirect()->route('customer-support');
+})->name('from.bap.support');
+Route::get('/force-logout', function () {
+    Auth::logout();
+    Session::flush();
+    return redirect()->route('login');
+});
+Route::middleware(['auth', 'ensure.extended.mfa'])->group(function () {
+    Route::get('/sso/bap', fn() => redirect()->away('https://bap.petra.ac.id'))->name('sso.to.bap.new');
+    Route::get('/sso/leap', fn() => redirect()->away('https://leap.petra.ac.id'))->name('sso.to.leap');
+    Route::get('/sso/obe', fn() => redirect()->away('https://leap.petra.ac.id'))->name('sso.to.obe');
+    Route::get('/sso/bimbingan-mahasiswa', fn() => redirect()->away('https://leap.petra.ac.id'))->name('sso.to.bimbingan');
+    Route::get('/sso/service-learning', fn() => redirect()->away('https://service-learning.petra.ac.id'))->name('sso.to.service');
+    Route::get('/sso/sim', fn() => redirect()->away('https://sim.petra.ac.id'))->name('sso.to.sim');
+    Route::get('/sso/sim-eltc', fn() => redirect()->away('https://sim-eltc.petra.ac.id'))->name('sso.to.sim-eltc');
+    Route::get('/sso/tnc', fn() => redirect()->away('https://tnc.petra.ac.id'))->name('sso.to.tnc');
+    Route::get('/sso/form', fn() => redirect()->away('https://form.petra.ac.id'))->name('sso.to.form');
+    Route::get('/sso/sister', fn() => redirect()->away('https://sister.kemdikbud.go.id/beranda'))->name('sso.to.sister');
+    Route::get('/sso/event', fn() => redirect()->away('https://events.petra.ac.id'))->name('sso.to.event');
+    Route::get('/sso/uppk', fn() => redirect()->away('https://uppk.petra.ac.id'))->name('sso.to.uppk');
+    Route::get('/sso/shortener', fn() => redirect()->away('https://s.petra.ac.id'))->name('sso.to.shortener');
+    Route::get('/sso/lostnfound', fn() => redirect()->away('http://lostnfound.petra.ac.id'))->name('sso.to.lost');
+    Route::get('/sso/konseling', fn() => redirect()->away('https://konseling.petra.ac.id'))->name('sso.to.konseling');
+    Route::get('/sso/library', fn() => redirect()->away('https://konseling.petra.ac.id'))->name('sso.to.library');
+    Route::get('/sso/grant', fn() => redirect()->away('https://tnc.petra.ac.id'))->name('sso.to.grant');
+    Route::get('/sso/alumni', fn() => redirect()->away('https://alumni.petra.ac.id/'))->name('sso.to.alumni');
+    Route::get('/sso/survey', fn() => redirect()->away('https://survey.petra.ac.id'))->name('sso.to.survey');
+    Route::get('/sso/survei-alumni', fn() => redirect()->away('https://survei-alumni.petra.ac.id'))->name('sso.to.survei-alumni');
+    Route::get('/sso/penugasan', fn() => redirect()->away('https://survei-alumni.petra.ac.id'))->name('sso.to.penugasan');
+    Route::get('/sso/akreditasi', fn() => redirect()->away('https://sim-eltc.petra.ac.id'))->name('sso.to.akreditasi');
+    Route::get('/sso/hsep', fn() => redirect()->away('https://sim.petra.ac.id'))->name('sso.to.hsep');
+});
+
+
+
+
+
+
 
 
 

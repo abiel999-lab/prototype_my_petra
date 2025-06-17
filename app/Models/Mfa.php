@@ -21,6 +21,8 @@ class Mfa extends Model
         'passwordless_enabled',
         'passwordless_token',
         'passwordless_expires_at',
+        'extended_mfa_enabled',
+        'extended_mfa_method',
     ];
 
     protected $casts = [
@@ -29,6 +31,7 @@ class Mfa extends Model
         'passwordless_expires_at' => 'datetime',
         'mfa_enabled' => 'boolean',
         'passwordless_enabled' => 'boolean',
+        'extended_mfa_enabled' => 'boolean',
     ];
 
     public function user()

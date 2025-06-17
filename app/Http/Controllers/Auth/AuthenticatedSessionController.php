@@ -116,7 +116,6 @@ class AuthenticatedSessionController extends Controller
 
                 $existing = \App\Models\TrustedDevice::where('user_id', $user->id)
                     ->where('os', $normalizedOS)
-                    ->where('ip_address', $ip)
                     ->first();
 
                 if (!$existing) {
@@ -305,7 +304,10 @@ class AuthenticatedSessionController extends Controller
         $token = Str::random(64);
         $user->mfa->passwordless_token = hash('sha256', $token);
         $user->mfa->passwordless_expires_at = now()->addMinutes(15);
-        $user->mfa->save();
+        if ($user->mfa instanceof Mfa) {
+            $user->mfa->save();
+        }
+
 
         $link = route('passwordless.verify', ['token' => $token]);
         Mail::to($user)->send(new MagicLinkMail($link));
@@ -325,6 +327,10 @@ class AuthenticatedSessionController extends Controller
         }
 
         $user = $mfa->user;
+        if (!$user instanceof User) {
+            abort(403, 'Invalid user relation.');
+        }
+
 
 
         if (!$user) {

@@ -222,16 +222,16 @@
                     </h1>
                 </div>
                 <div class="container">
-                    <a class="thing" href="https://bap.petra.ac.id">
+                    <a class="thing" href="{{ route('sso.to.bap') }}">
                         <i class="fas fa-chalkboard-teacher"></i> BAP
                     </a>
-                    <a class="thing" href="https://sim.petra.ac.id">
+                    <a class="thing" href="{{ route('sso.to.sim') }}">
                         <i class="fas fa-cubes"></i> SIM UK Petra
                     </a>
-                    <a class="thing" href="https://leap.petra.ac.id">
+                    <a class="thing" href="{{ route('sso.to.leap') }}">
                         <i class=""></i> LEAP-MBKM
                     </a>
-                    <a class="thing" href="https://service-learning.petra.ac.id">
+                    <a class="thing" href="{{ route('sso.to.servicelearning') }}">
                         <i class=""></i> Service-Learning
                     </a>
                 </div>
@@ -244,44 +244,44 @@
                     </h1>
                 </div>
                 <div class="container">
-                    <a class="thing" href="https://form.petra.ac.id">
+                    <a class="thing" href="{{ route('sso.to.form') }}">
                         <i class="fas fa-question-circle"></i> Petra Form
                     </a>
-                    <a class="thing" href="https://sister.kemdikbud.go.id/beranda">
+                    <a class="thing" href="{{ route('sso.to.sister') }}">
                         <i class="far fa-chart-bar"></i> Sister
                     </a>
-                    <a class="thing" href="https://events.petra.ac.id">
-                        <i class=""></i> Event Website
+                    <a class="thing" href="{{ route('sso.to.events') }}">
+                        <i class="fas fa-calendar-alt"></i> Event Website
                     </a>
-                    <a class="thing" href="https://uppk.petra.ac.id">
-                        <i class=""></i> Sim uppk
+                    <a class="thing" href="{{ route('sso.to.uppk') }}">
+                        <i class="fas fa-file-alt"></i> Sim UPPK
                     </a>
-                    <a class="thing" href="https://s.petra.ac.id/">
-                        <i class=""></i> Shortener
+                    <a class="thing" href="{{ route('sso.to.shortener') }}">
+                        <i class="fas fa-link"></i> Shortener
                     </a>
-                    <a class="thing" href="http://lostnfound.petra.ac.id">
+                    <a class="thing" href="{{ route('sso.to.lostfound') }}">
                         <i class="fas fa-person-circle-plus"></i> LOST &amp; FOUND
                     </a>
-                    <a class="thing" href="https://konseling.petra.ac.id">
+                    <a class="thing" href="{{ route('sso.to.konseling') }}">
                         <i class="fas fa-user-friends"></i> Konseling
                     </a>
-                    <a class="thing" href="https://konseling.petra.ac.id">
-                        <i class="fas fa-user-friends"></i> Library
+                    <a class="thing" href="{{ route('sso.to.library') }}">
+                        <i class="fas fa-book-reader"></i> Library
                     </a>
-                    <a class="thing" href="https://sim-eltc.petra.ac.id">
-                        <i class=""></i> SIM-ELTC
+                    <a class="thing" href="{{ route('sso.to.simeltc') }}">
+                        <i class="fas fa-network-wired"></i> SIM-ELTC
                     </a>
-                    <a class="thing" href="https://tnc.petra.ac.id">
-                        <i class=""></i> Term &amp; Conditions
+                    <a class="thing" href="{{ route('sso.to.tnc') }}">
+                        <i class="fas fa-clipboard-list"></i> Term &amp; Conditions
                     </a>
-                    <a class="thing" href="https://alumni.petra.ac.id/">
-                        <i class=""></i> alumni
+                    <a class="thing" href="{{ route('sso.to.alumni') }}">
+                        <i class="fas fa-users"></i> Alumni
                     </a>
                     <a class="thing" href="{{ route('profile.student.mfa') }}">
                         <i class="fas fa-shield-alt"></i> Activate Security
                     </a>
                     <a class="thing" href="{{ route('customer-support') }}">
-                        <i class=""></i> Support
+                        <i class="fas fa-headset"></i> Support
                     </a>
                 </div>
 
@@ -293,11 +293,11 @@
                     </h1>
                 </div>
                 <div class="container">
-                    <a class="thing" href="https://survey.petra.ac.id">
+                    <a class="thing" href="{{ route('sso.to.survey') }}">
                         <i class="fa fa-question"></i> Survey
                     </a>
-                    <a class="thing" title="" href="https://survei-alumni.petra.ac.id">
-                        <i class=""></i> Survei Alumni
+                    <a class="thing" href="{{ route('sso.to.akreditasi') }}">
+                        <i class="fas fa-certificate"></i> Akreditasi
                     </a>
                 </div>
             </div>

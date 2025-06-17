@@ -364,6 +364,38 @@
                                                     class="btn btn-success mt-2"
                                                     style="display: none;">Verify</button>
                                             </div>
+
+                                             <br>
+                                            {{-- Extended MFA --}}
+                                            <br><br>
+                                            <label for="extended_mfa_toggle" style="margin-right: 20px;">Enable
+                                                Extended MFA</label>
+                                            <label class="switch">
+                                                <input type="checkbox" id="extended_mfa_toggle"
+                                                    {{ auth()->user()->mfa && auth()->user()->mfa->extended_mfa_enabled ? 'checked' : '' }}>
+                                                <span class="slider"></span>
+                                            </label>
+
+                                            <form id="extended-mfa-method-form" class="mt-3">
+                                                <label for="extended_mfa_method">Choose Extended Authentication
+                                                    Method:</label>
+                                                <select name="extended_mfa_method" id="extended_mfa_method"
+                                                    class="form-control" required>
+                                                    <option value="google_auth"
+                                                        {{ auth()->user()->mfa && auth()->user()->mfa->extended_mfa_method === 'google_auth' ? 'selected' : '' }}>
+                                                        Google Authenticator
+                                                    </option>
+                                                    <option value="whatsapp"
+                                                        {{ auth()->user()->mfa && auth()->user()->mfa->extended_mfa_method === 'whatsapp' ? 'selected' : '' }}>
+                                                        WhatsApp
+                                                    </option>
+                                                </select>
+
+                                                <button type="submit"
+                                                    class="btn btn-primary save-btn mt-2">Save</button>
+                                            </form>
+
+
                                             <br>
                                             <label for="passwordless_enabled" style="margin-right: 20px;">Enable
                                                 Passwordless Login</label>
@@ -380,6 +412,21 @@
                                                 Google Authenticator).<br>
                                                 Tujuannya adalah untuk <strong>melindungi akun Anda jika password
                                                     diketahui orang lain</strong>.
+
+                                                <br><br>
+
+                                                <strong>Apa itu Extended MFA?</strong><br>
+                                                Extended Multi-Factor Authentication (Extended MFA) adalah lapisan
+                                                verifikasi tambahan <strong>selain MFA saat login</strong>.
+                                                Fitur ini dirancang untuk <strong>melindungi akses menuju aplikasi
+                                                    penting</strong> di dalam dashboard My Petra.
+                                                Ketika Anda memilih beberapa aplikasi sensitif, sistem akan meminta Anda
+                                                untuk <strong>memverifikasi ulang OTP</strong> sebelum mengaksesnya.
+                                                Ini memastikan bahwa meskipun akun sudah login, <strong>akses ke
+                                                    aplikasi tetap aman</strong> jika ada aktivitas mencurigakan dari
+                                                sesi tersebut. </br>
+                                                Metode yang tersedia: <strong>Google Authenticator</strong> atau
+                                                <strong>WhatsApp OTP</strong>.
 
                                                 <br><br>
 
@@ -791,6 +838,124 @@
                         Swal.fire('Error', 'Failed to toggle passwordless.', 'error');
                     }
                 });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            const phone = @json(auth()->user()->phone_number ?? '');
+
+            function showPhoneError() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Phone Number Required',
+                    text: 'Phone number is not set. Please update the mobile number in your profile.',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#dc3545',
+                    customClass: {
+                        confirmButton: 'btn btn-danger'
+                    },
+                    buttonsStyling: false
+                });
+            }
+
+            // 🔘 Save method via form
+            $('#extended-mfa-method-form').on('submit', function(e) {
+                e.preventDefault();
+
+                const method = $('#extended_mfa_method').val();
+                const enabled = $('#extended_mfa_toggle').is(':checked') ? 1 : 0;
+
+                if (enabled && method === 'whatsapp' && (!phone || phone.trim() === '')) {
+                    showPhoneError();
+                    return;
+                }
+
+                $.ajax({
+                    url: '{{ route('profile.student.extended-mfa.setting') }}',
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    data: {
+                        extended_mfa_enabled: enabled,
+                        extended_mfa_method: method
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Method Updated',
+                            text: response.message || 'Extended MFA method saved.',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#007bff',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            },
+                            buttonsStyling: false
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Failed to Save',
+                            text: xhr.responseJSON?.message ||
+                                'Could not save method setting.',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#dc3545',
+                            customClass: {
+                                confirmButton: 'btn btn-danger'
+                            },
+                            buttonsStyling: false
+                        });
+                    }
+                });
+            });
+
+            // 🔘 Save toggle automatically
+            $('#extended_mfa_toggle').on('change', function() {
+                const enabled = $(this).is(':checked') ? 1 : 0;
+                const method = $('#extended_mfa_method').val();
+
+                if (enabled && method === 'whatsapp' && (!phone || phone.trim() === '')) {
+                    showPhoneError();
+                    $(this).prop('checked', false);
+                    return;
+                }
+
+                $.ajax({
+                    url: '{{ route('profile.student.extended-mfa.setting') }}',
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    data: {
+                        extended_mfa_enabled: enabled,
+                        extended_mfa_method: method
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Settings Updated',
+                            text: 'Your Extended MFA setting has been saved.',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#007bff',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            },
+                            buttonsStyling: false
+                        });
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Failed to Toggle',
+                            text: 'Could not update Extended MFA setting.',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#dc3545'
+                        });
+                        $('#extended_mfa_toggle').prop('checked', !enabled);
+                    }
+                });
+            });
         });
     </script>
 </body>

@@ -59,73 +59,72 @@ class UserDeviceController extends Controller
     {
         $currentIp = request()->ip();
         $agent = new Agent();
-        $userAgent = request()->header('User-Agent');
-
-        $agent->setUserAgent($userAgent);
+        $agent->setUserAgent(request()->header('User-Agent'));
 
         $detectedOS = $agent->platform() ?? 'Unknown';
-        $normalizedOS = $this->normalizeOS($detectedOS);
+        $normalizedOS = $this->normalizeOS($detectedOS); // No lowercase
         $deviceType = $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
         $now = Carbon::now('Asia/Jakarta');
 
-        // 🧹 Auto-delete stale devices (30+ days unused)
+        // Hapus device lebih dari 30 hari
         TrustedDevice::where('user_id', $userId)
-            ->where('updated_at', '<', $now->subDays(30))
+            ->where('updated_at', '<', $now->copy()->subDays(30))
             ->delete();
-        //TrustedDevice::where('user_id', $userId)
-        //->where('updated_at', '<', now()->subMinutes(1))
-        //->delete();
 
-        // 🔍 Check if OS already exists (regardless of IP/device)
-        $existingDevice = TrustedDevice::where('user_id', $userId)
-            ->where('os', $normalizedOS)
-            ->where('device', $deviceType)
-            ->where('ip_address', $currentIp)
-            ->first();
+        $alreadyExists = TrustedDevice::where('user_id', $userId)
+            ->whereRaw('LOWER(os) = ?', [strtolower($normalizedOS)])
+            ->exists();
 
-        if ($existingDevice) {
-            // 🟢 OS already tracked → update timestamp
-            $existingDevice->touch();
-            return;
-        }
-
-        // 🔐 Count distinct OSes
         $distinctOSCount = TrustedDevice::where('user_id', $userId)
-            ->select('os')
-            ->distinct()
-            ->count();
+            ->select('os')->distinct()->count();
 
-        // ⛔️ Block login if trying to use 4th OS
-        if ($distinctOSCount >= 3) {
+        if (!$alreadyExists && $distinctOSCount >= 3) {
             session(['pending_user_id' => $userId]);
-            LoggingService::logSecurityViolation("User [{$userId}] blocked from logging in with 4th OS (Detected: {$normalizedOS})", [
+            LoggingService::logSecurityViolation("Blocked 4th OS login: {$normalizedOS}", [
                 'user_id' => $userId,
                 'ip' => $currentIp,
                 'os' => $normalizedOS,
             ]);
-
             return redirect()->route('device-limit-warning');
         }
 
-        // ✅ Save new OS (as new device)
-        TrustedDevice::create([
-            'user_id' => $userId,
-            'ip_address' => $currentIp,
-            'device' => $deviceType,
-            'os' => $normalizedOS,
-            'trusted' => false,
-            'action' => null,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ]);
+        if (!$alreadyExists) {
+            TrustedDevice::create([
+                'user_id' => $userId,
+                'ip_address' => $currentIp,
+                'device' => $deviceType,
+                'os' => $normalizedOS,
+                'trusted' => false,
+                'action' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
 
-        LoggingService::logMfaEvent("New OS added", [
-            'user_id' => $userId,
-            'ip' => $currentIp,
-            'device' => $deviceType,
-            'os' => $normalizedOS,
-        ]);
+            $user = User::find($userId);
+            Mail::to($user->email)->send(new NewDeviceLoginMail(
+                $currentIp,
+                $normalizedOS,
+                $deviceType,
+                $now->format('d M Y H:i'),
+                $user->name
+            ));
+
+            LoggingService::logMfaEvent("New device added", [
+                'user_id' => $userId,
+                'os' => $normalizedOS,
+                'ip' => $currentIp
+            ]);
+        } else {
+            // ✅ Update updated_at tanpa overwrite trusted
+            TrustedDevice::where('user_id', $userId)
+                ->whereRaw('LOWER(os) = ?', [strtolower($normalizedOS)])
+                ->update(['updated_at' => $now]);
+        }
     }
+
+
+
+
 
     private function deleteDevice($id, $userId)
     {
@@ -156,15 +155,21 @@ class UserDeviceController extends Controller
         if (!$device)
             return false;
 
-        // Ensure the user has at most 3 trusted OS entries
-        $osCount = TrustedDevice::where('user_id', $userId)->where('trusted', true)->count();
-        if ($osCount >= 3) {
-            return redirect()->back()->with('error', 'You can only trust up to 3 operating systems. Remove one first.');
-        }
+        // Hanya trust berdasarkan OS yang sama, semua lainnya untrust
+        TrustedDevice::where('user_id', $userId)
+            ->whereRaw('LOWER(os) != ?', [strtolower($device->os)])
+            ->update(['trusted' => false]);
 
-        // Trust the selected OS
         $device->update(['trusted' => true, 'action' => 'trust']);
+
+        LoggingService::logMfaEvent("Trusted device updated", [
+            'device_id' => $device->id,
+            'user_id' => $userId,
+            'os' => $device->os,
+            'trusted' => true,
+        ]);
     }
+
 
     private function untrustDevice($id, $userId)
     {
@@ -354,5 +359,3 @@ class UserDeviceController extends Controller
 
 
 }
-
-

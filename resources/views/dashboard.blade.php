@@ -221,10 +221,10 @@
                     </h1>
                 </div>
                 <div class="container">
-                    <a class="thing" href="https://events.petra.ac.id">
+                    <a class="thing" href="{{ route('sso.to.events') }}">
                         <i class=""></i> Event Website
                     </a>
-                    <a class="thing" href="https://konseling.petra.ac.id">
+                    <a class="thing" href="{{ route('sso.to.konseling') }}">
                         <i class="fas fa-user-friends"></i> Konseling
                     </a>
                 </div>
@@ -237,7 +237,7 @@
                     </h1>
                 </div>
                 <div class="container">
-                    <a class="thing" href="https://leap.petra.ac.id">
+                    <a class="thing" href="{{ route('sso.to.leap') }}">
                         <i class=""></i> LEAP-MBKM
                     </a>
                 </div>
@@ -250,7 +250,7 @@
                     </h1>
                 </div>
                 <div class="container">
-                    <a class="thing" href="https://s.petra.ac.id/">
+                    <a class="thing" href="{{ route('sso.to.shortener') }}">
                         <i class=""></i> Shortener
                     </a>
                     <a class="thing" href="{{ route('profile.mfa') }}">
@@ -269,7 +269,7 @@
                     </h1>
                 </div>
                 <div class="container">
-                    <a class="thing" href="https://sim.petra.ac.id">
+                    <a class="thing" href="{{ route('sso.to.sim') }}">
                         <i class="fas fa-cubes"></i> HSEP
                     </a>
                 </div>

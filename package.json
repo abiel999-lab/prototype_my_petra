@@ -3,6 +3,7 @@
     "type": "module",
     "scripts": {
         "serve": "concurrently \"php artisan serve\" \"npm run dev\"",
+        "serve:all": "concurrently \"cd ../ && php artisan serve --port=8000\" \"cd ./applications/prototype_bap_petra && php artisan serve --port=8002\"",
         "build": "vite build",
         "dev": "vite"
     },
