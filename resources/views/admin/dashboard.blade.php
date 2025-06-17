@@ -218,7 +218,7 @@
                     </h1>
                 </div>
                 <div class="container">
-                    <a class="thing" href="{{ route('sso.to.bap.new') }}">
+                    <a class="thing" href="{{ route('sso.to.bap') }}">
                         <i class="fas fa-chalkboard-teacher"></i> BAP
                     </a>
                     <a class="thing" href="{{ route('sso.to.bimbingan') }}">

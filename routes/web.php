@@ -384,7 +384,7 @@ Route::post('/passwordless/request', [AuthenticatedSessionController::class, 'se
 Route::get('/passwordless/verify/{token}', [AuthenticatedSessionController::class, 'verifyMagicLink'])->name('passwordless.verify');
 
 // aplikasi bap
-Route::get('/sso/bap', [SsoController::class, 'redirectToBap'])->middleware(['auth', 'ensure.extended.mfa'])->name('sso.to.bap');
+Route::get('/sso/bap-re', [SsoController::class, 'redirectToBap'])->middleware(['auth', 'ensure.extended.mfa'])->name('sso.to.bap');
 Route::get('/from-bap', function () {
     $user = auth()->user();
     $active = session('active_role', $user->usertype);
@@ -425,7 +425,7 @@ Route::get('/force-logout', function () {
     return redirect()->route('login');
 });
 Route::middleware(['auth', 'ensure.extended.mfa'])->group(function () {
-    Route::get('/sso/bap', fn() => redirect()->away('https://bap.petra.ac.id'))->name('sso.to.bap.new');
+    Route::get('/sso/bap-direct', fn() => redirect()->away('https://bap.petra.ac.id'))->name('sso.to.bap.new');
     Route::get('/sso/leap', fn() => redirect()->away('https://leap.petra.ac.id'))->name('sso.to.leap');
     Route::get('/sso/obe', fn() => redirect()->away('https://leap.petra.ac.id'))->name('sso.to.obe');
     Route::get('/sso/bimbingan-mahasiswa', fn() => redirect()->away('https://leap.petra.ac.id'))->name('sso.to.bimbingan');
