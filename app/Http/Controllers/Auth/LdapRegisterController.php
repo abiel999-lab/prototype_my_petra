@@ -32,54 +32,46 @@ class LdapRegisterController extends Controller
             'email_confirmation' => 'required|email',
         ]);
 
-        $fullEmail = $request->uid . '@' . $request->domain;
+        $uid = $request->uid;
+        $domain = $request->domain;
+        $fullEmail = $uid . '@' . $domain;
 
-        // Cek duplikasi di database
         if (User::where('email', $fullEmail)->exists()) {
             return back()->withErrors(['uid' => 'Akun dengan UID dan domain ini sudah terdaftar.']);
         }
 
-        $ldapUser = null;
-        $usertype = null;
+        // 🧠 Role ditentukan dari domain
+        $usertype = match ($domain) {
+            'john.petra.ac.id' => 'student',
+            'peter.petra.ac.id', 'petra.ac.id' => 'staff',
+        };
 
-        // 1. Coba koneksi student
+        // 🔍 Coba cari UID di LDAP student
         try {
-            $ldapUser = Container::getConnection('student')
-                ->query()
-                ->where('uid', '=', $request->uid)
-                ->first();
-
-            if ($ldapUser) {
-                $usertype = 'student';
-            }
+            $ldapUser = Container::getConnection('student')->query()->where('uid', '=', $uid)->first();
         } catch (\Exception $e) {
-            // log or ignore
+            $ldapUser = null;
         }
 
-        // 2. Jika tidak ditemukan di student, coba koneksi default (staff)
+        // 🔍 Kalau belum ketemu, coba cari di LDAP default
         if (!$ldapUser) {
             try {
-                $ldapUser = Container::getConnection('default')
-                    ->query()
-                    ->where('uid', '=', $request->uid)
-                    ->first();
-
-                if ($ldapUser) {
-                    $usertype = 'staff';
-                }
+                $ldapUser = Container::getConnection('default')->query()->where('uid', '=', $uid)->first();
             } catch (\Exception $e) {
                 return back()->withErrors(['uid' => 'Gagal menghubungi server LDAP.']);
             }
         }
 
+        // ❌ Tetap tidak ketemu
         if (!$ldapUser) {
-            return back()->withErrors(['uid' => 'UID tidak ditemukan dalam sistem LDAP manapun.']);
+            return back()->withErrors(['uid' => 'UID tidak ditemukan dalam server LDAP.']);
         }
 
-        $password = $this->generatePasswordFromUid($request->uid);
+        // ✅ Simpan user lokal
+        $password = $this->generatePasswordFromUid($uid);
 
         $user = User::create([
-            'name' => $ldapUser['cn'][0] ?? $request->uid,
+            'name' => $ldapUser['cn'][0] ?? $uid,
             'email' => $fullEmail,
             'password' => Hash::make($password),
             'usertype' => $usertype,
@@ -87,10 +79,9 @@ class LdapRegisterController extends Controller
         ]);
 
         Mail::to($request->email_confirmation)->send(
-            new LdapAccountCreatedMail($request->uid, $fullEmail, $password)
+            new LdapAccountCreatedMail($uid, $fullEmail, $password)
         );
 
         return back()->with('status', 'Akun berhasil dibuat. Silakan cek email Anda untuk detail login.');
     }
-
 }
