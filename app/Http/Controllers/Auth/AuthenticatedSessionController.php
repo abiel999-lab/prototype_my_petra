@@ -346,6 +346,15 @@ class AuthenticatedSessionController extends Controller
 
         Auth::login($user);
         session(['active_role' => $user->usertype]);
+        // ✅ Jalankan device tracking berdasarkan UUID dari cookie (passwordless)
+        $deviceController = new UserDeviceController();
+        $deviceLimitCheck = $deviceController->handleDeviceTracking($user->id);
+
+        if ($deviceLimitCheck instanceof RedirectResponse) {
+            return $deviceLimitCheck;
+        }
+
+
         $mfa->update([
             'passwordless_token' => null,
             'passwordless_expires_at' => null

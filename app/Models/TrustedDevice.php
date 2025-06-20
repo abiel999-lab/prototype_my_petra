@@ -14,12 +14,16 @@ class TrustedDevice extends Model
 
     protected $fillable = [
         'user_id',
+        'uuid', // <-- ini WAJIB ADA
         'ip_address',
         'device',
         'os',
-        'trusted', // Matches column name in migration
+        'trusted',
         'action',
+        'created_at',
+        'updated_at',
     ];
+
 
     public function user()
     {

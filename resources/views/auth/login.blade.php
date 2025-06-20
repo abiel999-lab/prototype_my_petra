@@ -141,13 +141,16 @@
                                     <br />
                                     <!-- Register -->
                                     Doesn't have account? Register on
-                                    <a style="color: blue !important;"href="{{ route('ldap.register') }}" class="text-reset"><strong>here</strong></a>.
+                                    <a style="color: blue !important;"href="{{ route('ldap.register') }}"
+                                        class="text-reset"><strong>here</strong></a>.
                                     <br />
                                     You are not a student or staff? Click
-                                    <a style="color: blue !important;"href="{{ route('login.public') }}" class="text-reset"><strong>here</strong></a>.
+                                    <a style="color: blue !important;"href="{{ route('login.public') }}"
+                                        class="text-reset"><strong>here</strong></a>.
                                     <br />
                                     Are you an admin? Click
-                                    <a style="color: blue !important;"href="{{ route('login.admin') }}" class="text-reset"><strong>here</strong></a>.
+                                    <a style="color: blue !important;"href="{{ route('login.admin') }}"
+                                        class="text-reset"><strong>here</strong></a>.
                                     <br />
                                     Need support? Click
                                     <a style="color: blue !important;" href="{{ route('customer-support') }}"
@@ -230,6 +233,17 @@
             });
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (!localStorage.getItem('device_uuid')) {
+                const uuid = crypto.randomUUID();
+                localStorage.setItem('device_uuid', uuid);
+            }
+
+            document.cookie = "device_uuid=" + localStorage.getItem('device_uuid') + "; path=/";
+        });
+    </script>
+
 </body>
 
 </html>

@@ -54,7 +54,7 @@ class CheckBannedStatus
         }
 
         // ✅ Auto logout and force login after 20 failed OTP attempts
-        if ($user->failed_otp_attempts >= 20) {
+        if ($user->failed_otp_attempts >= 6) {
             $user->mfa->update([
                 'otp_ban_until' => now()->addMinutes(30),
             ]);

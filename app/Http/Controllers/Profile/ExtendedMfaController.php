@@ -165,23 +165,25 @@ class ExtendedMfaController extends Controller
 
     private function generateSecureOtp($length = 6)
     {
-        do {
-            $otp = substr(
-                str_shuffle(
-                    Str::random(2) . // huruf campuran
-                    strtoupper(Str::random(2)) . // huruf besar
-                    rand(10, 99) // angka
-                ),
-                0,
-                $length
-            );
-        } while (
-            !preg_match('/[A-Z]/', $otp) ||
-            !preg_match('/[a-z]/', $otp) ||
-            !preg_match('/[0-9]/', $otp)
-        );
+        $upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $lower = 'abcdefghijklmnopqrstuvwxyz';
+        $digits = '0123456789';
+        $all = $upper . $lower . $digits;
 
-        return $otp;
+        // Ambil minimal 1 dari masing-masing kategori
+        $otp = $upper[random_int(0, strlen($upper) - 1)]
+            . $lower[random_int(0, strlen($lower) - 1)]
+            . $digits[random_int(0, strlen($digits) - 1)];
+
+        // Sisanya dari kombinasi semua karakter
+        $remaining = $length - 3;
+        $bytes = random_bytes($remaining);
+        for ($i = 0; $i < $remaining; $i++) {
+            $otp .= $all[ord($bytes[$i]) % strlen($all)];
+        }
+
+        return str_shuffle($otp); // Acak ulang agar tidak predictable urutannya
     }
+
 
 }

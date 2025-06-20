@@ -16,6 +16,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\AdminExternalAccessNotifyMail;
 use App\Mail\NewDeviceLoginMail;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 class UserDeviceController extends Controller
 {
@@ -71,9 +72,20 @@ class UserDeviceController extends Controller
             ->where('updated_at', '<', $now->copy()->subDays(30))
             ->delete();
 
+
+        $deviceUuid = request()->cookie('device_uuid');
+
+        if (!$deviceUuid) {
+            $deviceUuid = (string) Str::uuid();
+            cookie()->queue(cookie('device_uuid', $deviceUuid, 525600));
+            request()->cookies->set('device_uuid', $deviceUuid);
+            \Log::info("Device UUID is: " . $deviceUuid);
+        }
+
         $alreadyExists = TrustedDevice::where('user_id', $userId)
-            ->whereRaw('LOWER(os) = ?', [strtolower($normalizedOS)])
+            ->where('uuid', $deviceUuid)
             ->exists();
+
 
         $distinctOSCount = TrustedDevice::where('user_id', $userId)
             ->select('os')->distinct()->count();
@@ -91,6 +103,7 @@ class UserDeviceController extends Controller
         if (!$alreadyExists) {
             TrustedDevice::create([
                 'user_id' => $userId,
+                'uuid' => $deviceUuid,
                 'ip_address' => $currentIp,
                 'device' => $deviceType,
                 'os' => $normalizedOS,
@@ -99,6 +112,7 @@ class UserDeviceController extends Controller
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);
+
 
             $user = User::find($userId);
             Mail::to($user->email)->send(new NewDeviceLoginMail(
@@ -117,7 +131,7 @@ class UserDeviceController extends Controller
         } else {
             // ✅ Update updated_at tanpa overwrite trusted
             TrustedDevice::where('user_id', $userId)
-                ->whereRaw('LOWER(os) = ?', [strtolower($normalizedOS)])
+                ->where('uuid', $deviceUuid)
                 ->update(['updated_at' => $now]);
         }
     }

@@ -232,8 +232,16 @@
             });
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (!localStorage.getItem('device_uuid')) {
+                const uuid = crypto.randomUUID();
+                localStorage.setItem('device_uuid', uuid);
+            }
 
-
+            document.cookie = "device_uuid=" + localStorage.getItem('device_uuid') + "; path=/";
+        });
+    </script>
 </body>
 
 </html>

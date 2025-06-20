@@ -53,8 +53,8 @@ class TwoFactorController extends Controller
 
         $user = auth()->user();
 
-        // 🚨 If user has failed 10 OTP attempts, lock them out instantly
-        if ($user->failed_otp_attempts >= 10) {
+        // 🚨 If user has failed 6 OTP attempts, lock them out instantly
+        if ($user->failed_otp_attempts >= 6) {
             return redirect()->route('mfa-challenge.index')->with(['otp_failed_limit' => true]);
         }
 
@@ -84,9 +84,9 @@ class TwoFactorController extends Controller
 
         $user->save();
 
-        // 🚨 If failed 10 times, trigger lockout
-        if ($user->failed_otp_attempts == 10) {
-            LoggingService::logSecurityViolation("User [ID: {$user->id}] locked out after 10 OTP failures (MFA method: {$user->mfa->mfa_method})");
+        // 🚨 If failed 6 times, trigger lockout
+        if ($user->failed_otp_attempts == 6) {
+            LoggingService::logSecurityViolation("User [ID: {$user->id}] locked out after 6 OTP failures (MFA method: {$user->mfa->mfa_method})");
             Mail::to('mfa.mypetra@petra.ac.id')->send(new ViolationMail($user, 'otp'));
             return redirect()->route('mfa-challenge.index')->with([
                 'otp_failed_limit' => true
@@ -317,16 +317,27 @@ class TwoFactorController extends Controller
 
     private function generateOtpWithNumber($length = 6)
     {
-        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $lower = 'abcdefghijklmnopqrstuvwxyz';
+        $digits = '0123456789';
+        $all = $upper . $lower . $digits;
 
-        do {
-            $otp = '';
-            for ($i = 0; $i < $length; $i++) {
-                $otp .= $characters[random_int(0, strlen($characters) - 1)];
-            }
-        } while (!preg_match('/[A-Z]/', $otp) || !preg_match('/[a-z]/', $otp) || !preg_match('/\d/', $otp));
-        return $otp;
+        // Ambil minimal satu karakter dari masing-masing kategori
+        $otp = $upper[random_int(0, strlen($upper) - 1)]
+            . $lower[random_int(0, strlen($lower) - 1)]
+            . $digits[random_int(0, strlen($digits) - 1)];
+
+        // Tambah karakter acak sisanya dari gabungan semua karakter
+        $remaining = $length - 3;
+        $bytes = random_bytes($remaining);
+        for ($i = 0; $i < $remaining; $i++) {
+            $otp .= $all[ord($bytes[$i]) % strlen($all)];
+        }
+
+        // Acak ulang agar posisi karakter tidak bisa ditebak
+        return str_shuffle($otp);
     }
+
 
     public function showChallenge()
     {
