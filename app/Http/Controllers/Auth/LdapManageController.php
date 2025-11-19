@@ -9,6 +9,7 @@ use LdapRecord\Models\Entry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class LdapManageController extends Controller
 {
@@ -16,50 +17,87 @@ class LdapManageController extends Controller
     {
         $search = $request->input('uid');
 
-        $buildQuery = function ($connectionName) use ($search) {
-            $query = Container::getConnection($connectionName)
-                ->query()
-                ->in('dc=petra,dc=ac,dc=id');
+        // Flag untuk tahu koneksi mana yang down
+        $ldapDown = [
+            'default' => false,  // Petra staff
+            'student' => false,  // Petra student
+            'local'   => false,  // Docker lokal
+        ];
 
-            if ($search) {
-                $escaped = $this->ldapEscape($search);
-                $query->rawFilter("(uid=*$escaped*)");
-            } else {
-                $query->rawFilter("(uid=*)");
+        /**
+         * Helper untuk build query ke 1 koneksi LDAP.
+         * Kalau error (server down, timeout, dsb) → return collection kosong
+         * dan set flag $ldapDown[connection] = true.
+         */
+        $buildQuery = function (string $connectionName, string $baseDn) use ($search, &$ldapDown) {
+            try {
+                $query = Container::getConnection($connectionName)
+                    ->query()
+                    ->in($baseDn);
+
+                if ($search) {
+                    $escaped = $this->ldapEscape($search);
+                    $query->rawFilter("(uid=*{$escaped}*)");
+                } else {
+                    $query->rawFilter("(uid=*)");
+                }
+
+                return collect($query->get())
+                    ->filter(fn ($u) => isset($u['uid'][0]))
+                    ->map(fn ($u) => [
+                        'uid'        => $u['uid'][0] ?? '-',
+                        'cn'         => $u['cn'][0] ?? '-',
+                        'dn'         => $u['dn'] ?? '-',
+                        'connection' => $connectionName,
+                    ]);
+            } catch (\Throwable $e) {
+                // Kalau koneksi ini gagal, jangan bikin error 500
+                $ldapDown[$connectionName] = true;
+                Log::warning("LDAP search gagal pada koneksi [{$connectionName}]: {$e->getMessage()}");
+
+                return collect(); // kosong → nanti merge saja
             }
-
-            return collect($query->get())
-                ->filter(fn($u) => isset($u['uid'][0]))
-                ->map(fn($u) => [
-                    'uid' => $u['uid'][0] ?? '-',
-                    'cn' => $u['cn'][0] ?? '-',
-                    'dn' => $u['dn'] ?? '-',
-                    'connection' => $connectionName,
-                ]);
         };
 
-        $studentUsers = $buildQuery('student');
-        $staffUsers = $buildQuery('default');
+        // 🔹 Coba Petra student
+        $studentUsers = $buildQuery('student', 'dc=petra,dc=ac,dc=id');
 
+        // 🔹 Coba Petra staff
+        $staffUsers   = $buildQuery('default', 'dc=petra,dc=ac,dc=id');
+
+        // 🔹 Coba LDAP lokal (docker)
+        $localUsers   = $buildQuery('local', 'dc=petra,dc=local');
+
+        // 🔹 Gabungkan semua hasil yang berhasil
         $mergedUsers = $studentUsers
             ->merge($staffUsers)
+            ->merge($localUsers)
             ->unique('dn')
             ->sortBy('uid')
             ->values();
 
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-        $perPage = 10;
-        $currentItems = $mergedUsers->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        // Paginate manual (tetap sama seperti punyamu)
+        $currentPage  = LengthAwarePaginator::resolveCurrentPage();
+        $perPage      = 10;
+        $currentItems = $mergedUsers
+            ->slice(($currentPage - 1) * $perPage, $perPage)
+            ->values();
 
         $paginatedUsers = new LengthAwarePaginator(
             $currentItems,
             $mergedUsers->count(),
             $perPage,
             $currentPage,
-            ['path' => $request->url(), 'query' => $request->query()]
+            [
+                'path'  => $request->url(),
+                'query' => $request->query(),
+            ]
         );
 
-        return view('admin.ldap.create-new-ldap', ['allUsers' => $paginatedUsers]);
+        return view('admin.ldap.create-new-ldap', [
+            'allUsers' => $paginatedUsers,
+            'ldapDown' => $ldapDown,   // ⬅️ kirim info koneksi mana yang error
+        ]);
     }
 
     private function ldapEscape(string $value): string
@@ -142,7 +180,7 @@ class LdapManageController extends Controller
 
         try {
             // Cari entry berdasarkan DN dan buat object model
-            $entry = \LdapRecord\Models\Entry::find($request->dn);
+            $entry = Entry::find($request->dn);
 
             if ($entry) {
                 $entry->setConnection($request->connection); // penting

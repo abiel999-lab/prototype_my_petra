@@ -79,7 +79,7 @@ class UserDeviceController extends Controller
             $deviceUuid = (string) Str::uuid();
             cookie()->queue(cookie('device_uuid', $deviceUuid, 525600));
             request()->cookies->set('device_uuid', $deviceUuid);
-            \Log::info("Device UUID is: " . $deviceUuid);
+
         }
 
         $alreadyExists = TrustedDevice::where('user_id', $userId)
@@ -157,7 +157,7 @@ class UserDeviceController extends Controller
 
 
         if ($device->os === $currentOs) {
-            auth()->logout();
+            Auth::logout();
             return redirect('/login')->with('info', 'Your OS was removed, and you have been logged out.');
         }
         return true;

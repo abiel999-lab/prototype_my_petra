@@ -14,7 +14,10 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Support\SupportController;
-use LdapRecord\Models\ActiveDirectory\User as LdapUser;
+use App\Ldap\StaffUser as StaffLdapUser;
+use App\Ldap\StudentUser as StudentLdapUser;
+use App\Ldap\LocalUser as LocalLdapUser; // untuk LDAP docker kamu
+use LdapRecord\Container;
 use App\Models\TrustedDevice;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -28,6 +31,13 @@ use App\Http\Controllers\Auth\OtpLdapVerificationController;
 use App\Http\Controllers\Sso\SsoController;
 use App\Http\Controllers\Profile\ExtendedMfaController;
 use Illuminate\Support\Facades\Session;
+use App\Services\LdapGoogleSyncService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\Auth\LdapLoginController;
+
+
 
 // ðŸ”¹ Redirect root URL ('/') to the correct dashboard or login
 Route::middleware(['ip.limiter'])->get('/', function () {
@@ -48,165 +58,14 @@ Route::middleware(['ip.limiter'])->get('/', function () {
     return redirect()->route('login'); // Redirect to login if not logged in
 })->name('home');
 
-// ðŸ”¹ Google OAuth Routes
-Route::get('auth/google', function () {
-    return Socialite::driver('google')->redirect();
-})->name('google.login');
 
-Route::get('auth/google/callback', function () {
-    try {
-        $googleUser = Socialite::driver('google')->stateless()->user();
+// 🔹 Google OAuth Routes
+Route::get('auth/google', [GoogleAuthController::class, 'redirect'])->name('google.login');
+Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
 
-        $user = User::where('email', $googleUser->getEmail())->first();
+// LDAP Login Route
+Route::post('/login', [LdapLoginController::class, 'login'])->name('login');
 
-        if ($user) {
-            if ($user->banned_status) {
-                return redirect()->route('login')->withErrors([
-                    'email' => "Your account is banned. Please contact support."
-                ]);
-            }
-
-            $user->update([
-                'google_id' => $googleUser->getId(),
-            ]);
-        } else {
-            $email = $googleUser->getEmail();
-            $usertype = 'general';
-
-            if (str_ends_with($email, '@john.petra.ac.id')) {
-                $usertype = 'student';
-            } elseif (str_ends_with($email, '@peter.petra.ac.id')) {
-                $usertype = 'staff';
-            } elseif (str_ends_with($email, '@petra.ac.id')) {
-                $usertype = 'staff';
-            }
-
-            $user = User::create([
-                'name' => $googleUser->getName(),
-                'email' => $email,
-                'google_id' => $googleUser->getId(),
-                'password' => bcrypt(uniqid()),
-                'usertype' => $usertype,
-                'banned_status' => false,
-                'failed_login_attempts' => 0,
-            ]);
-        }
-
-        Auth::login($user);
-        session(['active_role' => $user->usertype]);
-
-        // ✅ Check OS limit + only send email if device is new
-        $userId = Auth::id();
-        $deviceController = new UserDeviceController();
-        $deviceLimitCheck = $deviceController->handleDeviceTracking($userId);
-
-        if ($deviceLimitCheck instanceof \Illuminate\Http\RedirectResponse) {
-            LoggingService::logSecurityViolation("Device limit hit for user [ID: {$userId}] during Google OAuth login");
-            return $deviceLimitCheck;
-        }
-
-        LoggingService::logMfaEvent("Google OAuth login successful for {$user->email}", [
-            'user_id' => $user->id,
-            'ip' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-        ]);
-
-        // ✅ Redirect based on user type
-        return match ($user->usertype) {
-            'admin' => redirect()->route('admin.dashboard'),
-            'student' => redirect()->route('student.dashboard'),
-            'staff' => redirect()->route('staff.dashboard'),
-            default => redirect()->route('dashboard'),
-        };
-
-    } catch (\Exception $e) {
-        LoggingService::logSecurityViolation("Google OAuth error: " . $e->getMessage());
-        return redirect()->route('login')->with('error', 'Google authentication failed.');
-    }
-})->name('google.callback');
-
-
-// 🔹 LDAP Authentication (Custom Login Handler)
-Route::post('/login', function (Request $request) {
-    // If the request contains emailLocalPart, construct the email address
-    $email = $request->has('emailLocalPart')
-        ? $request->emailLocalPart . $request->emailDomain
-        : $request->email;
-
-    $credentials = [
-        'email' => $email,
-        'password' => $request->password,
-    ];
-
-    // 🔹 Attempt database login first
-    if (Auth::attempt($credentials)) {
-        switch (Auth::user()->usertype) {
-            case 'admin':
-                return redirect()->route('admin.dashboard');
-            case 'student':
-                return redirect()->route('student.dashboard');
-            case 'staff':
-                return redirect()->route('staff.dashboard');
-            default:
-                return redirect()->route('dashboard');
-        }
-    }
-
-    // 🔹 Attempt LDAP authentication if database login fails
-    try {
-        $ldapUser = LdapUser::where('mail', $credentials['email'])->first();
-
-        if ($ldapUser && $ldapUser->authenticate($credentials['password'])) {
-            // Sync LDAP user into Laravel database
-            $email = $ldapUser->mail[0];
-            $user = User::where('email', $email)->first();
-            $firstLogin = !$user;
-
-            if ($firstLogin) {
-                $usertype = 'general';
-
-                if (str_ends_with($email, '@john.petra.ac.id')) {
-                    $usertype = 'student';
-                } elseif (str_ends_with($email, '@peter.petra.ac.id')) {
-                    $usertype = 'staff';
-                } elseif (str_ends_with($email, '@petra.ac.id')) {
-                    $usertype = 'staff';
-                }
-
-                $user = User::create([
-                    'email' => $email,
-                    'name' => $ldapUser->cn[0] ?? 'Unknown',
-                    'password' => Hash::make($credentials['password']),
-                    'usertype' => $usertype,
-                ]);
-            }
-
-
-            Auth::login($user);
-            session(['active_role' => $user->usertype]);
-            LoggingService::logMfaEvent("LDAP login success for {$user->email}", [
-                'user_id' => $user->id,
-                'ip' => request()->ip(),
-            ]);
-
-
-            switch ($user->usertype) {
-                case 'admin':
-                    return redirect()->route('admin.dashboard');
-                case 'student':
-                    return redirect()->route('student.dashboard');
-                case 'staff':
-                    return redirect()->route('staff.dashboard');
-                default:
-                    return redirect()->route('dashboard');
-            }
-        }
-    } catch (\Exception $e) {
-        LoggingService::logSecurityViolation("LDAP login failed for {$credentials['email']}: " . $e->getMessage());
-    }
-
-    return back()->withErrors(['email' => 'Invalid credentials']);
-})->name('login');
 
 // ðŸ”¹ Authentication Middleware
 Route::middleware('auth')->group(function () {
@@ -386,7 +245,7 @@ Route::get('/passwordless/verify/{token}', [AuthenticatedSessionController::clas
 // aplikasi bap
 Route::get('/sso/bap-re', [SsoController::class, 'redirectToBap'])->middleware(['auth', 'ensure.extended.mfa'])->name('sso.to.bap');
 Route::get('/from-bap', function () {
-    $user = auth()->user();
+    $user = Auth::user();
     $active = session('active_role', $user->usertype);
 
     // Jika role aktif tidak sama dengan usertype, reset session dan redirect ke default
@@ -402,7 +261,7 @@ Route::get('/from-bap', function () {
     });
 })->middleware(['auth']);
 Route::get('/from-bap/setting', function () {
-    $user = auth()->user();
+    $user = Auth::user();
     $active = session('active_role', $user->usertype);
 
     if ($active !== $user->usertype) {
@@ -449,12 +308,3 @@ Route::middleware(['auth', 'ensure.extended.mfa'])->group(function () {
     Route::get('/sso/akreditasi', fn() => redirect()->away('https://sim-eltc.petra.ac.id'))->name('sso.to.akreditasi');
     Route::get('/sso/hsep', fn() => redirect()->away('https://sim.petra.ac.id'))->name('sso.to.hsep');
 });
-
-
-
-
-
-
-
-
-

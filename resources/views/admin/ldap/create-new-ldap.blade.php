@@ -89,7 +89,26 @@
                                 </div>
                             @endif
 
+                            {{-- 🔹 INFO: koneksi LDAP mana yang gagal (datang dari controller) --}}
+                            @if (isset($ldapDown))
+                                @php
+                                    $downList = collect($ldapDown)
+                                        ->filter(fn($v) => $v)
+                                        ->keys()
+                                        ->implode(', ');
+                                @endphp
+
+                                @if ($downList !== '')
+                                    <div class="alert alert-warning">
+                                        Beberapa server LDAP tidak dapat dihubungi:
+                                        <strong>{{ $downList }}</strong>.<br>
+                                        Data yang tampil hanya dari koneksi LDAP yang berhasil.
+                                    </div>
+                                @endif
+                            @endif
+
                             <form method="POST" action="{{ route('ldap.store') }}">
+
                                 @csrf
 
                                 <div class="mb-3">
@@ -156,7 +175,8 @@
                     value="{{ request('uid') }}">
             </form>
 
-            <table class="table table-bordered">
+            <table class="table table-bordered" id="ldapTable">
+
                 <thead class="table-dark">
                     <tr>
                         <th>UID</th>

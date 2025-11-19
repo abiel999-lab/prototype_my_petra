@@ -58,6 +58,22 @@ return [
                 LDAP_OPT_X_TLS_REQUIRE_CERT => LDAP_OPT_X_TLS_NEVER,
             ],
         ],
+        // 🔹 KONEKSI BARU: LDAP lokal kamu
+        'local' => [
+            'hosts'    => [env('LDAP_LOCAL_HOST', '127.0.0.1')],
+            'port'     => env('LDAP_LOCAL_PORT', 389),
+            'base_dn'  => env('LDAP_LOCAL_BASE_DN', 'dc=petra,dc=local'),
+            'username' => env('LDAP_LOCAL_USERNAME', 'cn=admin,dc=petra,dc=local'),
+            'password' => env('LDAP_LOCAL_PASSWORD', 'adminpassword'),
+            'timeout'  => env('LDAP_LOCAL_TIMEOUT', 5),
+            'use_ssl'  => env('LDAP_LOCAL_SSL', false),
+            'use_tls'  => env('LDAP_LOCAL_TLS', false),
+            'options'  => [
+                LDAP_OPT_PROTOCOL_VERSION => 3,
+                LDAP_OPT_REFERRALS        => 0,
+            ],
+        ],
+
 
     ],
 
