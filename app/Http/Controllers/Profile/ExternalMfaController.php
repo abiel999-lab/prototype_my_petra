@@ -14,6 +14,7 @@ use PragmaRX\Google2FA\Google2FA;
 use App\Mail\ViolationMail;
 use App\Services\LoggingService;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 
 
@@ -90,7 +91,7 @@ class ExternalMfaController extends Controller
                     break;
 
                 case 'sms':
-                    (new SmsService())->sendSms($user->phone_number, "Your OTP Code is: $code", 'OTP');
+                    (new SmsService())->sendSms($user->phone_number, "Your OTP Code is: $code");
                     LoggingService::logMfaEvent("SMS OTP sent to {$user->phone_number}");
                     break;
 
@@ -231,14 +232,18 @@ class ExternalMfaController extends Controller
         return str_shuffle($otp);
     }
 
-
     public function showChallenge()
     {
-        $user = auth()->user();
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
         $mfaMethod = optional($user->mfa)->mfa_method; // Ambil metode MFA dari relasi
 
         return view('auth.mfa-challenge', [
             'mfaMethod' => strtoupper($mfaMethod), // Misal: "SMS", "EMAIL", "GOOGLE_AUTH"
         ]);
     }
-}
+    }
+

@@ -4,14 +4,17 @@ namespace App\Http\Controllers\Profile;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Jenssegers\Agent\Agent;
 use App\Services\LoggingService;
 use App\Http\Controllers\Controller;
 
-
 class SessionController extends Controller
 {
+    /**
+     * Ambil data session user tertentu.
+     */
     public function getSessionData($userId)
     {
         return DB::table('sessions')
@@ -22,9 +25,11 @@ class SessionController extends Controller
                 $agent = new Agent();
                 $agent->setUserAgent($session->user_agent);
 
-                $device = $agent->isDesktop() ? 'Desktop' : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
+                $device = $agent->isDesktop()
+                    ? 'Desktop'
+                    : ($agent->isMobile() || $agent->isTablet() ? 'Phone' : 'Unknown');
 
-                // Convert last activity to Jakarta timezone (WIB)
+                // Convert last activity ke timezone Jakarta (WIB)
                 $lastActivity = Carbon::parse($session->last_activity)->setTimezone('Asia/Jakarta');
 
                 // Fix session time handling
@@ -37,122 +42,157 @@ class SessionController extends Controller
                     : $lastActivity->copy()->addMinutes(intval(config('session.lifetime')));
 
                 return (object) [
-                    'id' => $session->id,
-                    'ip_address' => $session->ip_address,
-                    'user_agent' => $session->user_agent,
-                    'os' => $agent->platform() ?? 'Unknown',
-                    'browser' => $agent->browser() ?? 'Unknown',
-                    'device' => $device,
-                    'login_time' => $loginTime->format('d M Y H:i'),
-                    'expires_at' => $expiresAt->format('d M Y H:i'),
+                    'id'          => $session->id,
+                    'ip_address'  => $session->ip_address,
+                    'user_agent'  => $session->user_agent,
+                    'os'          => $agent->platform() ?? 'Unknown',
+                    'browser'     => $agent->browser() ?? 'Unknown',
+                    'device'      => $device,
+                    'login_time'  => $loginTime->format('d M Y H:i'),
+                    'expires_at'  => $expiresAt->format('d M Y H:i'),
                 ];
             });
     }
 
+    // ---------------- USER SESSION MANAGEMENT ----------------
 
     public function show()
     {
-        $sessions = $this->getSessionData(auth()->id());
+        $sessions = $this->getSessionData(Auth::id());
         return view('profile.session', compact('sessions')); // Corrected view path
     }
 
-    public function revoke($id)
+    public function revoke(Request $request, $id)
     {
-        return $this->revokeSession($id, 'profile.session.show');
+        return $this->revokeSession($request, $id, 'profile.session.show');
     }
 
-    public function revokeAll()
+    public function revokeAll(Request $request)
     {
-        return $this->revokeAllSessions('profile.session.show');
+        return $this->revokeAllSessions($request);
     }
 
     // ---------------- ADMIN SESSION MANAGEMENT ----------------
+
     public function Adminshow()
     {
-        $sessions = $this->getSessionData(auth()->id());
+        $sessions = $this->getSessionData(Auth::id());
         return view('profile.admin.session', compact('sessions'));
     }
 
-
-
-    public function Adminrevoke($id)
+    public function Adminrevoke(Request $request, $id)
     {
-        return $this->revokeSession($id, 'profile.admin.session.show');
+        return $this->revokeSession($request, $id, 'profile.admin.session.show');
     }
 
-    public function AdminrevokeAll()
+    public function AdminrevokeAll(Request $request)
     {
-        return $this->revokeAllSessions('profile.admin.session.show');
+        return $this->revokeAllSessions($request);
     }
 
     // ---------------- STUDENT SESSION MANAGEMENT ----------------
+
     public function Studentshow()
     {
-
-        $sessions = $this->getSessionData(auth()->id());
+        $sessions = $this->getSessionData(Auth::id());
         return view('profile.student.session', compact('sessions'));
     }
 
-    public function Studentrevoke($id)
+    public function Studentrevoke(Request $request, $id)
     {
-        return $this->revokeSession($id, 'profile.student.session.show');
+        return $this->revokeSession($request, $id, 'profile.student.session.show');
     }
 
-    public function StudentrevokeAll()
+    public function StudentrevokeAll(Request $request)
     {
-        return $this->revokeAllSessions('profile.student.session.show');
+        return $this->revokeAllSessions($request);
     }
 
     // ---------------- STAFF SESSION MANAGEMENT ----------------
+
     public function Staffshow()
     {
-
-        $sessions = $this->getSessionData(auth()->id());
+        $sessions = $this->getSessionData(Auth::id());
         return view('profile.staff.session', compact('sessions'));
     }
 
-
-
-    public function Staffrevoke($id)
+    public function Staffrevoke(Request $request, $id)
     {
-        return $this->revokeSession($id, 'profile.staff.session.show');
+        return $this->revokeSession($request, $id, 'profile.staff.session.show');
     }
 
-    public function StaffrevokeAll()
+    public function StaffrevokeAll(Request $request)
     {
-        return $this->revokeAllSessions('profile.staff.session.show');
+        return $this->revokeAllSessions($request);
     }
 
     // ---------------- HELPER FUNCTIONS ----------------
-    private function revokeSession($id, $route)
+
+    /**
+     * Revoke satu session.
+     * Kalau session yang dicabut adalah session saat ini -> langsung logout.
+     */
+    private function revokeSession(Request $request, $id, $route)
     {
-        $userId = auth()->id();
-        $session = DB::table('sessions')->where('id', $id)->where('user_id', $userId)->first();
+        $userId = Auth::id();
+        $currentSessionId = $request->session()->getId();
+
+        $session = DB::table('sessions')
+            ->where('id', $id)
+            ->where('user_id', $userId)
+            ->first();
 
         if (!$session) {
             return redirect()->route($route)->with('error', 'Sesi tidak ditemukan atau tidak diizinkan.');
         }
 
+        // Hapus session di database
         DB::table('sessions')->where('id', $id)->delete();
+
         LoggingService::logMfaEvent("User [ID: {$userId}] revoked a session", [
             'session_id' => $id,
         ]);
 
+        // Jika session yang dihapus adalah session yang sedang digunakan sekarang
+        if ($id === $currentSessionId) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
+            return redirect()->route('login')->with('success', 'Sesi Anda berhasil dicabut. Silakan login kembali.');
+        }
+
+        // Kalau yang dihapus adalah session lain (device lain), tetap di halaman sekarang
         return redirect()->route($route)->with('success', 'Sesi berhasil dicabut.');
     }
 
-    private function revokeAllSessions($route)
+    /**
+     * Revoke semua session user saat ini.
+     * Termasuk session sekarang -> otomatis logout.
+     */
+    private function revokeAllSessions(Request $request)
     {
-        DB::table('sessions')->where('user_id', auth()->id())->delete();
-        LoggingService::logMfaEvent("User [ID: " . auth()->id() . "] revoked all active sessions");
+        $userId = Auth::id();
 
-        return redirect()->route($route)->with('success', 'Semua sesi Anda telah dicabut.');
+        DB::table('sessions')->where('user_id', $userId)->delete();
+
+        LoggingService::logMfaEvent("User [ID: {$userId}] revoked all active sessions");
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->with('success', 'Semua sesi Anda telah dicabut. Silakan login kembali.');
     }
-    public function AdminRevokeFromManageUser($id)
+
+    /**
+     * Admin revoke session dari halaman manage user.
+     * Kalau admin tanpa sengaja hapus session miliknya sendiri, dia juga akan logout.
+     */
+    public function AdminRevokeFromManageUser(Request $request, $id)
     {
         // Hanya admin boleh akses
-        if (auth()->user()->usertype !== 'admin') {
+        if (!Auth::check() || Auth::user()->usertype !== 'admin') {
             abort(403, 'Unauthorized');
         }
 
@@ -162,17 +202,25 @@ class SessionController extends Controller
             return back()->with('error', 'Session not found.');
         }
 
+        $currentSessionId = $request->session()->getId();
+
         DB::table('sessions')->where('id', $id)->delete();
 
         LoggingService::logMfaEvent("Admin revoked session ID: $id", [
-            'admin_id' => auth()->id(),
-            'user_id' => $session->user_id,
-            'ip' => $session->ip_address,
+            'admin_id' => Auth::id(),
+            'user_id'  => $session->user_id,
+            'ip'       => $session->ip_address,
         ]);
+
+        // Jika admin menghapus session-nya sendiri -> logout
+        if ($id === $currentSessionId) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->with('success', 'Session Anda sendiri telah dicabut. Silakan login kembali.');
+        }
 
         return back()->with('success', 'Session revoked successfully.');
     }
-
-
-
 }

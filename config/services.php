@@ -60,4 +60,18 @@ return [
 
     ],
 
+    'keycloak' => [
+        'base_url'      => env('KEYCLOAK_BASE_URL'),
+        'realm'         => env('KEYCLOAK_REALM'),
+        'client_id'     => env('KEYCLOAK_CLIENT_ID'),
+        'client_secret' => env('KEYCLOAK_CLIENT_SECRET'),
+        'redirect_uri'  => env('KEYCLOAK_REDIRECT_URI'),
+    ],
+    'keycloak_admin' => [
+        'base_url'      => env('KEYCLOAK_BASE_URL', 'http://localhost:8080'),
+        'realm'         => env('KEYCLOAK_REALM', 'petra-identity-dev'),
+        'client_id'     => env('KEYCLOAK_ADMIN_CLIENT_ID'),
+        'client_secret' => env('KEYCLOAK_ADMIN_CLIENT_SECRET'),
+    ],
+
 ];

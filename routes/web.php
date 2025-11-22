@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Profile\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
+// use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Dashboard\HomeController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Profile\TwoFactorController;
@@ -10,33 +10,33 @@ use App\Http\Controllers\UserManagement\UserController;
 use App\Http\Controllers\Profile\SessionController;
 use App\Http\Middleware\Session\StoreUserSession;
 use App\Http\Controllers\UserManagement\UserDeviceController;
-use Laravel\Socialite\Facades\Socialite;
-use App\Models\User;
+// use Laravel\Socialite\Facades\Socialite;
+// use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Support\SupportController;
-use App\Ldap\StaffUser as StaffLdapUser;
-use App\Ldap\StudentUser as StudentLdapUser;
-use App\Ldap\LocalUser as LocalLdapUser; // untuk LDAP docker kamu
-use LdapRecord\Container;
-use App\Models\TrustedDevice;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
+// use App\Ldap\StaffUser as StaffLdapUser;
+// use App\Ldap\StudentUser as StudentLdapUser;
+// use App\Ldap\LocalUser as LocalLdapUser; // untuk LDAP docker kamu
+// use LdapRecord\Container;
+// use App\Models\TrustedDevice;
+// use Carbon\Carbon;
+// use Illuminate\Http\Request;
 use App\Http\Controllers\Profile\ExternalMfaController;
-use App\Services\LoggingService;
+// use App\Services\LoggingService;
 use App\Http\Controllers\Dashboard\LogViewerController;
 use App\Http\Controllers\UserManagement\RoleSwitchController;
-use App\Http\Controllers\Auth\LdapRegisterController;
+// use App\Http\Controllers\Auth\LdapRegisterController;
 use App\Http\Controllers\Auth\LdapManageController;
 use App\Http\Controllers\Auth\OtpLdapVerificationController;
 use App\Http\Controllers\Sso\SsoController;
 use App\Http\Controllers\Profile\ExtendedMfaController;
 use Illuminate\Support\Facades\Session;
-use App\Services\LdapGoogleSyncService;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Hash;
-use App\Http\Controllers\Auth\GoogleAuthController;
-use App\Http\Controllers\Auth\LdapLoginController;
-
+// use App\Services\LdapGoogleSyncService;
+// use Illuminate\Support\Facades\Log;
+// use Illuminate\Support\Facades\Hash;
+// use App\Http\Controllers\Auth\GoogleAuthController;
+// use App\Http\Controllers\Auth\LdapLoginController;
+use App\Http\Controllers\Auth\KeycloakController;
 
 
 // ðŸ”¹ Redirect root URL ('/') to the correct dashboard or login
@@ -52,20 +52,26 @@ Route::middleware(['ip.limiter'])->get('/', function () {
             case 'general':
                 return redirect()->route('dashboard');
             default:
-                return redirect()->route('dashboard'); // Default for unknown user types
+                return redirect()->route('dashboard');
         }
     }
-    return redirect()->route('login'); // Redirect to login if not logged in
+    return redirect()->route('login');
 })->name('home');
 
 
-// 🔹 Google OAuth Routes
-Route::get('auth/google', [GoogleAuthController::class, 'redirect'])->name('google.login');
-Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
+// // 🔹 Google OAuth Routes
+// Route::get('auth/google', [GoogleAuthController::class, 'redirect'])->name('google.login');
+// Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
 
-// LDAP Login Route
-Route::post('/login', [LdapLoginController::class, 'login'])->name('login');
+// // LDAP Login Route
+// Route::post('/login', [LdapLoginController::class, 'login'])->name('login');
 
+// Keycloack Login Route
+Route::get('/auth/keycloak/redirect', [KeycloakController::class, 'redirectToProvider'])
+    ->name('auth.keycloak.redirect');
+
+Route::get('/auth/keycloak/callback', [KeycloakController::class, 'handleCallback'])
+    ->name('auth.keycloak.callback');
 
 // ðŸ”¹ Authentication Middleware
 Route::middleware('auth')->group(function () {
@@ -213,8 +219,13 @@ Route::middleware(['auth', 'mfachallenge', StoreUserSession::class])->group(func
 require __DIR__ . '/auth.php';
 
 // ðŸ”¹ Public Login Pages
-Route::middleware(['ip.limiter'])->get('/login/public', [AuthenticatedSessionController::class, 'createPublic'])->name('login.public');
-Route::middleware(['ip.limiter'])->get('/login/admin', [AuthenticatedSessionController::class, 'createAdmin'])->name('login.admin');
+Route::get('/login/public', function () {
+    return redirect()->route('login');
+})->name('login.public');
+
+Route::get('/login/admin', function () {
+    return redirect()->route('login');
+})->name('login.admin');
 
 // 🔹 Device Limit Warning Route (Must be Public)
 Route::get('/device-limit-warning', function () {
@@ -232,15 +243,15 @@ Route::post('/customer-support/send', [SupportController::class, 'sendEmail'])
 Route::put('/profile/update-phone', [ProfileController::class, 'updatePhone'])->name('profile.update.phone');
 
 // LDAP Registration
-Route::middleware('throttle:5,1')->group(function () {
-    Route::get('/ldap-register', [LdapRegisterController::class, 'showForm'])->name('ldap.register');
-    Route::post('/ldap-register', [LdapRegisterController::class, 'register']);
-});
+// Route::middleware('throttle:5,1')->group(function () {
+//     Route::get('/ldap-register', [LdapRegisterController::class, 'showForm'])->name('ldap.register');
+//     Route::post('/ldap-register', [LdapRegisterController::class, 'register']);
+// });
 
 // Passwordless Login
-Route::get('/passwordless/request', [AuthenticatedSessionController::class, 'showPasswordlessForm'])->name('passwordless.request');
-Route::post('/passwordless/request', [AuthenticatedSessionController::class, 'sendMagicLink'])->name('passwordless.send');
-Route::get('/passwordless/verify/{token}', [AuthenticatedSessionController::class, 'verifyMagicLink'])->name('passwordless.verify');
+// Route::get('/passwordless/request', [AuthenticatedSessionController::class, 'showPasswordlessForm'])->name('passwordless.request');
+// Route::post('/passwordless/request', [AuthenticatedSessionController::class, 'sendMagicLink'])->name('passwordless.send');
+// Route::get('/passwordless/verify/{token}', [AuthenticatedSessionController::class, 'verifyMagicLink'])->name('passwordless.verify');
 
 // aplikasi bap
 Route::get('/sso/bap-re', [SsoController::class, 'redirectToBap'])->middleware(['auth', 'ensure.extended.mfa'])->name('sso.to.bap');

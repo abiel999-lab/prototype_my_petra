@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Ldap\LocalUser as LocalLdapUser;
+use App\Models\Ldap\LocalUser as LocalLdapUser;
 use App\Ldap\StaffUser as StaffLdapUser;
 use App\Ldap\StudentUser as StudentLdapUser;
 use App\Models\User;

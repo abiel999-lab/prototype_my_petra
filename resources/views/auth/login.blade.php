@@ -86,72 +86,16 @@
                     <div class="row d-flex justify-content-center flex-nowrap">
                         <div class="col-sm-6">
                             <div class="login-wrapper">
-                                <h1 class="login-title">Welcome Student and Staff</h1>
+                                <h1 class="login-title">Welcome Petranesians</h1>
                                 <p style="margin-top: 10px;">Log in to access our full features.</p>
 
-                                <!-- Login Form -->
-                                <form method="POST" action="{{ route('login') }}">
-                                    @csrf
-
-                                    <!-- Email and Domain -->
-                                    <div class="input-group mb-3">
-                                        <input type="text" class="form-control" id="emailLocalPart"
-                                            name="emailLocalPart" placeholder="Username"
-                                            value="{{ old('emailLocalPart') }}" required>
-
-                                        <select class="form-control" id="emailDomain" name="emailDomain" required>
-                                            <option value="@john.petra.ac.id">@john.petra.ac.id</option>
-                                            <option value="@peter.petra.ac.id">@peter.petra.ac.id</option>
-                                            <option value="@petra.ac.id">@petra.ac.id</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Hidden Email Field -->
-                                    <input type="email" class="form-control" id="email" name="email"
-                                        value="{{ old('email') }}" required style="display: none;">
-
-                                    <!-- Password -->
-                                    <div class="input-group mb-3">
-                                        <input type="password" class="form-control" id="password" name="password"
-                                            placeholder="Password" required>
-                                    </div>
-
-                                    <!-- Submit Button -->
-                                    <div class="form-group">
-                                        <button type="submit" class="btn btn-lg login-btn">Sign In</button>
-                                    </div>
-                                </form>
-
-                                <!-- Google Login -->
-                                <a href="{{ route('google.login') }}" class="btn btn-lg login-btn"
-                                    style="margin-top: 10px;">
-                                    <img src="https://login.petra.ac.id/img/logo-google.png" alt="Auth"
-                                        width="24" style="margin-right: 10px;">
-                                    Sign In with Google Mail
-                                </a>
+                                <div class="form-group mt-4">
+                                    <a href="{{ route('auth.keycloak.redirect') }}" class="btn btn-lg login-btn w-100">
+                                        Sign In with SSO (Keycloak)
+                                    </a>
+                                </div>
 
                                 <p class="login-wrapper-footer-text" style="margin-top: 20px;">
-                                    Try Passwordless Login?
-                                    <a style="color: blue !important;" href="{{ route('passwordless.request') }}"
-                                        class="text-reset"><strong>here</strong></a>.
-                                    <br />
-                                    Forgot your password? Reset your password
-                                    <a style="color: blue !important;"href="{{ route('password.request') }}"
-                                        class="text-reset"><strong>here</strong></a>.
-                                    <br />
-                                    <!-- Register -->
-                                    Doesn't have account? Register on
-                                    <a style="color: blue !important;"href="{{ route('ldap.register') }}"
-                                        class="text-reset"><strong>here</strong></a>.
-                                    <br />
-                                    You are not a student or staff? Click
-                                    <a style="color: blue !important;"href="{{ route('login.public') }}"
-                                        class="text-reset"><strong>here</strong></a>.
-                                    <br />
-                                    Are you an admin? Click
-                                    <a style="color: blue !important;"href="{{ route('login.admin') }}"
-                                        class="text-reset"><strong>here</strong></a>.
-                                    <br />
                                     Need support? Click
                                     <a style="color: blue !important;" href="{{ route('customer-support') }}"
                                         class="text-reset"><strong>here</strong></a>.
